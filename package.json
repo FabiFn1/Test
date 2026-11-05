@@ -1,0 +1,39 @@
+{
+  "name": "schichtwerk",
+  "productName": "Schichtwerk",
+  "version": "1.0.0",
+  "description": "Schichtwerk – Fabrik-Aufbauspiel",
+  "main": "main.js",
+  "author": "FabiFn1",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "prepare-assets": "node scripts/prepare-assets.js",
+    "dist": "npm run prepare-assets && electron-builder --win portable"
+  },
+  "build": {
+    "appId": "de.fabifn1.schichtwerk",
+    "productName": "Schichtwerk",
+    "files": [
+      "main.js",
+      "app/**/*"
+    ],
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "Schichtwerk.exe"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "three": "^0.160.0"
+  }
+}
