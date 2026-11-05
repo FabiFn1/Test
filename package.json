@@ -9,7 +9,9 @@
   "scripts": {
     "start": "electron .",
     "prepare-assets": "node scripts/prepare-assets.js",
-    "dist": "npm run prepare-assets && electron-builder --win portable"
+    "dist": "npm run prepare-assets && electron-builder --win portable",
+    "android:sync": "npm run prepare-assets && cap sync android",
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
   "build": {
     "appId": "de.fabifn1.schichtwerk",
@@ -30,10 +32,13 @@
     }
   },
   "devDependencies": {
+    "@capacitor/android": "^7.6.10",
+    "@capacitor/cli": "^7.6.10",
     "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/ibm-plex-mono": "^5.3.0",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "@capacitor/core": "^7.6.10"
   }
 }

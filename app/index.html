@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Schichtwerk</title>
 <link rel="stylesheet" href="vendor/fonts.css">
 <style>
@@ -67,6 +67,26 @@ h1{margin:0;font-size:38px;font-weight:700;line-height:1}
 #ketten{margin-top:18px;border-top:1px solid var(--linie);padding-top:12px;display:grid;gap:8px}#ketten>div:last-child{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:3px 22px;font-size:15px}
 .kt{display:grid;grid-template-columns:74px minmax(0,1fr);gap:8px}.kt span{color:var(--matt)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+
+/* Touch-Geräte */
+canvas#c{touch-action:none}html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#tbar{right:14px;bottom:110px;display:none;grid-template-columns:repeat(2,auto);gap:4px;padding:6px}#tbar button{min-width:46px;min-height:38px;font-size:15px}
+html.touch #tbar{display:grid}html.touch #insp{right:130px}html.touch .wz kbd{display:none}
+html.touch #ms{cursor:pointer}#ms.klein .bar,#ms.klein #hint{display:none}
+#hilfe>div,#ende>div,#frage>div{max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box}
+@media (max-width:950px),(max-height:520px){
+ #ms{left:8px;top:8px;width:190px;padding:7px 9px;gap:4px}#ms h2{font-size:17px}.bar{font-size:13px}#hint{font-size:13px}
+ #lager{right:8px;top:8px;width:178px;padding:7px 9px;gap:4px}#items{max-height:18vh}.it{font-size:13px}#takt{flex-wrap:wrap}#takt button{font-size:13px;padding:2px 6px}
+ #mini{left:8px;bottom:8px;width:104px;height:104px}#mini.gross{width:min(420px,calc(100vh - 30px));height:min(420px,calc(100vh - 30px))}
+ #leiste{left:120px;bottom:8px;padding:4px;max-width:calc(100vw - 196px)}html.touch #leiste{max-width:calc(100vw - 196px)}
+ .wz{flex-basis:56px;width:56px;height:60px;font-size:11px}.wz img{width:34px;height:34px}
+ #tbar{right:8px;bottom:76px;padding:4px;gap:3px}#tbar button{min-width:44px;min-height:30px;font-size:12px;padding:2px 5px}
+ #insp,html.touch #insp{right:118px;bottom:76px;width:220px;max-height:calc(100vh - 100px);overflow:auto;padding:8px 10px}
+ #menu,#lw{padding:6px}#mbau{grid-template-columns:minmax(0,1fr) 210px}#mkarten{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));padding:8px;gap:5px}.karte{min-height:96px}.karte img{width:48px;height:48px}.karte b{font-size:13px}#mdetail{padding:8px;font-size:14px}#mdetail img{width:64px;height:64px}
+ #mkopf,#mkopf2{flex-wrap:wrap;padding:6px 8px}#mkopf h2,#mkopf2 h2{font-size:17px}#mkopf .etikett{display:none}
+ #hilfe>div,#ende>div,#frage>div{padding:14px 16px;font-size:15px}#hilfe table{font-size:14px}h1{font-size:28px}
+}
+
 </style>
 <canvas id="c" tabindex="0" aria-label="Werkskarte"></canvas>
 <section id="ms" class="tafel" aria-label="Meilenstein"></section>
@@ -509,7 +529,7 @@ function menuOpen(on){$('menu').hidden=!on;$('tip').style.display='none';tipHove
 function menuTab(t){mTab=t;$('tbau').classList.toggle('an',t==='bau');$('tbaum').classList.toggle('an',t==='baum');$('mbau').hidden=t!=='bau';$('mbaum').hidden=t!=='baum';menuDraw();if(t==='baum'){const c=document.querySelector('.knoten.jetzt');if(c)$('baum').scrollLeft=Math.max(0,c.offsetLeft-$('baum').offsetLeft-240)}}
 function menuDraw(){if(mTab==='bau'){const a=avail();$('mkarten').innerHTML=TOOLS.map(k=>{const on=a.includes(k),s=G.slots.indexOf(k),u=unlockAt(k);return `<button class="karte${on?'':' zu'}${mSel===k?' wahl':''}" data-k="${k}">${s>=0?`<i>${keyOf(s)}</i>`:''}<img src="${icons[k]}" alt=""><b>${K[k].n}</b><small>${on?'verfügbar':'Meilenstein '+(u+1)}</small></button>`}).join('');detailDraw()}else baumDraw()}
 function detailDraw(){const k=mSel,d=K[k],on=avail().includes(k),u=unlockAt(k),s=G.slots.indexOf(k);let w='Kosten: '+costTxt(k);if(d.p)w+='\nStrom: '+d.p+' MW';if(d.gen)w+='\nLiefert: '+d.gen+' MW';if(d.s>1)w+=`\nGröße: ${d.s} × ${d.s} Felder`;
- $('mdetail').innerHTML=`<img src="${icons[k]}" alt=""><h2>${K[k].n}</h2><div>${d.info}</div><div class="werte">${w}</div>`+(on?`<div class="etikett">Auf Zahl legen</div><div id="slots">${[0,1,2,3,4,5,6,7,8,9].map(i=>`<button data-s="${i}" class="${s===i?'an':''}" title="${G.slots[i]?K[G.slots[i]].n:'frei'}">${keyOf(i)}</button>`).join('')}</div><div class="etikett">Oder Maus auf die Karte und Zahl drücken</div><button id="mbauen">Jetzt bauen</button>`:`<div class="etikett">Gesperrt bis Meilenstein ${u+1}: ${MS[u].n}</div>`);
+ $('mdetail').innerHTML=`<img src="${icons[k]}" alt=""><h2>${K[k].n}</h2><div>${d.info}</div><div class="werte">${w}</div>`+(on?`<div class="etikett">Auf Zahl legen</div><div id="slots">${[0,1,2,3,4,5,6,7,8,9].map(i=>`<button data-s="${i}" class="${s===i?'an':''}" title="${G.slots[i]?K[G.slots[i]].n:'frei'}">${keyOf(i)}</button>`).join('')}</div>${TOUCH?'':'<div class="etikett">Oder Maus auf die Karte und Zahl drücken</div>'}<button id="mbauen">Jetzt bauen</button>`:`<div class="etikett">Gesperrt bis Meilenstein ${u+1}: ${MS[u].n}</div>`);
  $('mdetail').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>assign(k,+b.dataset.s));const q=$('mbauen');if(q)q.onclick=()=>{menuOpen(false);setTool(k)}}
 function chip(k,txt){return `<div class="bed"><u style="background:#${ITEMS[k][1].toString(16).padStart(6,'0')}"></u><span>${ITEMS[k][0]}</span><em>${txt}</em></div>`}
 function baumDraw(){const st=['band','mast','bohrer','ofen','generator','fundament'];const fr=l=>`<div class="frei">${l.map(k=>`<div><img src="${icons[k]}" alt="">${K[k].n}</div>`).join('')}</div>`;
@@ -587,6 +607,53 @@ function frame(now){if(window.__noloop&&!window.__once)return;window.__once=fals
  drawItems();drawSpecial(dt);drawSmoke(paused?0:dt);ghostUp();hudT+=dt;if(hudT>.25){hudT=0;hud()}miniT+=dt;if(miniT>1){miniT=0;miniDraw()}rateT+=dt;if(rateT>=10){rateT=0;rateH.push({...rate});for(const k in rate)delete rate[k];if(rateH.length>6)rateH.shift();rateShow={};for(const r of rateH)for(const k in r)rateShow[k]=(rateShow[k]||0)+r[k];const f=60/(rateH.length*10);for(const k in rateShow)rateShow[k]=Math.round(rateShow[k]*f)}
  saveT+=dt;if(saveT>20){saveT=0;save()}ren.render(scene,cam);if(!window.__noloop)requestAnimationFrame(frame)}
 addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+/* ====== Touch-Steuerung (Handy und Tablet) ====== */
+const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
+(function(){
+ const sp=canvas.setPointerCapture.bind(canvas);canvas.setPointerCapture=id=>{try{sp(id)}catch(e){}};
+ const tp=new Map();let mode=null,first=null,gest=null,lp=null,pipette=false;
+ const fwd=(type,x,y,id)=>{const e=new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id,pointerType:'mouse',isPrimary:true,clientX:x,clientY:y,button:type==='pointermove'?-1:0,buttons:type==='pointerup'?0:1});e.__fwd=true;canvas.dispatchEvent(e)};
+ const dragTool=()=>tool==='x'||tool==='fundament'||tool==='kx'||(tool&&BK(tool));
+ const panBy=(dx,dy)=>{const sc=C.dist*.00125*(devicePixelRatio>1.5?1.3:1),c=Math.cos(C.yaw),s=Math.sin(C.yaw);C.tx-=(dx*c+dy*s)*sc;C.tz-=(-dx*s+dy*c)*sc;clampC()};
+ const two=()=>{const[a,b]=[...tp.values()];return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)||1,w:Math.atan2(b.y-a.y,b.x-a.x)}};
+ const stopLP=()=>{if(lp){clearTimeout(lp);lp=null}};
+ function pip(x,y){const w=pick({clientX:x,clientY:y});pipette=false;$('tb-pip').classList.remove('an');if(!w)return;const e=at(Math.floor(w[0]),Math.floor(w[1]));if(e&&avail().includes(e.k)){setTool(e.k);rot=e.r||0;pickRez=e.rez?[e.k,e.rez]:null;toast(K[e.k].n+' übernommen')}else toast('Hier steht nichts zum Übernehmen.')}
+ canvas.addEventListener('pointerdown',ev=>{if(ev.__fwd||ev.pointerType!=='touch')return;ev.stopImmediatePropagation();ev.preventDefault();
+  tp.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
+  if(tp.size===1){first={id:ev.pointerId,sx:ev.clientX,sy:ev.clientY,x:ev.clientX,y:ev.clientY};mode='pending';fwd('pointermove',ev.clientX,ev.clientY,ev.pointerId);
+   stopLP();lp=setTimeout(()=>{lp=null;if(mode==='pending'){mode='done';if(tool){setTool(null);toast('Werkzeug abgelegt')}else select(null)}},600)}
+  else if(tp.size===2){stopLP();if(mode==='game'){drag=null}mode='gesture';gest=two()}},true);
+ canvas.addEventListener('pointermove',ev=>{if(ev.__fwd||ev.pointerType!=='touch')return;ev.stopImmediatePropagation();const p=tp.get(ev.pointerId);if(!p)return;const dx=ev.clientX-p.x,dy=ev.clientY-p.y;p.x=ev.clientX;p.y=ev.clientY;
+  if(mode==='gesture'){if(tp.size<2)return;const g=two();panBy(g.x-gest.x,g.y-gest.y);C.tdist=T.MathUtils.clamp(C.tdist*gest.d/g.d,14,260);let dw=g.w-gest.w;if(dw>Math.PI)dw-=2*Math.PI;if(dw<-Math.PI)dw+=2*Math.PI;C.tyaw-=dw;gest=g;return}
+  if(!first||ev.pointerId!==first.id)return;first.x=ev.clientX;first.y=ev.clientY;
+  if(mode==='pending'&&Math.hypot(ev.clientX-first.sx,ev.clientY-first.sy)>10){stopLP();if(pipette||!tool){mode='pan';panBy(ev.clientX-first.sx,ev.clientY-first.sy);return}if(dragTool()){mode='game';fwd('pointerdown',first.sx,first.sy,ev.pointerId)}else mode='aim'}
+  if(mode==='pan')panBy(dx,dy);else if(mode==='game'||mode==='aim')fwd('pointermove',ev.clientX,ev.clientY,ev.pointerId)},true);
+ const up=ev=>{if(ev.__fwd||ev.pointerType!=='touch')return;ev.stopImmediatePropagation();if(!tp.has(ev.pointerId))return;tp.delete(ev.pointerId);stopLP();const cancel=ev.type==='pointercancel';
+  if(mode==='gesture'){if(!tp.size)mode=null;return}
+  if(!first||ev.pointerId!==first.id)return;const x=first.x,y=first.y;
+  if(mode==='pending'&&!cancel){if(pipette)pip(x,y);else{fwd('pointerdown',x,y,ev.pointerId);fwd('pointerup',x,y,ev.pointerId)}}
+  else if(mode==='aim'&&!cancel){fwd('pointerdown',x,y,ev.pointerId);fwd('pointerup',x,y,ev.pointerId)}
+  else if(mode==='game'){if(cancel)drag=null;else fwd('pointerup',x,y,ev.pointerId)}
+  mode=null;first=null};
+ canvas.addEventListener('pointerup',up,true);canvas.addEventListener('pointercancel',up,true);
+ if(!TOUCH)return;
+ document.documentElement.classList.add('touch');
+ const bar=document.createElement('nav');bar.id='tbar';bar.className='tafel';bar.setAttribute('aria-label','Touch-Werkzeuge');
+ bar.innerHTML='<button id="tb-rot" title="Bauwerk drehen">⟳ Drehen</button><button id="tb-ab" title="Werkzeug ablegen">✕ Ablegen</button><button id="tb-pip" title="Maschine übernehmen">Pipette</button><button id="tb-ql" title="Kamera links drehen">↶</button><button id="tb-qr" title="Kamera rechts drehen">↷</button><button id="tb-hoch" title="Kamera steiler">▲</button><button id="tb-flach" title="Kamera flacher">▼</button><button id="tb-map" title="Karte groß">Karte</button>';
+ document.body.appendChild(bar);
+ $('tb-rot').onclick=()=>{if(tool==='fundament'){fundUp=(fundUp+1)%3;toast('Fundament: '+(fundUp+1)+' Ebene(n) höher')}else rot=(rot+1)%4};
+ $('tb-ab').onclick=()=>{setTool(null);select(null);pipette=false;$('tb-pip').classList.remove('an')};
+ $('tb-pip').onclick=()=>{pipette=!pipette;$('tb-pip').classList.toggle('an',pipette);if(pipette)toast('Tippe auf eine Maschine, um sie zu übernehmen.')};
+ $('tb-ql').onclick=()=>{C.tyaw-=Math.PI/4};$('tb-qr').onclick=()=>{C.tyaw+=Math.PI/4};
+ $('tb-hoch').onclick=()=>{C.pitch=T.MathUtils.clamp(C.pitch+.15,.45,1.4)};$('tb-flach').onclick=()=>{C.pitch=T.MathUtils.clamp(C.pitch-.15,.45,1.4)};
+ $('tb-map').onclick=()=>{$('mini').classList.toggle('gross');miniDraw()};
+ $('ms').addEventListener('click',()=>$('ms').classList.toggle('klein'));if(innerHeight<520||innerWidth<700)$('ms').classList.add('klein');
+ const tab=document.querySelector('#hilfe table');if(tab)tab.innerHTML=[
+  ['Ein Finger ziehen','Karte bewegen (ohne Werkzeug)'],['Zwei Finger','Verschieben, Zoomen (Spreizen) und Kamera drehen'],['▲ / ▼, ↶ / ↷','Kamera neigen und in 45°-Schritten drehen'],
+  ['Antippen','Bauwerk setzen, ohne Werkzeug: Details zur Maschine'],['Finger auf Karte ziehen','Bänder, Fundament und Abriss: Strecke oder Fläche ziehen; andere Bauwerke: zielen und loslassen'],
+  ['Leiste unten','Bauwerk wählen, Menü öffnet Baumenü und Technikbaum'],['⟳ Drehen','Bauwerk drehen, der gelbe Pfeil zeigt den Ausgang'],['✕ Ablegen / lange drücken','Werkzeug ablegen'],
+  ['Pipette','Danach auf eine Maschine tippen: übernimmt sie samt Rezept und Richtung'],['Karte','Minimap vergrößern, Tippen springt dorthin'],['Meilenstein-Tafel antippen','Tafel ein- und ausklappen'],['II / 1× / 3×','Pause und Tempo']]
+  .map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')})();
 /* ====== Start ====== */
 window.__g={lwOpen,kennz,kxM,reparieren,tierUp,fx,AMT,REZ,MS,miniDraw,PATCHES,ORE,PUR,updateDeco,get byKind(){return byKind},menuOpen,menuTab,assign,F,TER,Lv,buildFund,removeFund,buildTerrain,msDraw,frame:(n)=>{for(let i=0;i<(n||1);i++){window.__once=true;frame(performance.now())}},get G(){return G},E,at,place,step,power,setTool,remove,ents,relist,give,deliver,save,load,fresh,C,scr(x,z){const v=new T.Vector3(x,YL(Lv(Math.floor(x),Math.floor(z))),z).project(cam);return[(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]},get tool(){return tool},get sel(){return sel},get nets(){return nets},get machines(){return machines},get belts(){return belts}};
 Promise.all(pending).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{makeIcons();const hadSave=load();if(!hadSave)fresh();buildTerrain();dirtyF=true;miniDraw();setSpeed(1);if(!G.help)$('hilfe').hidden=false;msDraw();toolsDraw();power();C.x=C.tx;C.z=C.tz;requestAnimationFrame(frame)});

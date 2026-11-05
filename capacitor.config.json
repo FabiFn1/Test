@@ -1,0 +1,6 @@
+{
+  "appId": "de.fabifn1.schichtwerk",
+  "appName": "Schichtwerk",
+  "webDir": "app",
+  "android": { "backgroundColor": "#1d2a30" }
+}

@@ -31,3 +31,15 @@ Zum Testen ohne Bauen: `npm run prepare-assets && npm start`.
 - `app/index.html` – das Spiel
 - `main.js` – Electron-Fenster
 - `scripts/prepare-assets.js` – kopiert three.js und Schriften nach `app/vendor/`
+
+## Android
+
+Die Android-App wird mit Capacitor gebaut (Ordner `android/`). Bei jedem Push baut
+GitHub Actions die Datei `Schichtwerk.apk`: Tab **Actions** → „Android-APK bauen“ →
+Artifact `Schichtwerk-Android` herunterladen, entpacken und die APK auf dem Handy öffnen.
+Dafür muss „Apps aus unbekannten Quellen installieren“ für den Browser bzw. Dateimanager erlaubt sein.
+
+Selbst bauen (Android-SDK und Java 21 nötig): `npm run android:apk`.
+
+Steuerung auf dem Handy: ein Finger bewegt die Karte bzw. baut, zwei Finger verschieben,
+zoomen und drehen. Die Knöpfe rechts unten drehen Bauwerke, legen Werkzeuge ab usw.
