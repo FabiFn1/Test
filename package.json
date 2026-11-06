@@ -9,7 +9,7 @@
   "scripts": {
     "start": "electron .",
     "prepare-assets": "node scripts/prepare-assets.js",
-    "dist": "npm run prepare-assets && electron-builder --win nsis portable",
+    "dist": "npm run prepare-assets && electron-builder --win nsis portable --publish never",
     "android:sync": "npm run prepare-assets && cap sync android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
