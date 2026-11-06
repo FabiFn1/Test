@@ -22,3 +22,4 @@ for (const [family, pkg, weights] of fonts) {
 }
 fs.writeFileSync(path.join(out, 'fonts.css'), css);
 console.log('Assets bereit in', out);
+require('./build-app.js');

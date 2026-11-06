@@ -1,6 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Schichtwerk</title>
-<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
 /* Leitwarte: HMI-Tafel aus emailliertem Stahl über der Werkskarte, Warnfarbe nur für Status */
 :root{--tafel:#1d2a30;--tafel2:#26363d;--linie:#3c5059;--text:#e6ebe6;--matt:#9db0b2;--signal:#f0b429;--gut:#5fbf77;--stoer:#e2574c;--display:"Barlow Condensed","Arial Narrow",sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;color-scheme:dark}
@@ -20,7 +19,7 @@ h2{margin:0;font-size:21px;font-weight:700;letter-spacing:.02em;line-height:1.1}
 #strom div{display:flex;justify-content:space-between;font:12px var(--mono);color:var(--matt)}
 #items{display:grid;gap:1px;max-height:44vh;overflow:auto}
 .it{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:7px;font-size:15px}.it u{width:11px;height:11px;display:block}.it em{font:12px var(--mono);font-style:normal}
-#takt{display:flex;gap:4px}
+#takt{display:flex;flex-wrap:wrap;gap:4px}
 button{font:600 15px var(--display);color:var(--text);background:var(--tafel2);border:1px solid var(--linie);padding:3px 9px;cursor:pointer}
 button:hover{border-color:var(--signal)}button:focus-visible{outline:2px solid var(--signal);outline-offset:1px}button.an{background:var(--signal);color:#1b2226;border-color:var(--signal)}
 #leiste{left:238px;bottom:12px;display:flex;gap:4px;padding:6px;max-width:calc(100vw - 252px);overflow-x:auto}
@@ -71,7 +70,7 @@ h1{margin:0;font-size:38px;font-weight:700;line-height:1}
 /* Touch-Geräte */
 canvas#c{touch-action:none}html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
 #tbar{right:14px;bottom:110px;display:none;grid-template-columns:repeat(2,auto);gap:4px;padding:6px}#tbar button{min-width:46px;min-height:38px;font-size:15px}
-html.touch #tbar{display:grid}html.touch #insp{right:130px}html.touch .wz kbd{display:none}
+html.touch #tbar{display:grid}html.touch #bneu{display:none}html.touch #insp{right:130px}html.touch .wz kbd{display:none}
 html.touch #ms{cursor:pointer}#ms.klein .bar,#ms.klein #hint{display:none}
 #hilfe>div,#ende>div,#frage>div{max-height:calc(100vh - 24px);overflow:auto;box-sizing:border-box}
 @media (max-width:950px),(max-height:520px){
@@ -87,6 +86,52 @@ html.touch #ms{cursor:pointer}#ms.klein .bar,#ms.klein #hint{display:none}
  #hilfe>div,#ende>div,#frage>div{padding:14px 16px;font-size:15px}#hilfe table{font-size:14px}h1{font-size:28px}
 }
 
+
+/* ====== Spielhülle: Laden, Titel, Pause, Einstellungen ====== */
+:root{--ui:1;--warn:repeating-linear-gradient(-45deg,var(--signal) 0 14px,#1b2226 14px 28px)}
+.tafel,#mini,#tip,#toast{zoom:var(--ui)}
+#hilfe{z-index:22}#frage{z-index:30}#ende{z-index:21}
+html.titel .tafel,html.titel #mini,html.titel #tbar,html.titel #tip,html.titel #fps{display:none!important}
+#laden,#titel,#pause,#einst,#ueber{position:fixed;inset:0;display:grid}
+#laden{z-index:40;background:#141e22;place-items:center}
+#laden>div{width:min(420px,80vw);display:grid;gap:14px}
+#laden h1,#titel h1{font:700 clamp(46px,9vw,104px)/.86 var(--display);letter-spacing:.01em;text-transform:uppercase;margin:0}
+#laden i{display:block;height:6px;background:#0f171b}#laden i b{display:block;height:100%;width:0;background:var(--signal);transition:width .3s}
+.streifen{height:10px;background:var(--warn)}
+#titel{z-index:20;grid-template-columns:minmax(0,560px) 1fr;background:linear-gradient(90deg,#0f171bf2 0,#0f171bcc 38%,#0f171b00 72%)}
+#titel>.spalte{display:grid;align-content:center;gap:26px;padding:40px max(28px,env(safe-area-inset-left,0px));min-height:0;overflow:auto}
+#titel .unter{font:600 15px var(--display);letter-spacing:.24em;text-transform:uppercase;color:var(--matt)}
+.liste{display:grid;gap:6px;max-width:360px}
+.liste button{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:2px 12px;text-align:left;font:600 22px var(--display);padding:10px 16px;background:#1d2a30e6;border:1px solid var(--linie);border-left:4px solid var(--linie)}
+.liste button small{grid-column:1/-1;font:12px var(--mono);color:var(--matt)}
+.liste button kbd{font:600 11px var(--mono);color:var(--matt)}
+.liste button:hover,.liste button:focus-visible{border-left-color:var(--signal);background:#26363de6;outline:none}
+.liste button.haupt{background:var(--signal);color:#1b2226;border-color:var(--signal)}.liste button.haupt small{color:#3b3a22}
+.liste button.haupt:hover,.liste button.haupt:focus-visible{background:#ffc94d}
+#titel .fuss{font:12px var(--mono);color:var(--matt)}
+#pause{z-index:15;place-items:center;background:#0f171bb3;padding:16px}
+#pause>div,#einst>div,#ueber>div{background:var(--tafel);border:1px solid var(--linie);box-shadow:0 3px 0 #0f171b;max-height:calc(100% - 8px);overflow:auto;box-sizing:border-box}
+#pause>div{width:min(420px,100%);display:grid;gap:16px;padding:0 0 20px}
+#pause>div>*:not(.streifen){margin:0 22px}
+#pause h2,#einst h2,#ueber h2{font-size:30px}
+.kenn{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--linie);border:1px solid var(--linie)}
+.kenn div{background:var(--tafel2);padding:7px 9px;display:grid;gap:1px}.kenn b{font:600 17px var(--mono);font-variant-numeric:tabular-nums}
+#einst,#ueber{z-index:25;place-items:center;background:#0f171bcc;padding:16px}
+#einst>div{width:min(640px,100%);display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:0}
+#einst .kopf{display:flex;align-items:center;gap:6px;padding:14px 18px 10px;border-bottom:1px solid var(--linie);flex-wrap:wrap}#einst .kopf h2{margin-right:auto}
+#einst .koerper{overflow:auto;padding:14px 18px;display:grid;gap:4px;align-content:start}
+#einst .zeile{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,240px);align-items:center;gap:6px 14px;padding:7px 0;border-bottom:1px solid #2c3d44;font-size:17px}
+#einst .zeile small{display:block;font:12px var(--mono);color:var(--matt)}
+#einst .seg{display:flex;gap:3px;flex-wrap:wrap}#einst .seg button{flex:1;font-size:14px;padding:4px 6px}
+#einst input[type=range]{width:100%;accent-color:var(--signal)}
+#einst .regler{display:grid;grid-template-columns:1fr 42px;align-items:center;gap:8px;font:12px var(--mono);color:var(--matt);text-align:right}
+#einst .fussz{display:flex;gap:6px;padding:12px 18px;border-top:1px solid var(--linie)}#einst .fussz span{flex:1}
+#ueber>div{width:min(520px,100%);display:grid;gap:12px;padding:0 0 20px;font-size:17px}#ueber>div>*:not(.streifen){margin:0 22px}
+#gesp{position:fixed;right:16px;bottom:8px;font:12px var(--mono);color:var(--matt);opacity:0;transition:opacity .6s;pointer-events:none;z-index:5}#gesp.an{opacity:1}
+#fps{position:fixed;left:50%;bottom:4px;transform:translateX(-50%);font:12px var(--mono);color:var(--matt);z-index:5;pointer-events:none}
+@media (max-width:720px){#titel{grid-template-columns:1fr;background:#0f171bd9}.liste{max-width:none}#einst .zeile{grid-template-columns:1fr}}
+@media (max-height:520px){#titel>.spalte{gap:14px;padding-block:16px}.liste button{font-size:18px;padding:6px 12px}#laden h1,#titel h1{font-size:56px}.kenn b{font-size:14px}}
+@media (prefers-reduced-motion:reduce){#laden i b,#gesp{transition:none}}
 </style>
 <canvas id="c" tabindex="0" aria-label="Werkskarte"></canvas>
 <section id="ms" class="tafel" aria-label="Meilenstein"></section>
@@ -110,7 +155,7 @@ html.touch #ms{cursor:pointer}#ms.klein .bar,#ms.klein #hint{display:none}
 </div></div>
 <div id="hilfe" hidden><div>
   <h1>Schichtwerk</h1>
-  <div>Baue Rohstoffe ab, verarbeite sie und liefere alles per Band in die Zentrale. Jeder Meilenstein schaltet neue Maschinen frei. Dein Ziel sind fertige Roboter.</div>
+  <div>Baue Rohstoffe ab, verarbeite sie und liefere alles per Band in die Zentrale. Jeder Meilenstein schaltet neue Maschinen frei. Dein Ziel ist der Start einer Rakete.</div>
   <table>
     <tr><td>WASD / Pfeile</td><td>Karte bewegen</td></tr>
     <tr><td>Rechte Maustaste ziehen</td><td>Karte bewegen</td></tr>
@@ -136,7 +181,46 @@ html.touch #ms{cursor:pointer}#ms.klein .bar,#ms.klein #hint{display:none}
 </div></div>
 <div id="ende" hidden><div><h1>Rakete gestartet.</h1><div>Dein Werk hat es bis ins All geschafft. Du kannst weiterbauen und weitere Raketen starten.</div><button id="endezu">Weiterbauen</button></div></div>
 <div id="frage" hidden><div><h2>Neues Spiel starten?</h2><div>Dein aktuelles Werk wird gelöscht.</div><div class="reihe"><button id="janeu">Ja, neu anfangen</button><button id="neinneu">Abbrechen</button></div></div></div>
-<script src="vendor/three.min.js"></script>
+
+<div id="laden"><div><div class="streifen"></div><h1>Schichtwerk</h1><div class="etikett" id="ladetxt">Werk wird geladen …</div><i><b id="ladebar"></b></i></div></div>
+<div id="titel" hidden><div class="spalte">
+  <div style="display:grid;gap:12px"><div class="streifen" style="width:120px"></div><h1>Schicht&shy;werk</h1><div class="unter">Fabrik-Aufbau · vom Erz zur Rakete</div></div>
+  <div class="liste" id="tliste">
+    <button id="t-weiter" class="haupt">Weiterspielen<small id="t-info"></small></button>
+    <button id="t-neu">Neues Spiel</button>
+    <button id="t-einst">Einstellungen</button>
+    <button id="t-hilfe">Steuerung</button>
+    <button id="t-ueber">Über das Spiel</button>
+  </div>
+  <div class="fuss">Version 1.1 · Spielstand wird automatisch gespeichert</div>
+</div><div></div></div>
+<div id="pause" hidden><div role="dialog" aria-label="Pause">
+  <div class="streifen"></div><h2>Pause</h2>
+  <div class="kenn" id="p-kenn"></div>
+  <div class="liste" style="max-width:none">
+    <button id="p-weiter" class="haupt">Weiterspielen<kbd>Esc</kbd></button>
+    <button id="p-speichern">Speichern</button>
+    <button id="p-einst">Einstellungen</button>
+    <button id="p-hilfe">Steuerung</button>
+    <button id="p-neu">Neues Spiel</button>
+    <button id="p-titel">Zum Hauptmenü</button>
+  </div>
+</div></div>
+<div id="einst" hidden><div role="dialog" aria-label="Einstellungen">
+  <div class="kopf"><h2>Einstellungen</h2><button id="e-audio" class="an">Audio</button><button id="e-grafik">Grafik</button><button id="e-steuer">Steuerung</button><button id="e-ober">Oberfläche</button></div>
+  <div class="koerper" id="e-body"></div>
+  <div class="fussz"><button id="e-reset">Standard wiederherstellen</button><span></span><button id="e-zu" class="an">Fertig</button></div>
+</div></div>
+<div id="ueber" hidden><div role="dialog" aria-label="Über das Spiel">
+  <div class="streifen"></div><h2>Schichtwerk</h2>
+  <div>Ein Fabrik-Aufbauspiel: Erz abbauen, schmelzen, verarbeiten und per Band in die Zentrale liefern. 31 Meilensteine führen vom ersten Bohrer bis zum Raketenstart.</div>
+  <div class="matt">Version 1.1 · 3D mit three.js · Musik und Geräusche werden live im Browser erzeugt.</div>
+  <div class="reihe"><button id="u-zu">Zurück</button></div>
+</div></div>
+<div id="gesp">Gespeichert</div>
+<div id="fps" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 'use strict';
 if(!window.THREE){document.body.insertAdjacentHTML('beforeend','<div id="fehler">Die 3D-Bibliothek konnte nicht geladen werden. Bitte lade die Seite neu.</div>');throw new Error('THREE fehlt')}
@@ -145,7 +229,7 @@ const BK=k=>k==='band'||k==='schnellband'||k==='expressband';const N=256,OX=80,D
 const ITEMS={eisenerz:['Eisenerz',0x9a5a44,'lump'],kupfererz:['Kupfererz',0xd0813a,'lump'],kohle:['Kohle',0x24262a,'lump'],stein:['Stein',0xa8a59a,'lump'],
  eisenplatte:['Eisenplatte',0xc3cbd0,'plate'],kupferplatte:['Kupferplatte',0xe0935a,'plate'],ziegel:['Ziegel',0xa6402c,'plate'],stahl:['Stahl',0x5d7486,'plate'],
  zahnrad:['Zahnrad',0x8d9aa2,'part'],draht:['Draht',0xe8b04a,'part'],schaltkreis:['Schaltkreis',0x2f9e63,'part'],motor:['Motor',0x3a78c2,'part'],roboter:['Roboter',0xf0b429,'part'],quarz:['Quarz',0xd9e6ee,'lump'],bauxit:['Bauxit',0xb5552e,'lump'],rohoel:['Rohöl',0x3a2d3f,'part'],glas:['Glas',0x9fd4e6,'plate'],aluminium:['Aluminium',0xdfe3e6,'plate'],kunststoff:['Kunststoff',0xe8e2d0,'plate'],treibstoff:['Treibstoff',0xc94f2f,'part'],computer:['Computer',0x22303a,'part'],rahmen:['Leichtrahmen',0xbfd0d8,'part'],raketenteil:['Raketenteil',0xf4f1e6,'part'],rakete:['Raketenstart',0xe8483a,'part']};
-const TREE={"items": {"schwefel": ["Schwefel", 14271034, "lump"], "uranerz": ["Uranerz", 6270526, "lump"], "silizium": ["Silizium", 7240332, "plate"], "zement": ["Zement", 12170922, "part"], "betonteil": ["Betonteil", 10131598, "plate"], "eisenstange": ["Eisenstange", 11121336, "part"], "schraube": ["Schrauben", 9410718, "part"], "rohr": ["Rohr", 8359060, "part"], "stahlblech": ["Stahlblech", 5335162, "plate"], "rotor": ["Rotor", 11561516, "part"], "stator": ["Stator", 9198116, "part"], "kugellager": ["Kugellager", 13226712, "part"], "getriebe": ["Getriebe", 7174016, "part"], "antrieb": ["Antriebseinheit", 3105448, "part"], "roboterarm": ["Roboterarm", 14723103, "part"], "gummi": ["Gummi", 2434602, "part"], "kabel": ["Kabel", 14248492, "part"], "schmierstoff": ["Schmierstoff", 9071146, "part"], "schwefelsaeure": ["Schwefels\u00e4ure", 13162570, "part"], "batterie": ["Batterie", 4891482, "part"], "sprengstoff": ["Sprengstoff", 12728874, "part"], "logikmodul": ["Logikmodul", 12728890, "part"], "prozessor": ["Prozessor", 3825602, "part"], "sensor": ["Sensor", 6210248, "part"], "solarzelle": ["Solarzelle", 1785710, "plate"], "akkupack": ["Akkupack", 3115598, "part"], "verbundplatte": ["Verbundplatte", 9413806, "plate"], "hitzeschild": ["Hitzeschild", 4869458, "plate"], "turbine": ["Turbine", 13620954, "part"], "raketensteuerung": ["Raketensteuerung", 3096458, "part"], "triebwerk": ["Triebwerk", 13920810, "part"], "uranpellet": ["Uranpellet", 8378442, "part"], "brennstab": ["Brennstab", 5227114, "part"], "ersatzteil": ["Ersatzteil", 14715436, "part"], "ausschuss": ["Ausschuss", 5917244, "lump"], "f1": ["Forschungspaket I", 14240314, "part"], "f2": ["Forschungspaket II", 4895578, "part"], "f3": ["Forschungspaket III", 3832024, "part"], "f4": ["Forschungspaket IV", 10115800, "part"], "f5": ["Forschungspaket V", 15786058, "part"]}, "rez": {"platte": {"b": "ofen", "in": {"eisenerz": 1}, "out": ["eisenplatte", 1], "t": 1.6}, "kupfer": {"b": "ofen", "in": {"kupfererz": 1}, "out": ["kupferplatte", 1], "t": 1.6}, "ziegel": {"b": "ofen", "in": {"stein": 2}, "out": ["ziegel", 1], "t": 2}, "stahl": {"b": "ofen", "in": {"eisenplatte": 3, "kohle": 1}, "out": ["stahl", 1], "t": 6}, "glas": {"b": "ofen", "in": {"quarz": 2}, "out": ["glas", 1], "t": 2}, "aluminium": {"b": "ofen", "in": {"bauxit": 3, "kohle": 1}, "out": ["aluminium", 1], "t": 4}, "silizium": {"b": "ofen", "in": {"quarz": 2, "kohle": 1}, "out": ["silizium", 1], "t": 4}, "zement": {"b": "ofen", "in": {"stein": 3}, "out": ["zement", 1], "t": 3}, "zahnrad": {"b": "fertiger", "in": {"eisenplatte": 2}, "out": ["zahnrad", 1], "t": 1.2}, "draht": {"b": "fertiger", "in": {"kupferplatte": 1}, "out": ["draht", 2], "t": 1}, "stange": {"b": "fertiger", "in": {"eisenplatte": 1}, "out": ["eisenstange", 2], "t": 0.8}, "schraube": {"b": "fertiger", "in": {"eisenstange": 1}, "out": ["schraube", 4], "t": 1}, "rohr": {"b": "fertiger", "in": {"eisenplatte": 2}, "out": ["rohr", 1], "t": 1.2}, "schaltkreis": {"b": "fertiger", "in": {"draht": 3, "eisenplatte": 1}, "out": ["schaltkreis", 1], "t": 2.5}, "blech": {"b": "fertiger", "in": {"stahl": 2}, "out": ["stahlblech", 1], "t": 2}, "betonteil": {"b": "fertiger", "in": {"zement": 2, "stein": 2}, "out": ["betonteil", 1], "t": 3}, "rotor": {"b": "fertiger", "in": {"eisenstange": 5, "schraube": 12}, "out": ["rotor", 1], "t": 6}, "stator": {"b": "fertiger", "in": {"rohr": 3, "draht": 8}, "out": ["stator", 1], "t": 6}, "motor": {"b": "fertiger", "in": {"rotor": 1, "stator": 1}, "out": ["motor", 1], "t": 8}, "lager": {"b": "fertiger", "in": {"stahl": 1, "schraube": 4}, "out": ["kugellager", 1], "t": 3}, "getriebe": {"b": "fertiger", "in": {"zahnrad": 4, "kugellager": 2, "stahlblech": 1}, "out": ["getriebe", 1], "t": 6}, "antrieb": {"b": "fertiger", "in": {"motor": 2, "getriebe": 1, "rohr": 2}, "out": ["antrieb", 1], "t": 12}, "kabel": {"b": "fertiger", "in": {"draht": 3, "gummi": 1}, "out": ["kabel", 1], "t": 2}, "roboterarm": {"b": "fertiger", "in": {"antrieb": 1, "schaltkreis": 4, "stahlblech": 2}, "out": ["roboterarm", 1], "t": 10}, "f1": {"b": "fertiger", "in": {"kupferplatte": 1, "zahnrad": 1}, "out": ["f1", 1], "t": 5}, "f2": {"b": "fertiger", "in": {"schaltkreis": 1, "rohr": 2, "zahnrad": 2}, "out": ["f2", 1], "t": 6}, "kunststoff": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["kunststoff", 1], "t": 3}, "treibstoff": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["treibstoff", 1], "t": 3}, "schmierstoff": {"b": "raffinerie", "in": {"rohoel": 1}, "out": ["schmierstoff", 1], "t": 2}, "gummi": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["gummi", 1], "t": 3}, "saeure": {"b": "chemiefabrik", "in": {"schwefel": 5, "eisenplatte": 1}, "out": ["schwefelsaeure", 2], "t": 2}, "batterie": {"b": "chemiefabrik", "in": {"schwefelsaeure": 2, "eisenplatte": 1, "kupferplatte": 1}, "out": ["batterie", 1], "t": 6}, "sprengstoff": {"b": "chemiefabrik", "in": {"schwefel": 2, "kohle": 2, "schmierstoff": 1}, "out": ["sprengstoff", 1], "t": 6}, "logikmodul": {"b": "praezision", "in": {"schaltkreis": 2, "kunststoff": 2, "kabel": 4}, "out": ["logikmodul", 1], "t": 8}, "f3": {"b": "praezision", "in": {"logikmodul": 1, "schwefelsaeure": 2, "stahlblech": 1}, "out": ["f3", 1], "t": 12}, "prozessor": {"b": "praezision", "in": {"logikmodul": 2, "schaltkreis": 10, "schwefelsaeure": 2}, "out": ["prozessor", 1], "t": 14}, "computer": {"b": "praezision", "in": {"logikmodul": 3, "kunststoff": 4, "kabel": 6}, "out": ["computer", 1], "t": 12}, "sensor": {"b": "praezision", "in": {"glas": 2, "logikmodul": 1, "kabel": 2}, "out": ["sensor", 1], "t": 6}, "solarzelle": {"b": "praezision", "in": {"silizium": 4, "glas": 2, "draht": 8}, "out": ["solarzelle", 1], "t": 8}, "akkupack": {"b": "praezision", "in": {"batterie": 4, "stahlblech": 1, "kabel": 2}, "out": ["akkupack", 1], "t": 10}, "verbundplatte": {"b": "praezision", "in": {"aluminium": 4, "kunststoff": 2, "stahlblech": 1}, "out": ["verbundplatte", 1], "t": 8}, "rahmen": {"b": "praezision", "in": {"verbundplatte": 2, "aluminium": 3, "stahl": 1}, "out": ["rahmen", 1], "t": 6}, "hitzeschild": {"b": "praezision", "in": {"verbundplatte": 2, "betonteil": 4}, "out": ["hitzeschild", 1], "t": 12}, "turbine": {"b": "praezision", "in": {"aluminium": 4, "kugellager": 4, "rotor": 2}, "out": ["turbine", 1], "t": 14}, "roboter": {"b": "praezision", "in": {"roboterarm": 2, "logikmodul": 2, "sensor": 2}, "out": ["roboter", 1], "t": 16}, "f4": {"b": "praezision", "in": {"antrieb": 1, "verbundplatte": 1, "schraube": 20}, "out": ["f4", 1], "t": 18}, "f5": {"b": "praezision", "in": {"prozessor": 2, "akkupack": 1, "sensor": 1}, "out": ["f5", 1], "t": 24}, "raketensteuerung": {"b": "praezision", "in": {"prozessor": 2, "sensor": 4, "computer": 1}, "out": ["raketensteuerung", 1], "t": 24}, "triebwerk": {"b": "praezision", "in": {"turbine": 2, "treibstoff": 10, "hitzeschild": 1}, "out": ["triebwerk", 1], "t": 30}, "brennstab": {"b": "praezision", "in": {"uranpellet": 3, "stahlblech": 2, "zement": 2}, "out": ["brennstab", 1], "t": 20}, "raketenteil": {"b": "praezision", "in": {"rahmen": 4, "raketensteuerung": 1, "triebwerk": 1, "akkupack": 2, "sprengstoff": 2}, "out": ["raketenteil", 1], "t": 40}, "uranpellet": {"b": "zentrifuge", "in": {"uranerz": 10}, "out": ["uranpellet", 1], "t": 12}, "ersatzteil": {"b": "fertiger", "in": {"eisenplatte": 2, "zahnrad": 1}, "out": ["ersatzteil", 1], "t": 3}, "recycling": {"b": "recycler", "in": {"ausschuss": 4}, "out": ["eisenplatte", 2], "t": 4}}, "ms": [{"n": "Anlauf", "need": {"eisenplatte": 525}, "un": ["verteiler", "kreuzung", "lagerkiste"], "h": 0.15}, {"n": "Kupfer und Ziegel", "need": {"kupferplatte": 600, "ziegel": 300}, "un": ["fertiger", "greifer"], "h": 0.3}, {"n": "Erste Teile", "need": {"zahnrad": 450, "draht": 1750}, "un": ["sortierer"], "h": 0.4}, {"n": "Forschung I", "need": {"f1": 1000}, "un": ["grossmast"], "h": 0.6}, {"n": "Schrauben und Stangen", "need": {"eisenstange": 3000, "schraube": 12500}, "un": [], "h": 0.5}, {"n": "Kraftwerk", "need": {"rohr": 1250, "schaltkreis": 950}, "un": ["kraftwerk"], "h": 0.7}, {"n": "Forschung II", "need": {"f2": 725}, "un": ["schnellband", "wartungsstation"], "h": 1.0}, {"n": "Stahl", "need": {"stahl": 1750}, "un": ["schnellbohrer", "solar", "recycler"], "h": 0.8}, {"n": "Elektromotoren", "need": {"rotor": 1250, "stator": 500}, "un": [], "h": 1.0}, {"n": "Mechanik", "need": {"stahlblech": 575, "kugellager": 1000, "getriebe": 175}, "un": ["montagewerk"], "h": 1.2}, {"n": "Antrieb", "need": {"motor": 1250}, "un": ["oelpumpe"], "h": 1.2}, {"n": "Petrochemie", "need": {"kunststoff": 5000, "gummi": 5000}, "un": ["raffinerie"], "h": 1.3}, {"n": "Kabel und Glas", "need": {"kabel": 3000, "glas": 5250}, "un": ["elektroofen"], "h": 1.2}, {"n": "Schwefelchemie", "need": {"schwefelsaeure": 9250}, "un": ["chemiefabrik"], "h": 1.4}, {"n": "Pr\u00e4zisionstechnik", "need": {"logikmodul": 1500}, "un": ["praezision"], "h": 1.6}, {"n": "Forschung III", "need": {"f3": 1500}, "un": ["drohnenhafen"], "h": 2.2}, {"n": "Batterien", "need": {"batterie": 2750, "schmierstoff": 22500}, "un": [], "h": 1.5}, {"n": "Antriebseinheiten", "need": {"antrieb": 1000}, "un": [], "h": 1.8}, {"n": "Leichtmetall", "need": {"aluminium": 9750, "verbundplatte": 1500}, "un": [], "h": 2.0}, {"n": "Roboterarme", "need": {"roboterarm": 1000}, "un": ["expressband"], "h": 2.0}, {"n": "Forschung IV", "need": {"f4": 1750}, "un": ["zentrifuge"], "h": 2.8}, {"n": "Silizium und Solar", "need": {"silizium": 20000, "solarzelle": 3000}, "un": [], "h": 2.0}, {"n": "Rechenleistung", "need": {"computer": 850, "prozessor": 1000}, "un": [], "h": 2.5}, {"n": "Roboter", "need": {"roboter": 350, "sensor": 3000}, "un": [], "h": 2.6}, {"n": "Akkus und Turbinen", "need": {"akkupack": 2500, "turbine": 2750}, "un": [], "h": 2.6}, {"n": "Kernkraft", "need": {"uranpellet": 12500, "brennstab": 2250}, "un": ["kernkraftwerk"], "h": 2.4}, {"n": "Forschung V", "need": {"f5": 1500}, "un": [], "h": 3.2}, {"n": "Hitzeschilde", "need": {"hitzeschild": 1750, "sprengstoff": 32500}, "un": [], "h": 2.4}, {"n": "Leichtbau", "need": {"rahmen": 3250, "triebwerk": 1250}, "un": [], "h": 3.2}, {"n": "Raketensteuerung", "need": {"raketensteuerung": 1500}, "un": [], "h": 3.2}, {"n": "Raumfahrtkunde", "need": {"raketenteil": 1250}, "un": [], "h": 6.0}], "silo": 0, "rawT": {"eisenerz": 991937.5, "kupfererz": 793337.5, "stein": 150100.0, "kohle": 430450.0, "rohoel": 1005700.0, "quarz": 151300.0, "schwefel": 291875.0, "bauxit": 535500.0, "uranerz": 192500.0}, "val": {"eisenplatte": 2, "kupferplatte": 2, "ziegel": 4, "stahl": 8, "glas": 4, "aluminium": 8, "silizium": 6, "zement": 6, "zahnrad": 4, "draht": 2, "eisenstange": 2, "schraube": 2, "rohr": 4, "schaltkreis": 5, "stahlblech": 16, "betonteil": 16, "rotor": 8, "stator": 20, "motor": 28, "kugellager": 9, "getriebe": 50, "antrieb": 114, "kabel": 7, "roboterarm": 166, "f1": 6, "f2": 21, "kunststoff": 4, "treibstoff": 4, "schmierstoff": 2, "gummi": 4, "schwefelsaeure": 6, "batterie": 16, "sprengstoff": 10, "logikmodul": 46, "f3": 74, "prozessor": 154, "computer": 196, "sensor": 68, "solarzelle": 40, "akkupack": 94, "verbundplatte": 56, "rahmen": 144, "hitzeschild": 176, "turbine": 84, "roboter": 560, "f4": 175, "f5": 470, "raketensteuerung": 776, "triebwerk": 384, "brennstab": 104, "raketenteil": 1944, "uranpellet": 20, "ersatzteil": 8}};const SILO=1250,VAL=TREE.val;for(const k in TREE.items)ITEMS[k]=TREE.items[k];const REZ=TREE.rez;
+const TREE={"items": {"schwefel": ["Schwefel", 14271034, "lump"], "uranerz": ["Uranerz", 6270526, "lump"], "silizium": ["Silizium", 7240332, "plate"], "zement": ["Zement", 12170922, "part"], "betonteil": ["Betonteil", 10131598, "plate"], "eisenstange": ["Eisenstange", 11121336, "part"], "schraube": ["Schrauben", 9410718, "part"], "rohr": ["Rohr", 8359060, "part"], "stahlblech": ["Stahlblech", 5335162, "plate"], "rotor": ["Rotor", 11561516, "part"], "stator": ["Stator", 9198116, "part"], "kugellager": ["Kugellager", 13226712, "part"], "getriebe": ["Getriebe", 7174016, "part"], "antrieb": ["Antriebseinheit", 3105448, "part"], "roboterarm": ["Roboterarm", 14723103, "part"], "gummi": ["Gummi", 2434602, "part"], "kabel": ["Kabel", 14248492, "part"], "schmierstoff": ["Schmierstoff", 9071146, "part"], "schwefelsaeure": ["Schwefels\u00e4ure", 13162570, "part"], "batterie": ["Batterie", 4891482, "part"], "sprengstoff": ["Sprengstoff", 12728874, "part"], "logikmodul": ["Logikmodul", 12728890, "part"], "prozessor": ["Prozessor", 3825602, "part"], "sensor": ["Sensor", 6210248, "part"], "solarzelle": ["Solarzelle", 1785710, "plate"], "akkupack": ["Akkupack", 3115598, "part"], "verbundplatte": ["Verbundplatte", 9413806, "plate"], "hitzeschild": ["Hitzeschild", 4869458, "plate"], "turbine": ["Turbine", 13620954, "part"], "raketensteuerung": ["Raketensteuerung", 3096458, "part"], "triebwerk": ["Triebwerk", 13920810, "part"], "uranpellet": ["Uranpellet", 8378442, "part"], "brennstab": ["Brennstab", 5227114, "part"], "ersatzteil": ["Ersatzteil", 14715436, "part"], "ausschuss": ["Ausschuss", 5917244, "lump"], "f1": ["Forschungspaket I", 14240314, "part"], "f2": ["Forschungspaket II", 4895578, "part"], "f3": ["Forschungspaket III", 3832024, "part"], "f4": ["Forschungspaket IV", 10115800, "part"], "f5": ["Forschungspaket V", 15786058, "part"]}, "rez": {"platte": {"b": "ofen", "in": {"eisenerz": 1}, "out": ["eisenplatte", 1], "t": 1.6}, "kupfer": {"b": "ofen", "in": {"kupfererz": 1}, "out": ["kupferplatte", 1], "t": 1.6}, "ziegel": {"b": "ofen", "in": {"stein": 2}, "out": ["ziegel", 1], "t": 2}, "stahl": {"b": "ofen", "in": {"eisenplatte": 3, "kohle": 1}, "out": ["stahl", 1], "t": 6}, "glas": {"b": "ofen", "in": {"quarz": 2}, "out": ["glas", 1], "t": 2}, "aluminium": {"b": "ofen", "in": {"bauxit": 3, "kohle": 1}, "out": ["aluminium", 1], "t": 4}, "silizium": {"b": "ofen", "in": {"quarz": 2, "kohle": 1}, "out": ["silizium", 1], "t": 4}, "zement": {"b": "ofen", "in": {"stein": 3}, "out": ["zement", 1], "t": 3}, "zahnrad": {"b": "fertiger", "in": {"eisenplatte": 2}, "out": ["zahnrad", 1], "t": 1.2}, "draht": {"b": "fertiger", "in": {"kupferplatte": 1}, "out": ["draht", 2], "t": 1}, "stange": {"b": "fertiger", "in": {"eisenplatte": 1}, "out": ["eisenstange", 2], "t": 0.8}, "schraube": {"b": "fertiger", "in": {"eisenstange": 1}, "out": ["schraube", 4], "t": 1}, "rohr": {"b": "fertiger", "in": {"eisenplatte": 2}, "out": ["rohr", 1], "t": 1.2}, "schaltkreis": {"b": "fertiger", "in": {"draht": 3, "eisenplatte": 1}, "out": ["schaltkreis", 1], "t": 2.5}, "blech": {"b": "fertiger", "in": {"stahl": 2}, "out": ["stahlblech", 1], "t": 2}, "betonteil": {"b": "fertiger", "in": {"zement": 2, "stein": 2}, "out": ["betonteil", 1], "t": 3}, "rotor": {"b": "fertiger", "in": {"eisenstange": 5, "schraube": 12}, "out": ["rotor", 1], "t": 6}, "stator": {"b": "fertiger", "in": {"rohr": 3, "draht": 8}, "out": ["stator", 1], "t": 6}, "motor": {"b": "fertiger", "in": {"rotor": 1, "stator": 1}, "out": ["motor", 1], "t": 8}, "lager": {"b": "fertiger", "in": {"stahl": 1, "schraube": 4}, "out": ["kugellager", 1], "t": 3}, "getriebe": {"b": "fertiger", "in": {"zahnrad": 4, "kugellager": 2, "stahlblech": 1}, "out": ["getriebe", 1], "t": 6}, "antrieb": {"b": "fertiger", "in": {"motor": 2, "getriebe": 1, "rohr": 2}, "out": ["antrieb", 1], "t": 12}, "kabel": {"b": "fertiger", "in": {"draht": 3, "gummi": 1}, "out": ["kabel", 1], "t": 2}, "roboterarm": {"b": "fertiger", "in": {"antrieb": 1, "schaltkreis": 4, "stahlblech": 2}, "out": ["roboterarm", 1], "t": 10}, "f1": {"b": "fertiger", "in": {"kupferplatte": 1, "zahnrad": 1}, "out": ["f1", 1], "t": 5}, "f2": {"b": "fertiger", "in": {"schaltkreis": 1, "rohr": 2, "zahnrad": 2}, "out": ["f2", 1], "t": 6}, "kunststoff": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["kunststoff", 1], "t": 3}, "treibstoff": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["treibstoff", 1], "t": 3}, "schmierstoff": {"b": "raffinerie", "in": {"rohoel": 1}, "out": ["schmierstoff", 1], "t": 2}, "gummi": {"b": "raffinerie", "in": {"rohoel": 2}, "out": ["gummi", 1], "t": 3}, "saeure": {"b": "chemiefabrik", "in": {"schwefel": 5, "eisenplatte": 1}, "out": ["schwefelsaeure", 2], "t": 2}, "batterie": {"b": "chemiefabrik", "in": {"schwefelsaeure": 2, "eisenplatte": 1, "kupferplatte": 1}, "out": ["batterie", 1], "t": 6}, "sprengstoff": {"b": "chemiefabrik", "in": {"schwefel": 2, "kohle": 2, "schmierstoff": 1}, "out": ["sprengstoff", 1], "t": 6}, "logikmodul": {"b": "praezision", "in": {"schaltkreis": 2, "kunststoff": 2, "kabel": 4}, "out": ["logikmodul", 1], "t": 8}, "f3": {"b": "praezision", "in": {"logikmodul": 1, "schwefelsaeure": 2, "stahlblech": 1}, "out": ["f3", 1], "t": 12}, "prozessor": {"b": "praezision", "in": {"logikmodul": 2, "schaltkreis": 10, "schwefelsaeure": 2}, "out": ["prozessor", 1], "t": 14}, "computer": {"b": "praezision", "in": {"logikmodul": 3, "kunststoff": 4, "kabel": 6}, "out": ["computer", 1], "t": 12}, "sensor": {"b": "praezision", "in": {"glas": 2, "logikmodul": 1, "kabel": 2}, "out": ["sensor", 1], "t": 6}, "solarzelle": {"b": "praezision", "in": {"silizium": 4, "glas": 2, "draht": 8}, "out": ["solarzelle", 1], "t": 8}, "akkupack": {"b": "praezision", "in": {"batterie": 4, "stahlblech": 1, "kabel": 2}, "out": ["akkupack", 1], "t": 10}, "verbundplatte": {"b": "praezision", "in": {"aluminium": 4, "kunststoff": 2, "stahlblech": 1}, "out": ["verbundplatte", 1], "t": 8}, "rahmen": {"b": "praezision", "in": {"verbundplatte": 2, "aluminium": 3, "stahl": 1}, "out": ["rahmen", 1], "t": 6}, "hitzeschild": {"b": "praezision", "in": {"verbundplatte": 2, "betonteil": 4}, "out": ["hitzeschild", 1], "t": 12}, "turbine": {"b": "praezision", "in": {"aluminium": 4, "kugellager": 4, "rotor": 2}, "out": ["turbine", 1], "t": 14}, "roboter": {"b": "praezision", "in": {"roboterarm": 2, "logikmodul": 2, "sensor": 2}, "out": ["roboter", 1], "t": 16}, "f4": {"b": "praezision", "in": {"antrieb": 1, "verbundplatte": 1, "schraube": 20}, "out": ["f4", 1], "t": 18}, "f5": {"b": "praezision", "in": {"prozessor": 2, "akkupack": 1, "sensor": 1}, "out": ["f5", 1], "t": 24}, "raketensteuerung": {"b": "praezision", "in": {"prozessor": 2, "sensor": 4, "computer": 1}, "out": ["raketensteuerung", 1], "t": 24}, "triebwerk": {"b": "praezision", "in": {"turbine": 2, "treibstoff": 10, "hitzeschild": 1}, "out": ["triebwerk", 1], "t": 30}, "brennstab": {"b": "praezision", "in": {"uranpellet": 3, "stahlblech": 2, "zement": 2}, "out": ["brennstab", 1], "t": 20}, "raketenteil": {"b": "praezision", "in": {"rahmen": 4, "raketensteuerung": 1, "triebwerk": 1, "akkupack": 2, "sprengstoff": 2}, "out": ["raketenteil", 1], "t": 40}, "uranpellet": {"b": "zentrifuge", "in": {"uranerz": 10}, "out": ["uranpellet", 1], "t": 12}, "ersatzteil": {"b": "fertiger", "in": {"eisenplatte": 2, "zahnrad": 1}, "out": ["ersatzteil", 1], "t": 3}, "recycling": {"b": "recycler", "in": {"ausschuss": 4}, "out": ["eisenplatte", 2], "t": 4}}, "ms": [{"n": "Anlauf", "need": {"eisenplatte": 525}, "un": ["verteiler", "kreuzung", "lagerkiste"], "h": 0.15}, {"n": "Kupfer und Ziegel", "need": {"kupferplatte": 600, "ziegel": 300}, "un": ["fertiger", "greifer"], "h": 0.3}, {"n": "Erste Teile", "need": {"zahnrad": 450, "draht": 1750}, "un": ["sortierer"], "h": 0.4}, {"n": "Forschung I", "need": {"f1": 1000}, "un": ["grossmast"], "h": 0.6}, {"n": "Schrauben und Stangen", "need": {"eisenstange": 3000, "schraube": 12500}, "un": [], "h": 0.5}, {"n": "Kraftwerk", "need": {"rohr": 1250, "schaltkreis": 950}, "un": ["kraftwerk"], "h": 0.7}, {"n": "Forschung II", "need": {"f2": 725}, "un": ["schnellband", "wartungsstation"], "h": 1.0}, {"n": "Stahl", "need": {"stahl": 1750}, "un": ["schnellbohrer", "solar", "recycler"], "h": 0.8}, {"n": "Elektromotoren", "need": {"rotor": 1250, "stator": 500}, "un": [], "h": 1.0}, {"n": "Mechanik", "need": {"stahlblech": 575, "kugellager": 1000, "getriebe": 175}, "un": ["montagewerk"], "h": 1.2}, {"n": "Antrieb", "need": {"motor": 1250}, "un": ["oelpumpe"], "h": 1.2}, {"n": "Petrochemie", "need": {"kunststoff": 5000, "gummi": 5000}, "un": ["raffinerie"], "h": 1.3}, {"n": "Kabel und Glas", "need": {"kabel": 3000, "glas": 5250}, "un": ["elektroofen"], "h": 1.2}, {"n": "Schwefelchemie", "need": {"schwefelsaeure": 9250}, "un": ["chemiefabrik"], "h": 1.4}, {"n": "Pr\u00e4zisionstechnik", "need": {"logikmodul": 1500}, "un": ["praezision"], "h": 1.6}, {"n": "Forschung III", "need": {"f3": 1500}, "un": ["drohnenhafen"], "h": 2.2}, {"n": "Batterien", "need": {"batterie": 2750, "schmierstoff": 22500}, "un": [], "h": 1.5}, {"n": "Antriebseinheiten", "need": {"antrieb": 1000}, "un": [], "h": 1.8}, {"n": "Leichtmetall", "need": {"aluminium": 9750, "verbundplatte": 1500}, "un": [], "h": 2.0}, {"n": "Roboterarme", "need": {"roboterarm": 1000}, "un": ["expressband"], "h": 2.0}, {"n": "Forschung IV", "need": {"f4": 1750}, "un": ["zentrifuge"], "h": 2.8}, {"n": "Silizium und Solar", "need": {"silizium": 20000, "solarzelle": 3000}, "un": [], "h": 2.0}, {"n": "Rechenleistung", "need": {"computer": 850, "prozessor": 1000}, "un": [], "h": 2.5}, {"n": "Roboter", "need": {"roboter": 350, "sensor": 3000}, "un": [], "h": 2.6}, {"n": "Akkus und Turbinen", "need": {"akkupack": 2500, "turbine": 2750}, "un": [], "h": 2.6}, {"n": "Kernkraft", "need": {"uranpellet": 12500, "brennstab": 2250}, "un": ["kernkraftwerk"], "h": 2.4}, {"n": "Forschung V", "need": {"f5": 1500}, "un": [], "h": 3.2}, {"n": "Hitzeschilde", "need": {"hitzeschild": 1750, "sprengstoff": 32500}, "un": [], "h": 2.4}, {"n": "Leichtbau", "need": {"rahmen": 3250, "triebwerk": 1250}, "un": [], "h": 3.2}, {"n": "Raketensteuerung", "need": {"raketensteuerung": 1500}, "un": ["raketensilo"], "h": 3.2}, {"n": "Raumfahrtkunde", "need": {"raketenteil": 1250}, "un": [], "h": 6.0}], "silo": 0, "rawT": {"eisenerz": 991937.5, "kupfererz": 793337.5, "stein": 150100.0, "kohle": 430450.0, "rohoel": 1005700.0, "quarz": 151300.0, "schwefel": 291875.0, "bauxit": 535500.0, "uranerz": 192500.0}, "val": {"eisenplatte": 2, "kupferplatte": 2, "ziegel": 4, "stahl": 8, "glas": 4, "aluminium": 8, "silizium": 6, "zement": 6, "zahnrad": 4, "draht": 2, "eisenstange": 2, "schraube": 2, "rohr": 4, "schaltkreis": 5, "stahlblech": 16, "betonteil": 16, "rotor": 8, "stator": 20, "motor": 28, "kugellager": 9, "getriebe": 50, "antrieb": 114, "kabel": 7, "roboterarm": 166, "f1": 6, "f2": 21, "kunststoff": 4, "treibstoff": 4, "schmierstoff": 2, "gummi": 4, "schwefelsaeure": 6, "batterie": 16, "sprengstoff": 10, "logikmodul": 46, "f3": 74, "prozessor": 154, "computer": 196, "sensor": 68, "solarzelle": 40, "akkupack": 94, "verbundplatte": 56, "rahmen": 144, "hitzeschild": 176, "turbine": 84, "roboter": 560, "f4": 175, "f5": 470, "raketensteuerung": 776, "triebwerk": 384, "brennstab": 104, "raketenteil": 1944, "uranpellet": 20, "ersatzteil": 8}};const SILO=1250,VAL=TREE.val;for(const k in TREE.items)ITEMS[k]=TREE.items[k];const REZ=TREE.rez;
 const OLDMS={Anlauf:'Anlauf','Kupfer und Ziegel':'Kupfer und Ziegel',Mechanik:'Kraftwerk',Elektronik:'Forschung II',Stahl:'Stahl',Antrieb:'Antrieb',Roboter:'Petrochemie','Glas und Aluminium':'Leichtmetall',Petrochemie:'Petrochemie',Rechenleistung:'Rechenleistung',Leichtbau:'Leichtbau',Rakete:'Raumfahrtkunde'},OLDL=['Anlauf','Kupfer und Ziegel','Mechanik','Elektronik','Stahl','Antrieb','Roboter','Glas und Aluminium','Petrochemie','Rechenleistung','Leichtbau','Rakete'];
 const SILOTXT=SILO.toLocaleString('de-DE');const K={ // name, Größe, Kosten, Strom in MW
  band:{n:'Band',s:1,c:{eisenplatte:1},v:1.6,info:'Transportiert Material. Ziehen legt mehrere Felder.'},
@@ -180,8 +264,8 @@ const SILOTXT=SILO.toLocaleString('de-DE');const K={ // name, Größe, Kosten, S
  drohnenhafen:{n:'Drohnenhafen',s:3,c:{stahl:20,schaltkreis:20,motor:5},p:8,info:'Fliegt Material zu einem anderen Hafen. Baue zwei Häfen und wähle am ersten per Klick das Ziel. Ideal für weit entfernte Vorkommen.'},
  raketensilo:{n:'Raketensilo',s:5,c:{stahlblech:600,betonteil:800,computer:100},p:20,info:'Braucht '+SILOTXT+' Raketenteile. Sind sie drin, startest du die Rakete per Klick. Das ist das Endziel.'},
  zentrale:{n:'Zentrale',s:6,c:{},gen:14,info:'Nimmt alles vom Band an. Daraus bezahlst du neue Bauwerke.'}};
-const TOOLS=['band','mast','bohrer','ofen','generator','fundament','verteiler','kreuzung','lagerkiste','fertiger','greifer','sortierer','grossmast','kraftwerk','schnellband','schnellbohrer','solar','montagewerk','oelpumpe','raffinerie','elektroofen','chemiefabrik','praezision','drohnenhafen','wartungsstation','recycler','expressband','zentrifuge','kernkraftwerk'];
-const HINTS={"Anlauf": "Dein erster Strang läuft schon. Setz weitere Bohrer aufs braune Eisenerz. Fahr mit der Maus über ein Vorkommen, dann siehst du, wie viel noch da ist. Wird der Strom knapp: Bohrer aufs schwarze Kohlefeld, davor einen Generator, und Strommasten dorthin.", "Kupfer und Ziegel": "Kupfererz ist orange, Stein hellgrau. Beides braucht einen eigenen Ofen und ein Band zur Zentrale.", "Petrochemie": "Ölquellen sind dunkle Lachen weit draußen, auf der Minimap lila. Ölpumpe drauf, Rohöl in die Raffinerie. Drohnen und lange Bänder bringen es nach Hause.", "Schwefelchemie": "Schwefel liegt gelb auf der Karte. Die Chemiefabrik macht daraus Schwefelsäure.", "Kernkraft": "Uranerz ist grün. Die Zentrifuge macht Pellets, das Präzisionswerk Brennstäbe.", "Raumfahrtkunde": "Dein größter Kunde will Raketenteile. Liefere sie an die Zentrale, danach laufen die Aufträge endlos weiter."};const MS=TREE.ms.map(m=>({...m,hint:HINTS[m.n]||`Liefere das Geforderte an die Zentrale. Alle Rezepte stehen im Technikbaum (Tab). Vorkommen sind endlich, plane rechtzeitig neue ein.`}));
+const TOOLS=['band','mast','bohrer','ofen','generator','fundament','verteiler','kreuzung','lagerkiste','fertiger','greifer','sortierer','grossmast','kraftwerk','schnellband','schnellbohrer','solar','montagewerk','oelpumpe','raffinerie','elektroofen','chemiefabrik','praezision','drohnenhafen','wartungsstation','recycler','expressband','zentrifuge','kernkraftwerk','raketensilo'];
+const HINTS={"Anlauf": "Dein erster Strang läuft schon. Setz weitere Bohrer aufs braune Eisenerz. Fahr mit der Maus über ein Vorkommen, dann siehst du, wie viel noch da ist. Wird der Strom knapp: Bohrer aufs schwarze Kohlefeld, davor einen Generator, und Strommasten dorthin.", "Kupfer und Ziegel": "Kupfererz ist orange, Stein hellgrau. Beides braucht einen eigenen Ofen und ein Band zur Zentrale.", "Petrochemie": "Ölquellen sind dunkle Lachen weit draußen, auf der Minimap lila. Ölpumpe drauf, Rohöl in die Raffinerie. Drohnen und lange Bänder bringen es nach Hause.", "Schwefelchemie": "Schwefel liegt gelb auf der Karte. Die Chemiefabrik macht daraus Schwefelsäure.", "Kernkraft": "Uranerz ist grün. Die Zentrifuge macht Pellets, das Präzisionswerk Brennstäbe.", "Raumfahrtkunde": "Dein größter Kunde will Raketenteile. Liefere sie an die Zentrale. Das Raketensilo ist jetzt frei: Füll es mit Raketenteilen und starte die Rakete."};const MS=TREE.ms.map(m=>({...m,hint:HINTS[m.n]||`Liefere das Geforderte an die Zentrale. Alle Rezepte stehen im Technikbaum (Tab). Vorkommen sind endlich, plane rechtzeitig neue ein.`}));
 const START_STOCK={eisenplatte:120,kupferplatte:30,stein:60};
 /* ====== Karte ====== */
 function rnd(s){return()=>(s=Math.imul(s^s>>>15,1|s)+0x6D2B79F5|0,((s^s>>>14)>>>0)/4294967296)}
@@ -269,7 +353,7 @@ function step(dt){
   if(k.burn){if(e.burn>0){e.burn-=dt}{const fu=k.fuel||'kohle';if(e.burn<=0&&(e.inv[fu]||0)>0){e.inv[fu]--;e.burn=k.burn}}e.st=!e.net?'noPower':e.burn>0?'ok':'wait';continue}
   if(e.out.length){const o=outTile(e);if(give(o[0],o[1],o[2],e.out[0],e.z))e.out.shift()}
   if(e.k==='lagerkiste'){e.st='ok';if(!e.out.length)for(const i in e.inv)if(e.inv[i]>0){e.inv[i]--;e.out.push(i);break}continue}
-  if(!e.net){e.st='noPower';continue}
+  if(!e.net||!sat){e.st='noPower';continue}
   if(e.off||e.kaputt){e.st=e.kaputt?'defekt':'off';continue}
   if(e.k==='wartungsstation'){station(e,dt);continue}
   if(e.k==='raketensilo'){if(e.launch!==undefined){e.st='ok';e.launch+=dt;if(e.launch>=22){delete e.launch;G.rockets=(G.rockets||0)+1;deliver('rakete');UI.toast('Rakete im All. Starts bisher: '+G.rockets)}}else e.st=(e.inv.raketenteil||0)>=SILO?'ok':'wait';continue}
@@ -654,10 +738,141 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
   ['Leiste unten','Bauwerk wählen, Menü öffnet Baumenü und Technikbaum'],['⟳ Drehen','Bauwerk drehen, der gelbe Pfeil zeigt den Ausgang'],['✕ Ablegen / lange drücken','Werkzeug ablegen'],
   ['Pipette','Danach auf eine Maschine tippen: übernimmt sie samt Rezept und Richtung'],['Karte','Minimap vergrößern, Tippen springt dorthin'],['Meilenstein-Tafel antippen','Tafel ein- und ausklappen'],['II / 1× / 3×','Pause und Tempo']]
   .map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')})();
+/* ====== Spielhülle: Einstellungen, Ton, Titel, Pause ====== */
+const EK='schichtwerk-einst';
+const SET_STD={master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
+const SET={...SET_STD};try{Object.assign(SET,JSON.parse(localStorage.getItem(EK))||{})}catch(e){}
+function setSave(){try{localStorage.setItem(EK,JSON.stringify(SET))}catch(e){}}
+
+/* --- Ton: alles wird live mit WebAudio erzeugt --- */
+const AU={c:null,m:null,s:null,mu:null,u:null,noise:null,last:{},beat:0,next:0};
+function auStart(){if(AU.c){if(AU.c.state==='suspended')AU.c.resume();return}const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ try{const c=AU.c=new AC();const g=()=>c.createGain();AU.m=g();AU.s=g();AU.mu=g();AU.u=g();AU.s.connect(AU.m);AU.mu.connect(AU.m);AU.u.connect(AU.m);
+  const comp=c.createDynamicsCompressor();AU.m.connect(comp);comp.connect(c.destination);
+  const len=c.sampleRate*2,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;AU.noise=b;
+  // Musik: Hall über Delay
+  const dl=c.createDelay(1),fb=g(),wet=g();dl.delayTime.value=.42;fb.gain.value=.38;wet.gain.value=.35;dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(AU.mu);AU.hall=dl;
+  // Werkshalle: gefiltertes Rauschen
+  const n=c.createBufferSource();n.buffer=b;n.loop=true;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=180;AU.hum=g();AU.hum.gain.value=0;n.connect(lp);lp.connect(AU.hum);AU.hum.connect(AU.u);n.start();
+  auVol();AU.next=c.currentTime+.3}catch(e){AU.c=null}}
+function auVol(){if(!AU.c)return;const t=AU.c.currentTime;AU.m.gain.setTargetAtTime(SET.master,t,.05);AU.s.gain.setTargetAtTime(SET.sfx,t,.05);AU.mu.gain.setTargetAtTime(SET.musik*.55,t,.3);AU.u.gain.setTargetAtTime(SET.umgebung,t,.3)}
+function ton(f,typ,t0,dur,vol,ziel,f2){const c=AU.c,o=c.createOscillator(),g=c.createGain();o.type=typ;o.frequency.setValueAtTime(f,t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+dur);g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.008);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);o.connect(g);g.connect(ziel||AU.s);o.start(t0);o.stop(t0+dur+.05)}
+function rausch(t0,dur,vol,typ,f,f2,q){const c=AU.c,s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.noise;fl.type=typ;fl.frequency.setValueAtTime(f,t0);if(f2)fl.frequency.exponentialRampToValueAtTime(f2,t0+dur);fl.Q.value=q||1;g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);s.connect(fl);fl.connect(g);g.connect(AU.s);s.start(t0,Math.random());s.stop(t0+dur+.05)}
+function sfx(n){if(!AU.c||AU.c.state!=='running'||!SET.sfx||!SET.master)return;const now=AU.c.currentTime;if(now-(AU.last[n]||0)<({band:.045,klick:.03,abriss:.06}[n]||.02))return;AU.last[n]=now;const t=now+.005;
+ switch(n){
+  case'klick':ton(1500,'square',t,.03,.035);break;
+  case'band':ton(820+Math.random()*80,'triangle',t,.05,.07);rausch(t,.04,.05,'highpass',3000);break;
+  case'bau':ton(150,'sine',t,.16,.35,null,55);rausch(t,.09,.18,'lowpass',900,200);ton(620,'triangle',t+.02,.07,.05);break;
+  case'abriss':rausch(t,.28,.22,'bandpass',1400,180,1.5);ton(300,'sawtooth',t,.18,.05,null,80);break;
+  case'fehler':ton(150,'sawtooth',t,.09,.08);ton(118,'sawtooth',t+.11,.13,.08);break;
+  case'meilenstein':[523.3,659.3,784,1046.5].forEach((f,i)=>{ton(f,'triangle',t+i*.11,.55,.13);ton(f*2,'sine',t+i*.11,.3,.03)});ton(261.6,'sine',t+.33,1.2,.12);break;
+  case'kasse':ton(1318.5,'square',t,.08,.04);ton(1760,'square',t+.07,.18,.04);break;
+  case'rakete':rausch(t,4,.35,'lowpass',120,1600,.7);ton(55,'sawtooth',t,3.5,.12,null,110);[392,523.3,659.3,784].forEach((f,i)=>ton(f,'triangle',t+1+i*.2,1.4,.1));break}}
+// Generative Musik: ruhige Flächen und vereinzelte Töne in d-Moll
+const AKK=[[146.8,174.6,220,261.6],[116.5,146.8,174.6,220],[174.6,220,261.6,329.6],[130.8,164.8,196,246.9]],PENTA=[293.7,349.2,392,440,523.3,587.3,698.5];
+function musik(){if(!AU.c||AU.c.state!=='running')return;const c=AU.c;if(!SET.musik||!SET.master){AU.next=c.currentTime+.5;return}while(AU.next<c.currentTime+.6){const t=AU.next,bar=AU.beat++,a=AKK[Math.floor(bar/4)%4];
+ if(bar%4===0)for(const f of a){for(const d of[-4,4]){const o=c.createOscillator(),g=c.createGain(),fl=c.createBiquadFilter();o.type='sawtooth';o.frequency.value=f;o.detune.value=d;fl.type='lowpass';fl.frequency.value=650;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.022,t+2.2);g.gain.setValueAtTime(.022,t+6);g.gain.linearRampToValueAtTime(0,t+8.4);o.connect(fl);fl.connect(g);g.connect(AU.mu);o.start(t);o.stop(t+8.6)}}
+ if(Math.random()<.55){const f=PENTA[Math.floor(Math.random()*PENTA.length)],o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.06,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+1.6);o.connect(g);g.connect(AU.mu);g.connect(AU.hall);o.start(t);o.stop(t+1.7)}
+ AU.next+=2}}
+['pointerdown','keydown','touchstart'].forEach(t=>addEventListener(t,auStart,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!AU.c)return;if(document.hidden)AU.c.suspend();else AU.c.resume()});
+document.addEventListener('click',ev=>{if(ev.target.closest('button'))sfx('klick')},true);
+
+/* --- Spielfunktionen anhängen (Ton, Fehlerkorrekturen) --- */
+{const _place=place;place=function(k,x,y,r,quiet){const ok=_place(k,x,y,r,quiet);if(ok)sfx(BK(k)?'band':'bau');return ok}}
+{const _remove=remove;remove=function(e){const n=E.size;_remove(e);if(E.size<n)sfx('abriss')}}
+{const _rf=removeFund;removeFund=function(x,y){const ok=_rf(x,y);if(ok)sfx('abriss');return ok}}
+{const _bf=buildFund;buildFund=function(a,b){const n=F.reduce((s,v)=>s+v,0);_bf(a,b);if(F.reduce((s,v)=>s+v,0)!==n)sfx('bau')}}
+{const _toast=toast;toast=function(s){_toast(s);
+ if(/^Meilenstein geschafft/.test(s))sfx('meilenstein');else if(/^Auftrag erfüllt/.test(s))sfx('kasse');else if(/^Rakete im All/.test(s)){sfx('rakete');if(G.rockets===1)ende('rakete')}
+ else if(/^(Nicht genug|Hier |Der Boden|Bohrer müssen|Ölpumpen|Dieser Platz|Noch |Material fehlt|Keine Ersatzteile|Das Silo)/.test(s))sfx('fehler')}}
+{const _pk=panKeys;panKeys=dt=>_pk(dt*SET.kamera)}
+{const _cu=camUp;camUp=function(dt){if(SHELL.titel)C.tyaw+=dt*.045;else if(SET.rand&&mausDrin&&!drag&&!rpan&&!orbit&&$('menu').hidden&&$('lw').hidden){const m=24,v=C.dist*.9*dt*SET.kamera;let f=0,s=0;if(mouse[0]<m)s=-1;else if(mouse[0]>innerWidth-m)s=1;if(mouse[1]<m)f=1;else if(mouse[1]>innerHeight-m)f=-1;if(f||s){const c=Math.cos(C.yaw),n=Math.sin(C.yaw);C.tx+=(s*c-f*n)*v;C.tz+=(-s*n-f*c)*v;clampC()}}_cu(dt)}}
+let mausDrin=false;document.addEventListener('mouseleave',()=>{mausDrin=false});document.addEventListener('mousemove',()=>{mausDrin=true});
+canvas.addEventListener('wheel',ev=>{if(!SET.zoomUm)return;ev.stopImmediatePropagation();ev.preventDefault();C.tdist=T.MathUtils.clamp(C.tdist*Math.pow(1.0015,-ev.deltaY),14,260)},{passive:false,capture:true});
+// Speichern: Intervall aus den Einstellungen, Fehler melden
+let lastSave=0,saveWarn=0;
+{const _save=save;save=function(force){if(force!==true&&!(force instanceof Event)&&performance.now()-lastSave<SET.auto*1000-50)return true;
+ // Das Original fängt Schreibfehler still ab, deshalb wird setItem kurz überwacht
+ let ok=true;const orig=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){try{return orig.call(this,k,v)}catch(e){if(k===SK)ok=false;throw e}};try{_save()}catch(e){ok=false}finally{Storage.prototype.setItem=orig}
+ lastSave=performance.now();if(!ok){if(performance.now()-saveWarn>60000){saveWarn=performance.now();toast('Speichern fehlgeschlagen: Der Browser-Speicher ist voll.')}}else if(force!==undefined||SHELL.zeig){const g=$('gesp');g.classList.add('an');setTimeout(()=>g.classList.remove('an'),1400)}return ok}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
+// Wartungsaufträge nach dem Laden den neuen Maschinen-IDs zuordnen
+{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(localStorage.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
+function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${m} min`:`${m} min`}
+
+/* --- Grafik --- */
+function grafik(){const q=SET.qual,dpr=devicePixelRatio||1;ren.setPixelRatio(q==='niedrig'?Math.min(dpr,1)*.8:q==='mittel'?Math.min(dpr,1.5):Math.min(dpr,2));
+ const sh=q!=='niedrig',ms=q==='hoch'?2048:1024;if(ren.shadowMap.enabled!==sh||sun.shadow.mapSize.x!==ms){ren.shadowMap.enabled=sh;sun.castShadow=sh;sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}scene.traverse(o=>{if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)}})}
+ size();smI.visible=SET.rauch;$('fps').hidden=!SET.fps;document.documentElement.style.setProperty('--ui',SET.ui)}
+
+/* --- Menüs --- */
+const SHELL={titel:false,pause:false,vorher:false,zeig:true,hatSpiel:false,zurueck:null};
+function offen(id){const e=$(id);return e&&!e.hidden}
+function spielStop(){if(!SHELL.pause&&!SHELL.titel)SHELL.vorher=paused;setSpeed(0)}
+function spielWeiter(){setSpeed(SHELL.vorher?0:(G.speed||1));canvas.focus()}
+function titelZeigen(){spielStop();SHELL.titel=true;document.documentElement.classList.add('titel');$('pause').hidden=true;SHELL.pause=false;setTool(null);select(null);menuOpen(false);lwOpen(false);$('mini').classList.remove('gross');
+ SHELL.hatSpiel=E.size>9||G.ms>0||(G.t||0)>60;$('t-weiter').hidden=!SHELL.hatSpiel;$('t-neu').classList.toggle('haupt',!SHELL.hatSpiel);
+ const m=MS[G.ms];$('t-info').textContent=SHELL.hatSpiel?`Meilenstein ${Math.min(G.ms+1,MS.length)} von ${MS.length}${m?' · '+m.n:''} · ${spielzeit(G.t)}`:'';$('titel').hidden=false;setTimeout(()=>($(SHELL.hatSpiel?'t-weiter':'t-neu')).focus(),50)}
+function titelWeg(){SHELL.titel=false;document.documentElement.classList.remove('titel');$('titel').hidden=true;spielWeiter();if(!G.help)$('hilfe').hidden=false}
+function pauseZeigen(){if(SHELL.titel)return;spielStop();SHELL.pause=true;setTool(null);
+ const hq=nodes.find(n=>n.k==='zentrale'),n=hq&&hq.net;const lauf=machines.filter(e=>e.st==='ok').length;
+ $('p-kenn').innerHTML=[['Spielzeit',spielzeit(G.t)],['Meilenstein',`${Math.min(G.ms+1,MS.length)} / ${MS.length}`],['Raketen',G.rockets||0],['Maschinen',machines.length],['davon in Betrieb',lauf],['Strom',n?`${n.dem.toFixed(0)} / ${n.gen.toFixed(0)} MW`:'–']].map(([a,b])=>`<div><span class="etikett">${a}</span><b>${b}</b></div>`).join('');
+ $('pause').hidden=false;setTimeout(()=>$('p-weiter').focus(),30)}
+function pauseWeg(){$('pause').hidden=true;SHELL.pause=false;spielWeiter()}
+function neuesSpiel(){if(SHELL.hatSpiel||E.size>9){$('frage').hidden=false;$('janeu').focus()}else{if(SHELL.titel)titelWeg();else pauseWeg()}}
+function hilfeZeigen(zurueck){SHELL.zurueck=zurueck;$('hilfe').hidden=false;$('hzu').textContent=zurueck?'Zurück':'Schicht beginnen';$('hzu').focus()}
+function ende(art){const d=$('ende').firstElementChild;d.innerHTML=art==='rakete'?`<div class="streifen"></div><h1>Rakete gestartet.</h1><div>Dein Werk hat es bis ins All geschafft. Du kannst weiterbauen und weitere Raketen starten.</div><button id="endezu">Weiterbauen</button>`:`<div class="streifen"></div><h1>Alle Meilensteine geschafft.</h1><div>Jetzt fehlt nur noch der Start: Bau ein Raketensilo, füll es mit ${SILOTXT} Raketenteilen und schick die Rakete ins All.</div><button id="endezu">Weiterbauen</button>`;$('endezu').onclick=()=>{$('ende').hidden=true;canvas.focus()};$('ende').hidden=false;if(art!=='rakete')sfx('meilenstein')}
+UI.ende=()=>ende('ms');
+
+$('t-weiter').onclick=titelWeg;$('t-neu').onclick=neuesSpiel;$('t-einst').onclick=()=>einstZeigen();$('t-hilfe').onclick=()=>hilfeZeigen('titel');$('t-ueber').onclick=()=>{$('ueber').hidden=false;$('u-zu').focus()};$('u-zu').onclick=()=>{$('ueber').hidden=true};
+$('p-weiter').onclick=pauseWeg;$('p-speichern').onclick=()=>{if(save(true))toast('Spiel gespeichert.')};$('p-einst').onclick=()=>einstZeigen();$('p-hilfe').onclick=()=>hilfeZeigen('pause');$('p-neu').onclick=neuesSpiel;$('p-titel').onclick=()=>{save(true);titelZeigen()};
+$('hzu').onclick=()=>{$('hilfe').hidden=true;if(!SHELL.zurueck){G.help=true;canvas.focus()}SHELL.zurueck=null};
+$('bh').onclick=()=>hilfeZeigen(null);
+$('bneu').textContent='Menü';$('bneu').title='Pausemenü (Esc)';$('bneu').onclick=pauseZeigen;
+$('neinneu').onclick=()=>{$('frage').hidden=true};
+{const _ja=$('janeu').onclick;$('janeu').onclick=()=>{_ja();G.help=false;SHELL.hatSpiel=false;$('pause').hidden=true;SHELL.pause=false;SHELL.vorher=false;if(SHELL.titel){SHELL.titel=false;document.documentElement.classList.remove('titel');$('titel').hidden=true}setSpeed(1);$('hilfe').hidden=false;$('hzu').textContent='Schicht beginnen';save(true)}}
+
+/* --- Einstellungen --- */
+let eTab='audio';
+const seg=(id,opts)=>`<div class="seg">${opts.map(([v,n])=>`<button data-set="${id}" data-v="${v}" class="${String(SET[id])===String(v)?'an':''}">${n}</button>`).join('')}</div>`;
+const regler=(id,min,max,st,fmt)=>`<div class="regler"><input type="range" id="r-${id}" data-set="${id}" min="${min}" max="${max}" step="${st}" value="${SET[id]}"><span id="rv-${id}">${fmt(SET[id])}</span></div>`;
+const pz=v=>Math.round(v*100)+' %';
+const ZEILEN={audio:()=>[['Gesamtlautstärke','',regler('master',0,1,.05,pz)],['Effekte','Bauen, Abriss, Meilensteine',regler('sfx',0,1,.05,pz)],['Musik','Ruhige Begleitmusik',regler('musik',0,1,.05,pz)],['Werkshalle','Hintergrundgeräusch deiner Maschinen',regler('umgebung',0,1,.05,pz)]],
+ grafik:()=>[['Qualität','Niedrig: ohne Schatten, schont Akku und schwache Geräte',seg('qual',[['niedrig','Niedrig'],['mittel','Mittel'],['hoch','Hoch']])],['Rauch','Abgase über Öfen und Generatoren',seg('rauch',[[true,'An'],[false,'Aus']])],['Bilder pro Sekunde anzeigen','',seg('fps',[[true,'An'],[false,'Aus']])]],
+ steuer:()=>[['Kamera-Tempo','Für Tasten und Bildschirmrand',regler('kamera',.4,2.5,.1,pz)],['Zoom umkehren','Mausrad andersherum',seg('zoomUm',[[false,'Normal'],[true,'Umgekehrt']])],['Kamera am Bildschirmrand bewegen','Maus an den Rand schieben',seg('rand',[[false,'Aus'],[true,'An']])]],
+ ober:()=>[['Größe der Oberfläche','Tafeln, Leiste und Minimap',regler('ui',.75,1.4,.05,pz)],['Automatisch speichern','',seg('auto',[[20,'20 s'],[60,'1 min'],[300,'5 min']])]]};
+function einstZeigen(){$('einst').hidden=false;einstDraw();$('e-zu').focus()}
+function einstDraw(){for(const t of['audio','grafik','steuer','ober'])$('e-'+t).classList.toggle('an',eTab===t);$('e-body').innerHTML=ZEILEN[eTab]().map(([a,b,c])=>`<div class="zeile"><div>${a}${b?`<small>${b}</small>`:''}</div>${c}</div>`).join('')}
+function einstAnwenden(){setSave();auVol();grafik()}
+for(const t of['audio','grafik','steuer','ober'])$('e-'+t).onclick=()=>{eTab=t;einstDraw()};
+$('e-body').addEventListener('click',ev=>{const b=ev.target.closest('button[data-set]');if(!b)return;const id=b.dataset.set,v=b.dataset.v;SET[id]=v==='true'?true:v==='false'?false:isNaN(+v)?v:+v;einstAnwenden();einstDraw()});
+$('e-body').addEventListener('input',ev=>{const r=ev.target;if(!r.dataset.set)return;SET[r.dataset.set]=+r.value;const f=$('rv-'+r.dataset.set);if(f)f.textContent=pz(+r.value);einstAnwenden()});
+$('e-zu').onclick=()=>{$('einst').hidden=true};$('e-reset').onclick=()=>{Object.assign(SET,SET_STD);einstAnwenden();einstDraw();toast('Einstellungen zurückgesetzt.')};
+
+/* --- Tastatur: Dialoge zuerst --- */
+addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'&&ev.target.type!=='range')return;const k=ev.key;
+ const zu=(id,f)=>{ev.preventDefault();ev.stopImmediatePropagation();if(f)f();else $(id).hidden=true};
+ if(offen('frage'))return k==='Escape'?zu('frage'):(k==='Enter'?undefined:ev.stopImmediatePropagation());
+ if(offen('einst'))return k==='Escape'?zu('einst'):ev.stopImmediatePropagation();
+ if(offen('ueber'))return k==='Escape'?zu('ueber'):ev.stopImmediatePropagation();
+ if(offen('hilfe'))return k==='Escape'||k==='h'||k==='H'?zu('hilfe',()=>$('hzu').click()):ev.stopImmediatePropagation();
+ if(offen('ende'))return k==='Escape'?zu('ende'):ev.stopImmediatePropagation();
+ if(SHELL.titel){if(k!=='Tab'&&k!=='Enter'&&k!==' ')ev.stopImmediatePropagation();return}
+ if(SHELL.pause){if(k==='Escape')zu(null,pauseWeg);else if(k!=='Tab'&&k!=='Enter'&&k!==' ')ev.stopImmediatePropagation();return}
+ if(k==='Escape'&&!tool&&!sel&&$('menu').hidden&&$('lw').hidden&&!$('mini').classList.contains('gross'))zu(null,pauseZeigen);
+ else if(k==='Escape'&&$('mini').classList.contains('gross')&&!tool)zu(null,()=>{$('mini').classList.remove('gross');miniDraw()})},true);
+
+/* --- Eigene Schleife: Musik, Werkshalle, FPS --- */
+{let fz=0,fn=0,ft=performance.now();(function tick(now){requestAnimationFrame(tick);fn++;if(now-ft>=500){$('fps').textContent=Math.round(fn*1000/(now-ft))+' FPS';fn=0;ft=now}
+ if(AU.c&&AU.c.state==='running'){musik();fz+=1;if(fz>15){fz=0;let n=0;const r=Math.max(30,C.dist*.8);for(const e of machines)if(e.st==='ok'&&Math.abs(e.x-C.x)<r&&Math.abs(e.y-C.z)<r)n++;AU.hum.gain.setTargetAtTime(SHELL.titel||paused?0:Math.min(.5,n/40)*.9,AU.c.currentTime,.8)}}})(performance.now())}
+// Touch: Menü-Knopf in der Werkzeugleiste
+if(TOUCH&&$('tbar')){const b=document.createElement('button');b.textContent='☰ Menü';b.title='Pausemenü';b.onclick=pauseZeigen;$('tbar').prepend(b)}
+// Ladefortschritt
+{let fertig=0;const gesamt=pending.length||1;pending.forEach(p=>p.then(()=>{fertig++;$('ladebar').style.width=(fertig/gesamt*100)+'%'}))}
+SHELL.boot=function(hadSave){grafik();$('laden').hidden=true;titelZeigen()};
 /* ====== Start ====== */
 window.__g={lwOpen,kennz,kxM,reparieren,tierUp,fx,AMT,REZ,MS,miniDraw,PATCHES,ORE,PUR,updateDeco,get byKind(){return byKind},menuOpen,menuTab,assign,F,TER,Lv,buildFund,removeFund,buildTerrain,msDraw,frame:(n)=>{for(let i=0;i<(n||1);i++){window.__once=true;frame(performance.now())}},get G(){return G},E,at,place,step,power,setTool,remove,ents,relist,give,deliver,save,load,fresh,C,scr(x,z){const v=new T.Vector3(x,YL(Lv(Math.floor(x),Math.floor(z))),z).project(cam);return[(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]},get tool(){return tool},get sel(){return sel},get nets(){return nets},get machines(){return machines},get belts(){return belts}};
-Promise.all(pending).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{makeIcons();const hadSave=load();if(!hadSave)fresh();buildTerrain();dirtyF=true;miniDraw();setSpeed(1);if(!G.help)$('hilfe').hidden=false;msDraw();toolsDraw();power();C.x=C.tx;C.z=C.tz;requestAnimationFrame(frame)});
+Promise.all(pending).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{makeIcons();const hadSave=load();if(!hadSave)fresh();buildTerrain();dirtyF=true;miniDraw();setSpeed(1);SHELL.boot(hadSave);msDraw();toolsDraw();power();C.x=C.tx;C.z=C.tz;requestAnimationFrame(frame)});
 
 </script>
-
-</body></html>

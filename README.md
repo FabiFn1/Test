@@ -28,7 +28,8 @@ Zum Testen ohne Bauen: `npm run prepare-assets && npm start`.
 
 ## Aufbau
 
-- `app/index.html` – das Spiel
+- `game/schichtwerk.html` – das Spiel (Quelle, wird auch als Claude-Artifact veröffentlicht)
+- `app/index.html` – daraus erzeugte Offline-Version (`npm run prepare-assets`)
 - `main.js` – Electron-Fenster
 - `scripts/prepare-assets.js` – kopiert three.js und Schriften nach `app/vendor/`
 
