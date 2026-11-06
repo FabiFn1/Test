@@ -18,4 +18,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Schichtwerk-Windows
-          path: dist/Schichtwerk.exe
+          path: |
+            dist/Schichtwerk-Setup.exe
+            dist/Schichtwerk.exe

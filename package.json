@@ -9,7 +9,7 @@
   "scripts": {
     "start": "electron .",
     "prepare-assets": "node scripts/prepare-assets.js",
-    "dist": "npm run prepare-assets && electron-builder --win portable",
+    "dist": "npm run prepare-assets && electron-builder --win nsis portable",
     "android:sync": "npm run prepare-assets && cap sync android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
@@ -21,7 +21,10 @@
       "app/**/*"
     ],
     "win": {
-      "target": "portable",
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "signAndEditExecutable": false
     },
     "portable": {
@@ -29,6 +32,17 @@
     },
     "directories": {
       "output": "dist"
+    },
+    "nsis": {
+      "artifactName": "Schichtwerk-Setup.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Schichtwerk",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
     }
   },
   "devDependencies": {
