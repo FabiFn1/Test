@@ -1,8 +1,7 @@
 name: Android-APK bauen
 
 on:
-  push:
-  workflow_dispatch:
+  workflow_dispatch:   # nur manuell starten (Actions → Run workflow)
 
 jobs:
   build:
