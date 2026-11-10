@@ -738,67 +738,84 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
   ['Leiste unten','Bauwerk wählen, Menü öffnet Baumenü und Technikbaum'],['⟳ Drehen','Bauwerk drehen, der gelbe Pfeil zeigt den Ausgang'],['✕ Ablegen / lange drücken','Werkzeug ablegen'],
   ['Pipette','Danach auf eine Maschine tippen: übernimmt sie samt Rezept und Richtung'],['Karte','Minimap vergrößern, Tippen springt dorthin'],['Meilenstein-Tafel antippen','Tafel ein- und ausklappen'],['II / 1× / 3×','Pause und Tempo']]
   .map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')})();
-/* ====== Grafikstil „Werksmodell“: Miniatur aus Pappe, Tusche und Abendlicht ====== */
-const STIL={an:false,rt:null,qs:null,qc:null,qm:null,toon:new Map(),hemi:null,alt:null,unschaerfe:true,tick:0};
-STIL.grad=(function(){const d=new Uint8Array([60,60,60,255,150,150,150,255,215,215,215,255,255,255,255,255]);const t=new T.DataTexture(d,4,1);t.minFilter=t.magFilter=T.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
-// Hänge im Gelände als Kartonschnitt: helle Kante, feine Wellpappe-Rillen, dunkle Fuge je Ebene
-function pappe(m){m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvWP=(modelMatrix*vec4(transformed,1.)).xyz;vWN=normalize(mat3(modelMatrix)*objectNormal);');
- sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;').replace('#include <color_fragment>',`#include <color_fragment>
- {float steil=smoothstep(.55,.25,vWN.y);float lv=vWP.y+1.;float rille=.92+.08*step(.5,fract(lv*22.));float fuge=smoothstep(.06,0.,abs(fract(lv)-.5)-.44);
-  vec3 karton=mix(vec3(.80,.66,.47),vec3(.93,.84,.68),step(.5,fract(lv)))*rille*(1.-.35*fuge);
-  diffuseColor.rgb=mix(diffuseColor.rgb,karton,steil);
-  float kante=smoothstep(.04,0.,abs(fract(lv)-.03))*step(.3,vWN.y)*(1.-step(.95,vWN.y));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.95,.9,.78),kante*.5);}`)};m.customProgramCacheKey=()=>'pappe'}
-function toonVon(m){let t=STIL.toon.get(m);if(t)return t;
- t=new T.MeshToonMaterial({color:m.color.clone(),map:m.map,gradientMap:STIL.grad,vertexColors:m.vertexColors,emissive:m.emissive?m.emissive.clone():new T.Color(0),emissiveIntensity:m.emissiveIntensity??1,emissiveMap:m.emissiveMap||null,transparent:m.transparent,opacity:m.opacity,side:m.side,depthWrite:m.depthWrite,flatShading:m.flatShading});
- // Metall wirkt ohne Spiegelung zu dunkel: aufhellen
- if((m.metalness||0)>.5)t.color.multiplyScalar(1.35);
- if(m===groundMat){pappe(t);t.color.setRGB(.94,1.12,.8)}
- if(m.opacity<1&&m.transparent&&m.color.getHex()===0x2c5364){t.color.set(0x4a9aa6);t.opacity=.88}
- STIL.toon.set(m,t);return t}
-function toonAlles(an){scene.traverse(o=>{if(!o.isMesh)return;if(an){const m=o.material;if(m&&m.isMeshStandardMaterial){o.userData.std=m;o.material=toonVon(m)}}else if(o.userData.std){o.material=o.userData.std;delete o.userData.std}})}
-// Nachbearbeitung
-function stilPost(){if(STIL.qm)return;STIL.qc=new T.OrthographicCamera(-1,1,1,-1,0,1);STIL.qs=new T.Scene();
- STIL.qm=new T.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},res:{value:new T.Vector2(1,1)},cn:{value:1},cf:{value:1200},dick:{value:1},blur:{value:1}},
- vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
- fragmentShader:`#include <packing>
- uniform sampler2D tC,tD;uniform vec2 res;uniform float cn,cf,dick,blur;varying vec2 vUv;
- float vz(vec2 u){return -perspectiveDepthToViewZ(texture2D(tD,u).x,cn,cf);}
- float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
- void main(){vec2 px=dick/res;float z=vz(vUv);
-  float zl=vz(vUv-vec2(px.x,0.)),zr=vz(vUv+vec2(px.x,0.)),zu=vz(vUv+vec2(0.,px.y)),zd=vz(vUv-vec2(0.,px.y));
-  float lap=abs(zl+zr+zu+zd-4.*z)/max(z,1.);float kante=smoothstep(.0025,.009,lap);
-  float g=max(abs(zl-zr),abs(zu-zd));float sil=smoothstep(.02,.05,g/max(z,1.));kante=max(kante,sil);
-  vec3 W=vec3(.299,.587,.114);float c0=dot(texture2D(tC,vUv).rgb,W);float cd=max(abs(dot(texture2D(tC,vUv+vec2(px.x,0.)).rgb,W)-c0),abs(dot(texture2D(tC,vUv+vec2(0.,px.y)).rgb,W)-c0))/(c0+.15);
-  kante=max(kante,smoothstep(.35,.7,cd)*.55*smoothstep(90.,30.,z));
-  // Tiefenunschärfe zum oberen und unteren Rand
-  float b=blur*smoothstep(.18,.5,abs(vUv.y-.52))*min(1.,z/60.+.4);vec4 c=texture2D(tC,vUv);
-  if(b>.01){vec3 s=c.rgb;float n=1.;for(int i=0;i<12;i++){float a=float(i)*2.39996;float r=sqrt(float(i)+.5)/3.46;vec2 o=vec2(cos(a),sin(a))*r*b*7./res;s+=texture2D(tC,vUv+o).rgb;n+=1.;}c.rgb=s/n;}
-  vec3 col=c.rgb;
-  // warme Abendstimmung, etwas kräftigere Farben
-  float l=dot(col,vec3(.299,.587,.114));col=mix(vec3(l),col,1.12)*vec3(1.05,1.,.92);
-  col=mix(col,col*vec3(.18,.14,.13),kante*(1.-b*.7)*.85);
-  // Papierkorn und Vignette
-  col*=.975+.05*hash(floor(vUv*res/1.5));vec2 q=vUv-.5;col*=1.-.32*dot(q,q)*1.6;
-  gl_FragColor=vec4(col,1.);
-  #include <tonemapping_fragment>
-  #include <colorspace_fragment>
- }`,depthTest:false,depthWrite:false});
- STIL.qs.add(new T.Mesh(new T.PlaneGeometry(2,2),STIL.qm))}
-function stilRT(){const v=ren.getDrawingBufferSize(new T.Vector2());if(STIL.rt&&STIL.rt.width===v.x&&STIL.rt.height===v.y)return;if(STIL.rt){STIL.rt.depthTexture.dispose();STIL.rt.dispose()}
- const dt=new T.DepthTexture(v.x,v.y);dt.type=T.UnsignedIntType;STIL.rt=new T.WebGLRenderTarget(v.x,v.y,{type:T.HalfFloatType,depthTexture:dt,samples:SET.qual==='hoch'?4:0});STIL.qm.uniforms.res.value.set(v.x,v.y);STIL.qm.uniforms.dick.value=Math.max(1.4,ren.getPixelRatio()*1.25)}
-function renderBild(){if(!STIL.an){ren.render(scene,cam);return}if(++STIL.tick%60===0)toonAlles(true);stilRT();const u=STIL.qm.uniforms;u.cn.value=cam.near;u.cf.value=cam.far;u.blur.value=SET.unschaerfe&&!SHELL.titel?1:SHELL.titel?.6:0;u.tC.value=STIL.rt.texture;u.tD.value=STIL.rt.depthTexture;
- ren.setRenderTarget(STIL.rt);ren.render(scene,cam);ren.setRenderTarget(null);ren.render(STIL.qs,STIL.qc)}
-// Himmel und Licht je Stil
-STIL.himmel=(function(){const c=document.createElement('canvas');c.width=64;c.height=512;const g=c.getContext('2d');const l=g.createLinearGradient(0,0,0,512);l.addColorStop(0,'#6f8fa8');l.addColorStop(.3,'#c9b9a0');l.addColorStop(.47,'#f2c894');l.addColorStop(.51,'#8a7a5e');l.addColorStop(1,'#5a4f3e');g.fillStyle=l;g.fillRect(0,0,64,512);const t=new T.CanvasTexture(c);t.mapping=T.EquirectangularReflectionMapping;t.colorSpace=T.SRGBColorSpace;return t})();
-function stilSetzen(){const an=SET.stil!=='klassisch';if(an===STIL.an&&STIL.alt)return;
- if(!STIL.alt)STIL.alt={bg:scene.background,fog:scene.fog.color.clone(),sun:sun.color.clone(),si:sun.intensity,exp:ren.toneMappingExposure};
- STIL.an=an;if(an){stilPost();if(!STIL.hemi){STIL.hemi=new T.HemisphereLight(0xe4ecf2,0x7a6448,1.8);scene.add(STIL.hemi)}STIL.hemi.visible=true;scene.background=STIL.himmel;scene.fog.color.set(0xe3c9a2);sun.color.set(0xffd7a3);sun.intensity=2.9;ren.toneMappingExposure=1.02}
- else{if(STIL.hemi)STIL.hemi.visible=false;scene.background=STIL.alt.bg;scene.fog.color.copy(STIL.alt.fog);sun.color.copy(STIL.alt.sun);sun.intensity=STIL.alt.si;ren.toneMappingExposure=STIL.alt.exp;if(STIL.rt){STIL.rt.dispose();STIL.rt=null}}
- toonAlles(an)}
-{const _bt=buildTerrain;buildTerrain=function(){_bt();if(STIL.an)toonAlles(true)}}
+/* ====== Realistische Grafik: Umgebungsverdeckung, Gras, Boden, Wasser, Bäume ====== */
+const REAL={rt:null,aoRT:null,qc:new T.OrthographicCamera(-1,1,1,-1,0,1),aoS:null,aoM:null,coS:null,coM:null,an:false,gras:null,grasAt:null,grasN:-1,wasser:null,t0:performance.now()};
+// Hilfsfunktion: Höhenfeld (0..1) -> Normalenkarte
+function normalKarte(n,hf,st){const c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d'),im=g.createImageData(n,n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){const h=(a,b)=>hf[((b+n)%n)*n+(a+n)%n];const dx=(h(x+1,y)-h(x-1,y))*st,dy=(h(x,y+1)-h(x,y-1))*st,l=Math.hypot(dx,dy,1),i=(y*n+x)*4;im.data[i]=(-dx/l*.5+.5)*255;im.data[i+1]=(-dy/l*.5+.5)*255;im.data[i+2]=(1/l*.5+.5)*255;im.data[i+3]=255}g.putImageData(im,0,0);const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=8;return t}
+function rauschFeld(n,seed,okt){const R=rnd(seed),hf=new Float32Array(n*n);for(const[f,a]of okt){const gN=f+1,gr=new Float32Array(gN*gN).map(()=>R());for(let y=0;y<n;y++)for(let x=0;x<n;x++){const fx=x/n*f,fy=y/n*f,i=Math.floor(fx),j=Math.floor(fy),u=fx-i,v=fy-j,s=u*u*(3-2*u),q=v*v*(3-2*v),p=(a,b)=>gr[(b%f)*gN+(a%f)];hf[y*n+x]+=a*((p(i,j)*(1-s)+p(i+1,j)*s)*(1-q)+(p(i,j+1)*(1-s)+p(i+1,j+1)*s)*q)}}return hf}
+/* --- Boden: feine Struktur, Fels an steilen Hängen --- */
+{const hf=rauschFeld(256,91,[[8,.5],[32,.35],[128,.25]]);const R=rnd(92);for(let i=0;i<6000;i++){const x=Math.floor(R()*256),y=Math.floor(R()*256);hf[y*256+x]+=.25*(R()-.3)}
+ groundMat.normalMap=normalKarte(256,hf,5);groundMat.normalScale.set(.75,.75);
+ groundMat.onBeforeCompile=sh=>{sh.uniforms.uReal={value:1};REAL.bodenU=sh.uniforms.uReal;
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvWP=(modelMatrix*vec4(transformed,1.)).xyz;vWN=normalize(mat3(modelMatrix)*objectNormal);');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;uniform float uReal;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1,0)),f.x),mix(h21(i+vec2(0,1)),h21(i+vec2(1,1)),f.x),f.y);}')
+   .replace('#include <color_fragment>',`#include <color_fragment>
+  if(uReal>.5){float st=smoothstep(.86,.5,vWN.y);float sch=vn2(vec2(vWP.y*7.,(vWP.x+vWP.z)*.35));vec3 fels=vec3(.40,.37,.32)*(.72+.45*sch)*(.85+.3*vn2(vWP.xz*1.7));
+   diffuseColor.rgb=mix(diffuseColor.rgb,fels,st*.9);
+   float m=vn2(vWP.xz*.09)*.6+vn2(vWP.xz*.37)*.4;diffuseColor.rgb*=mix(.86,1.12,m)*(1.-st*.1);}`)}
+ groundMat.customProgramCacheKey=()=>'boden-real';groundMat.needsUpdate=true}
+/* --- Wasser: spiegelnd mit bewegten Wellen --- */
+{let w=null;scene.traverse(o=>{if(o.isMesh&&o.material&&o.material.color&&o.material.color.getHex()===0x2c5364)w=o});
+ if(w){const hf=rauschFeld(256,57,[[4,.5],[8,.35],[16,.25],[32,.12]]);const m=w.material;m.normalMap=normalKarte(256,hf,9);m.normalMap.repeat.set(26,26);m.normalScale.set(.45,.45);m.color.set(0x1b4552);m.roughness=.04;m.metalness=0;m.envMapIntensity=1.25;m.opacity=.9;m.needsUpdate=true;REAL.wasser=m}}
+/* --- Bäume: unregelmäßige Kronen, jeder Baum etwas anders gefärbt --- */
+{const P=TREEPARTS();P.forEach(([ge],q)=>{if(q===2)return;const p=ge.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),h=Math.sin(x*12.9+y*78.2+z*37.7)*43758.5,r=h-Math.floor(h);const s=y>1.5?1:.82+r*.36;p.setXYZ(i,x*s+(r-.5)*.18,y+(r-.5)*.25,z*s+(Math.cos(h)*.5)*.18)}p.needsUpdate=true;ge.computeVertexNormals()})}
+function baumPatch(){const geos=new Set(TREEPARTS().map(p=>p[0]));scene.traverse(o=>{if(!o.isInstancedMesh||!geos.has(o.geometry)||o.material.userData.baum)return;o.material.userData.baum=1;const m=o.material;m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying float vTV;').replace('#include <begin_vertex>','#include <begin_vertex>\nvTV=fract(sin(dot(instanceMatrix[3].xz,vec2(12.98,78.23)))*43758.5);');sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vTV;').replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb*=mix(vec3(.78,.86,.8),vec3(1.12,1.08,.92),vTV);')};m.customProgramCacheKey=()=>'baum';m.needsUpdate=true})}
+baumPatch();{const _bt=buildTerrain;buildTerrain=function(){_bt();baumPatch();REAL.grasAt=null}}
+/* --- Gras: Büschel aus einzelnen Halmen, wiegen sich im Wind --- */
+REAL.grasM=new T.MeshStandardMaterial({vertexColors:true,side:T.DoubleSide,roughness:.85,metalness:0,envMapIntensity:.6});
+REAL.grasM.onBeforeCompile=sh=>{sh.uniforms.uT={value:0};REAL.grasU=sh.uniforms.uT;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float gh;uniform float uT;').replace('#include <begin_vertex>','#include <begin_vertex>\n{vec3 wp=instanceMatrix[3].xyz;float w=sin(uT*1.6+wp.x*.31+wp.z*.23)*.6+sin(uT*2.7+wp.x*.9-wp.z*.4)*.3;transformed.x+=w*.13*gh*gh;transformed.z+=w*.07*gh*gh;}')};
+REAL.grasM.customProgramCacheKey=()=>'gras';
+REAL.grasG=(function(){const R=rnd(404),pos=[],col=[],nor=[],gh=[];for(let b=0;b<9;b++){const a=R()*6.283,r=R()*.42,x=Math.cos(a)*r,z=Math.sin(a)*r,h=.22+R()*.3,w=.035+R()*.025,ro=R()*6.283,c=Math.cos(ro),s=Math.sin(ro),lx=Math.cos(a+1)*.09*R(),lz=Math.sin(a+1)*.09*R();
+  const v=[[x-c*w,0,z-s*w,0],[x+c*w,0,z+s*w,0],[x+c*w*.45+lx*.5,h*.55,z+s*w*.45+lz*.5,.55],[x-c*w*.45+lx*.5,h*.55,z-s*w*.45+lz*.5,.55],[x+lx,h,z+lz,1]];
+  for(const t of[[0,1,2],[0,2,3],[3,2,4]])for(const k of t){const q=v[k];pos.push(q[0],q[1],q[2]);nor.push(0,1,0);gh.push(q[3]);const f=q[3];col.push(.26+.34*f,.30+.36*f,.12+.16*f)}}
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('gh',new T.Float32BufferAttribute(gh,1));return g})();
+REAL.gras=new T.InstancedMesh(REAL.grasG,REAL.grasM,18000);REAL.gras.count=0;REAL.gras.frustumCulled=false;REAL.gras.receiveShadow=true;REAL.gras.setColorAt(0,new T.Color(1,1,1));scene.add(REAL.gras);
+const GRASCOL=[0xa3ad6c,0x96a35f,0xb0ad70,0x8c9a5c,0xb4b47a].map(h=>new T.Color(h));
+function grasBauen(){const g=REAL.gras,cx=Math.round(C.tx),cz=Math.round(C.tz),RR=SET.qual==='hoch'?36:26,dicht=SET.qual==='hoch'?3:2,ob=new T.Object3D();let n=0;
+ for(let y=cz-RR;y<=cz+RR;y++)for(let x=cx-RR;x<=cx+RR;x++){if(x<1||y<1||x>=N-1||y>=N-1)continue;const d=Math.hypot(x-cx,y-cz);if(d>RR)continue;const i=y*N+x,l=TER[i];
+  if(l<1||ORE[i]||grid[i]||F[i]>l||TER[i-1]!==l||TER[i+1]!==l||TER[i-N]!==l||TER[i+N]!==l)continue;
+  for(let k=0;k<dicht&&n<g.instanceMatrix.count;k++){const h=Math.sin(i*12.9898+k*78.233)*43758.5453,r=h-Math.floor(h),r2=(r*7.31)%1,r3=(r*13.7)%1;if(r3<.12)continue;
+   const sc=(.75+r2*.6)*Math.min(1,(RR-d)/6);ob.position.set(x+.15+r*.7,YL(l),y+.15+r2*.7);ob.rotation.set(0,r3*6.283,0);ob.scale.set(sc,sc*(.8+r*.5),sc);ob.updateMatrix();g.setMatrixAt(n,ob.matrix);g.setColorAt(n,GRASCOL[Math.floor(r3*5)%5]);n++}}
+ g.count=n;g.instanceMatrix.needsUpdate=true;if(g.instanceColor)g.instanceColor.needsUpdate=true;REAL.grasAt=[cx,cz];REAL.grasN=E.size+F.length*0}
+{const _p=place,_r=remove,_bf=buildFund,_rf=removeFund;place=function(...a){const r=_p(...a);if(r)REAL.grasAt=null;return r};remove=function(e){_r(e);REAL.grasAt=null};buildFund=function(a,b){_bf(a,b);REAL.grasAt=null};removeFund=function(x,y){const r=_rf(x,y);if(r)REAL.grasAt=null;return r}}
+/* --- Nachbearbeitung: Umgebungsverdeckung (SAO) und Farbabstimmung --- */
+function realPost(){if(REAL.aoM)return;
+ REAL.aoM=new T.ShaderMaterial({uniforms:{tD:{value:null},pI:{value:new T.Matrix4()},p11:{value:1},res:{value:new T.Vector2()},rad:{value:1.6},str:{value:1.1}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:`uniform sampler2D tD;uniform mat4 pI;uniform float p11,rad,str;uniform vec2 res;varying vec2 vUv;
+  vec3 vp(vec2 u){float d=texture2D(tD,u).x;vec4 c=pI*vec4(u*2.-1.,d*2.-1.,1.);return c.xyz/c.w;}
+  float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+  void main(){float d=texture2D(tD,vUv).x;if(d>=.9999){gl_FragColor=vec4(1.);return;}vec3 P=vp(vUv);vec2 px=1./res;
+   vec3 n=normalize(cross(vp(vUv+vec2(px.x,0.))-P,vp(vUv+vec2(0.,px.y))-P));if(dot(n,P)>0.)n=-n;
+   float rp=min(rad*p11/-P.z*.5*res.y,60.);if(rp<1.){gl_FragColor=vec4(1.);return;}
+   float ao=0.,a0=hs(gl_FragCoord.xy)*6.283;
+   for(int i=0;i<14;i++){float t=(float(i)+.5)/14.;float a=a0+float(i)*2.39996;vec3 S=vp(vUv+vec2(cos(a),sin(a))*t*rp/res);vec3 v=S-P;float vv=dot(v,v);ao+=max(0.,dot(v,n)-.004*-P.z)/(vv+.02)*smoothstep(rad*rad*4.,0.,vv);}
+   gl_FragColor=vec4(vec3(clamp(1.-str*ao/14.,0.,1.)),1.);}`,depthTest:false,depthWrite:false,toneMapped:false});
+ REAL.coM=new T.ShaderMaterial({uniforms:{tC:{value:null},tA:{value:null},tD:{value:null},ares:{value:new T.Vector2()},aoAn:{value:1}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+  fragmentShader:`uniform sampler2D tC,tA,tD;uniform vec2 ares;uniform float aoAn;varying vec2 vUv;
+  float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+  void main(){vec3 c=texture2D(tC,vUv).rgb;
+   if(aoAn>.5){float d0=texture2D(tD,vUv).x,s=0.,w=0.;for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(float(x),float(y))/ares;float dd=texture2D(tD,vUv+o).x;float k=1./(1.+abs(dd-d0)*4000.);s+=texture2D(tA,vUv+o).r*k;w+=k;}float ao=s/w;c*=mix(1.,ao,.75);}
+   float l=dot(c,vec3(.2126,.7152,.0722));c=mix(vec3(l),c,1.08)*1.06;
+   vec2 q=vUv-.5;c*=1.-.16*dot(q,q)*1.8;
+   gl_FragColor=vec4(c,1.);
+   #include <tonemapping_fragment>
+   #include <colorspace_fragment>
+   gl_FragColor.rgb+=(hs(gl_FragCoord.xy)-.5)/255.;}`,depthTest:false,depthWrite:false});
+ const pl=new T.PlaneGeometry(2,2);REAL.aoS=new T.Scene();REAL.aoS.add(new T.Mesh(pl,REAL.aoM));REAL.coS=new T.Scene();REAL.coS.add(new T.Mesh(pl,REAL.coM))}
+function realRT(){const v=ren.getDrawingBufferSize(new T.Vector2()),ms=SET.qual==='hoch'?4:2;if(REAL.rt&&REAL.rt.width===v.x&&REAL.rt.height===v.y&&REAL.rt.samples===ms)return;
+ if(REAL.rt){REAL.rt.depthTexture.dispose();REAL.rt.dispose();REAL.aoRT.dispose()}const dt=new T.DepthTexture(v.x,v.y);dt.type=T.UnsignedIntType;
+ REAL.rt=new T.WebGLRenderTarget(v.x,v.y,{type:T.HalfFloatType,depthTexture:dt,samples:ms});const ax=Math.ceil(v.x/2),ay=Math.ceil(v.y/2);REAL.aoRT=new T.WebGLRenderTarget(ax,ay,{type:T.UnsignedByteType});
+ REAL.aoM.uniforms.res.value.set(ax,ay);REAL.coM.uniforms.ares.value.set(ax,ay)}
+function renderBild(){const t=(performance.now()-REAL.t0)/1000;
+ if(REAL.wasser&&REAL.wasser.normalMap)REAL.wasser.normalMap.offset.set(t*.011,t*.007);
+ const grasAn=SET.gras&&SET.qual!=='niedrig'&&C.dist<130;REAL.gras.visible=grasAn;if(grasAn){if(REAL.grasU)REAL.grasU.value=t;const a=REAL.grasAt;if(!a||Math.abs(a[0]-C.tx)>5||Math.abs(a[1]-C.tz)>5)grasBauen()}
+ if(SET.qual==='niedrig'){ren.render(scene,cam);return}
+ realPost();realRT();ren.setRenderTarget(REAL.rt);ren.render(scene,cam);
+ const aoAn=SET.ao;if(aoAn){const u=REAL.aoM.uniforms;u.tD.value=REAL.rt.depthTexture;u.pI.value.copy(cam.projectionMatrixInverse);u.p11.value=cam.projectionMatrix.elements[5];ren.setRenderTarget(REAL.aoRT);ren.render(REAL.aoS,REAL.qc)}
+ const c=REAL.coM.uniforms;c.tC.value=REAL.rt.texture;c.tA.value=REAL.aoRT.texture;c.tD.value=REAL.rt.depthTexture;c.aoAn.value=aoAn?1:0;ren.setRenderTarget(null);ren.render(REAL.coS,REAL.qc)}
 /* ====== Spielhülle: Einstellungen, Ton, Titel, Pause ====== */
 const EK='schichtwerk-einst';
-const SET_STD={stil:'modell',unschaerfe:true,master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
+const SET_STD={ao:true,gras:true,master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
 const SET={...SET_STD};try{Object.assign(SET,JSON.parse(localStorage.getItem(EK))||{})}catch(e){}
 function setSave(){try{localStorage.setItem(EK,JSON.stringify(SET))}catch(e){}}
 
@@ -862,7 +879,7 @@ function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor
 /* --- Grafik --- */
 function grafik(){const q=SET.qual,dpr=devicePixelRatio||1;ren.setPixelRatio(q==='niedrig'?Math.min(dpr,1)*.8:q==='mittel'?Math.min(dpr,1.5):Math.min(dpr,2));
  const sh=q!=='niedrig',ms=q==='hoch'?2048:1024;if(ren.shadowMap.enabled!==sh||sun.shadow.mapSize.x!==ms){ren.shadowMap.enabled=sh;sun.castShadow=sh;sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}scene.traverse(o=>{if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)}})}
- size();stilSetzen();smI.visible=SET.rauch;$('fps').hidden=!SET.fps;document.documentElement.style.setProperty('--ui',SET.ui)}
+ size();smI.visible=SET.rauch;$('fps').hidden=!SET.fps;document.documentElement.style.setProperty('--ui',SET.ui)}
 
 /* --- Menüs --- */
 const SHELL={titel:false,pause:false,vorher:false,zeig:true,hatSpiel:false,zurueck:null};
@@ -897,7 +914,7 @@ const seg=(id,opts)=>`<div class="seg">${opts.map(([v,n])=>`<button data-set="${
 const regler=(id,min,max,st,fmt)=>`<div class="regler"><input type="range" id="r-${id}" data-set="${id}" min="${min}" max="${max}" step="${st}" value="${SET[id]}"><span id="rv-${id}">${fmt(SET[id])}</span></div>`;
 const pz=v=>Math.round(v*100)+' %';
 const ZEILEN={audio:()=>[['Gesamtlautstärke','',regler('master',0,1,.05,pz)],['Effekte','Bauen, Abriss, Meilensteine',regler('sfx',0,1,.05,pz)],['Musik','Ruhige Begleitmusik',regler('musik',0,1,.05,pz)],['Werkshalle','Hintergrundgeräusch deiner Maschinen',regler('umgebung',0,1,.05,pz)]],
- grafik:()=>[['Grafikstil','Werksmodell: Miniatur aus Pappe mit Tusche-Umrissen',seg('stil',[['modell','Werksmodell'],['klassisch','Klassisch']])],['Tiefenunschärfe','Nur im Werksmodell: unscharfer Bildrand wie bei einer Modellbahn',seg('unschaerfe',[[true,'An'],[false,'Aus']])],['Qualität','Niedrig: ohne Schatten, schont Akku und schwache Geräte',seg('qual',[['niedrig','Niedrig'],['mittel','Mittel'],['hoch','Hoch']])],['Rauch','Abgase über Öfen und Generatoren',seg('rauch',[[true,'An'],[false,'Aus']])],['Bilder pro Sekunde anzeigen','',seg('fps',[[true,'An'],[false,'Aus']])]],
+ grafik:()=>[['Qualität','Niedrig: ohne Schatten und Effekte, schont Akku und schwache Geräte',seg('qual',[['niedrig','Niedrig'],['mittel','Mittel'],['hoch','Hoch']])],['Umgebungsverdeckung','Weiche Kontaktschatten in Ecken und unter Maschinen',seg('ao',[[true,'An'],[false,'Aus']])],['Gras','Einzelne Halme in Kameranähe, wiegen sich im Wind',seg('gras',[[true,'An'],[false,'Aus']])],['Rauch','Abgase über Öfen und Generatoren',seg('rauch',[[true,'An'],[false,'Aus']])],['Bilder pro Sekunde anzeigen','',seg('fps',[[true,'An'],[false,'Aus']])]],
  steuer:()=>[['Kamera-Tempo','Für Tasten und Bildschirmrand',regler('kamera',.4,2.5,.1,pz)],['Zoom umkehren','Mausrad andersherum',seg('zoomUm',[[false,'Normal'],[true,'Umgekehrt']])],['Kamera am Bildschirmrand bewegen','Maus an den Rand schieben',seg('rand',[[false,'Aus'],[true,'An']])]],
  ober:()=>[['Größe der Oberfläche','Tafeln, Leiste und Minimap',regler('ui',.75,1.4,.05,pz)],['Automatisch speichern','',seg('auto',[[20,'20 s'],[60,'1 min'],[300,'5 min']])]]};
 function einstZeigen(){$('einst').hidden=false;einstDraw();$('e-zu').focus()}
