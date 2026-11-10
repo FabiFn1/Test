@@ -689,7 +689,7 @@ function frame(now){if(window.__noloop&&!window.__once)return;window.__once=fals
   beltOff=(beltOff-dt*G.speed*1.6)%1;beltTex.offset.x=beltOff;
   const t=now/500;for(const k of['bohrer','schnellbohrer','fertiger','montagewerk','praezision','generator','greifer']){const l=byKind[k]||[];if(!l.length)continue;for(const{m,q}of KM[k]){if(!q.spin)continue;for(let i=0;i<l.length;i++){const e=l[i];if(k==='greifer')m.setMatrixAt(i,pmat(e,q,(e.h?Math.PI:0)+Math.PI*Math.min(1,e.t/.55)));else if(e.st==='ok')m.setMatrixAt(i,pmat(e,q,t*3+i))}m.instanceMatrix.needsUpdate=true}}}
  drawItems();drawSpecial(dt);drawSmoke(paused?0:dt);ghostUp();hudT+=dt;if(hudT>.25){hudT=0;hud()}miniT+=dt;if(miniT>1){miniT=0;miniDraw()}rateT+=dt;if(rateT>=10){rateT=0;rateH.push({...rate});for(const k in rate)delete rate[k];if(rateH.length>6)rateH.shift();rateShow={};for(const r of rateH)for(const k in r)rateShow[k]=(rateShow[k]||0)+r[k];const f=60/(rateH.length*10);for(const k in rateShow)rateShow[k]=Math.round(rateShow[k]*f)}
- saveT+=dt;if(saveT>20){saveT=0;save()}ren.render(scene,cam);if(!window.__noloop)requestAnimationFrame(frame)}
+ saveT+=dt;if(saveT>20){saveT=0;save()}renderBild();if(!window.__noloop)requestAnimationFrame(frame)}
 addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
 /* ====== Touch-Steuerung (Handy und Tablet) ====== */
 const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
@@ -738,9 +738,67 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
   ['Leiste unten','Bauwerk wählen, Menü öffnet Baumenü und Technikbaum'],['⟳ Drehen','Bauwerk drehen, der gelbe Pfeil zeigt den Ausgang'],['✕ Ablegen / lange drücken','Werkzeug ablegen'],
   ['Pipette','Danach auf eine Maschine tippen: übernimmt sie samt Rezept und Richtung'],['Karte','Minimap vergrößern, Tippen springt dorthin'],['Meilenstein-Tafel antippen','Tafel ein- und ausklappen'],['II / 1× / 3×','Pause und Tempo']]
   .map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join('')})();
+/* ====== Grafikstil „Werksmodell“: Miniatur aus Pappe, Tusche und Abendlicht ====== */
+const STIL={an:false,rt:null,qs:null,qc:null,qm:null,toon:new Map(),hemi:null,alt:null,unschaerfe:true,tick:0};
+STIL.grad=(function(){const d=new Uint8Array([60,60,60,255,150,150,150,255,215,215,215,255,255,255,255,255]);const t=new T.DataTexture(d,4,1);t.minFilter=t.magFilter=T.NearestFilter;t.generateMipmaps=false;t.needsUpdate=true;return t})();
+// Hänge im Gelände als Kartonschnitt: helle Kante, feine Wellpappe-Rillen, dunkle Fuge je Ebene
+function pappe(m){m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;').replace('#include <worldpos_vertex>','#include <worldpos_vertex>\nvWP=(modelMatrix*vec4(transformed,1.)).xyz;vWN=normalize(mat3(modelMatrix)*objectNormal);');
+ sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;varying vec3 vWN;').replace('#include <color_fragment>',`#include <color_fragment>
+ {float steil=smoothstep(.55,.25,vWN.y);float lv=vWP.y+1.;float rille=.92+.08*step(.5,fract(lv*22.));float fuge=smoothstep(.06,0.,abs(fract(lv)-.5)-.44);
+  vec3 karton=mix(vec3(.80,.66,.47),vec3(.93,.84,.68),step(.5,fract(lv)))*rille*(1.-.35*fuge);
+  diffuseColor.rgb=mix(diffuseColor.rgb,karton,steil);
+  float kante=smoothstep(.04,0.,abs(fract(lv)-.03))*step(.3,vWN.y)*(1.-step(.95,vWN.y));diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.95,.9,.78),kante*.5);}`)};m.customProgramCacheKey=()=>'pappe'}
+function toonVon(m){let t=STIL.toon.get(m);if(t)return t;
+ t=new T.MeshToonMaterial({color:m.color.clone(),map:m.map,gradientMap:STIL.grad,vertexColors:m.vertexColors,emissive:m.emissive?m.emissive.clone():new T.Color(0),emissiveIntensity:m.emissiveIntensity??1,emissiveMap:m.emissiveMap||null,transparent:m.transparent,opacity:m.opacity,side:m.side,depthWrite:m.depthWrite,flatShading:m.flatShading});
+ // Metall wirkt ohne Spiegelung zu dunkel: aufhellen
+ if((m.metalness||0)>.5)t.color.multiplyScalar(1.35);
+ if(m===groundMat){pappe(t);t.color.setRGB(.94,1.12,.8)}
+ if(m.opacity<1&&m.transparent&&m.color.getHex()===0x2c5364){t.color.set(0x4a9aa6);t.opacity=.88}
+ STIL.toon.set(m,t);return t}
+function toonAlles(an){scene.traverse(o=>{if(!o.isMesh)return;if(an){const m=o.material;if(m&&m.isMeshStandardMaterial){o.userData.std=m;o.material=toonVon(m)}}else if(o.userData.std){o.material=o.userData.std;delete o.userData.std}})}
+// Nachbearbeitung
+function stilPost(){if(STIL.qm)return;STIL.qc=new T.OrthographicCamera(-1,1,1,-1,0,1);STIL.qs=new T.Scene();
+ STIL.qm=new T.ShaderMaterial({uniforms:{tC:{value:null},tD:{value:null},res:{value:new T.Vector2(1,1)},cn:{value:1},cf:{value:1200},dick:{value:1},blur:{value:1}},
+ vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+ fragmentShader:`#include <packing>
+ uniform sampler2D tC,tD;uniform vec2 res;uniform float cn,cf,dick,blur;varying vec2 vUv;
+ float vz(vec2 u){return -perspectiveDepthToViewZ(texture2D(tD,u).x,cn,cf);}
+ float hash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+ void main(){vec2 px=dick/res;float z=vz(vUv);
+  float zl=vz(vUv-vec2(px.x,0.)),zr=vz(vUv+vec2(px.x,0.)),zu=vz(vUv+vec2(0.,px.y)),zd=vz(vUv-vec2(0.,px.y));
+  float lap=abs(zl+zr+zu+zd-4.*z)/max(z,1.);float kante=smoothstep(.0025,.009,lap);
+  float g=max(abs(zl-zr),abs(zu-zd));float sil=smoothstep(.02,.05,g/max(z,1.));kante=max(kante,sil);
+  vec3 W=vec3(.299,.587,.114);float c0=dot(texture2D(tC,vUv).rgb,W);float cd=max(abs(dot(texture2D(tC,vUv+vec2(px.x,0.)).rgb,W)-c0),abs(dot(texture2D(tC,vUv+vec2(0.,px.y)).rgb,W)-c0))/(c0+.15);
+  kante=max(kante,smoothstep(.35,.7,cd)*.55*smoothstep(90.,30.,z));
+  // Tiefenunschärfe zum oberen und unteren Rand
+  float b=blur*smoothstep(.18,.5,abs(vUv.y-.52))*min(1.,z/60.+.4);vec4 c=texture2D(tC,vUv);
+  if(b>.01){vec3 s=c.rgb;float n=1.;for(int i=0;i<12;i++){float a=float(i)*2.39996;float r=sqrt(float(i)+.5)/3.46;vec2 o=vec2(cos(a),sin(a))*r*b*7./res;s+=texture2D(tC,vUv+o).rgb;n+=1.;}c.rgb=s/n;}
+  vec3 col=c.rgb;
+  // warme Abendstimmung, etwas kräftigere Farben
+  float l=dot(col,vec3(.299,.587,.114));col=mix(vec3(l),col,1.12)*vec3(1.05,1.,.92);
+  col=mix(col,col*vec3(.18,.14,.13),kante*(1.-b*.7)*.85);
+  // Papierkorn und Vignette
+  col*=.975+.05*hash(floor(vUv*res/1.5));vec2 q=vUv-.5;col*=1.-.32*dot(q,q)*1.6;
+  gl_FragColor=vec4(col,1.);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+ }`,depthTest:false,depthWrite:false});
+ STIL.qs.add(new T.Mesh(new T.PlaneGeometry(2,2),STIL.qm))}
+function stilRT(){const v=ren.getDrawingBufferSize(new T.Vector2());if(STIL.rt&&STIL.rt.width===v.x&&STIL.rt.height===v.y)return;if(STIL.rt){STIL.rt.depthTexture.dispose();STIL.rt.dispose()}
+ const dt=new T.DepthTexture(v.x,v.y);dt.type=T.UnsignedIntType;STIL.rt=new T.WebGLRenderTarget(v.x,v.y,{type:T.HalfFloatType,depthTexture:dt,samples:SET.qual==='hoch'?4:0});STIL.qm.uniforms.res.value.set(v.x,v.y);STIL.qm.uniforms.dick.value=Math.max(1.4,ren.getPixelRatio()*1.25)}
+function renderBild(){if(!STIL.an){ren.render(scene,cam);return}if(++STIL.tick%60===0)toonAlles(true);stilRT();const u=STIL.qm.uniforms;u.cn.value=cam.near;u.cf.value=cam.far;u.blur.value=SET.unschaerfe&&!SHELL.titel?1:SHELL.titel?.6:0;u.tC.value=STIL.rt.texture;u.tD.value=STIL.rt.depthTexture;
+ ren.setRenderTarget(STIL.rt);ren.render(scene,cam);ren.setRenderTarget(null);ren.render(STIL.qs,STIL.qc)}
+// Himmel und Licht je Stil
+STIL.himmel=(function(){const c=document.createElement('canvas');c.width=64;c.height=512;const g=c.getContext('2d');const l=g.createLinearGradient(0,0,0,512);l.addColorStop(0,'#6f8fa8');l.addColorStop(.3,'#c9b9a0');l.addColorStop(.47,'#f2c894');l.addColorStop(.51,'#8a7a5e');l.addColorStop(1,'#5a4f3e');g.fillStyle=l;g.fillRect(0,0,64,512);const t=new T.CanvasTexture(c);t.mapping=T.EquirectangularReflectionMapping;t.colorSpace=T.SRGBColorSpace;return t})();
+function stilSetzen(){const an=SET.stil!=='klassisch';if(an===STIL.an&&STIL.alt)return;
+ if(!STIL.alt)STIL.alt={bg:scene.background,fog:scene.fog.color.clone(),sun:sun.color.clone(),si:sun.intensity,exp:ren.toneMappingExposure};
+ STIL.an=an;if(an){stilPost();if(!STIL.hemi){STIL.hemi=new T.HemisphereLight(0xe4ecf2,0x7a6448,1.8);scene.add(STIL.hemi)}STIL.hemi.visible=true;scene.background=STIL.himmel;scene.fog.color.set(0xe3c9a2);sun.color.set(0xffd7a3);sun.intensity=2.9;ren.toneMappingExposure=1.02}
+ else{if(STIL.hemi)STIL.hemi.visible=false;scene.background=STIL.alt.bg;scene.fog.color.copy(STIL.alt.fog);sun.color.copy(STIL.alt.sun);sun.intensity=STIL.alt.si;ren.toneMappingExposure=STIL.alt.exp;if(STIL.rt){STIL.rt.dispose();STIL.rt=null}}
+ toonAlles(an)}
+{const _bt=buildTerrain;buildTerrain=function(){_bt();if(STIL.an)toonAlles(true)}}
 /* ====== Spielhülle: Einstellungen, Ton, Titel, Pause ====== */
 const EK='schichtwerk-einst';
-const SET_STD={master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
+const SET_STD={stil:'modell',unschaerfe:true,master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
 const SET={...SET_STD};try{Object.assign(SET,JSON.parse(localStorage.getItem(EK))||{})}catch(e){}
 function setSave(){try{localStorage.setItem(EK,JSON.stringify(SET))}catch(e){}}
 
@@ -804,7 +862,7 @@ function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor
 /* --- Grafik --- */
 function grafik(){const q=SET.qual,dpr=devicePixelRatio||1;ren.setPixelRatio(q==='niedrig'?Math.min(dpr,1)*.8:q==='mittel'?Math.min(dpr,1.5):Math.min(dpr,2));
  const sh=q!=='niedrig',ms=q==='hoch'?2048:1024;if(ren.shadowMap.enabled!==sh||sun.shadow.mapSize.x!==ms){ren.shadowMap.enabled=sh;sun.castShadow=sh;sun.shadow.mapSize.set(ms,ms);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}scene.traverse(o=>{if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true)}})}
- size();smI.visible=SET.rauch;$('fps').hidden=!SET.fps;document.documentElement.style.setProperty('--ui',SET.ui)}
+ size();stilSetzen();smI.visible=SET.rauch;$('fps').hidden=!SET.fps;document.documentElement.style.setProperty('--ui',SET.ui)}
 
 /* --- Menüs --- */
 const SHELL={titel:false,pause:false,vorher:false,zeig:true,hatSpiel:false,zurueck:null};
@@ -839,7 +897,7 @@ const seg=(id,opts)=>`<div class="seg">${opts.map(([v,n])=>`<button data-set="${
 const regler=(id,min,max,st,fmt)=>`<div class="regler"><input type="range" id="r-${id}" data-set="${id}" min="${min}" max="${max}" step="${st}" value="${SET[id]}"><span id="rv-${id}">${fmt(SET[id])}</span></div>`;
 const pz=v=>Math.round(v*100)+' %';
 const ZEILEN={audio:()=>[['Gesamtlautstärke','',regler('master',0,1,.05,pz)],['Effekte','Bauen, Abriss, Meilensteine',regler('sfx',0,1,.05,pz)],['Musik','Ruhige Begleitmusik',regler('musik',0,1,.05,pz)],['Werkshalle','Hintergrundgeräusch deiner Maschinen',regler('umgebung',0,1,.05,pz)]],
- grafik:()=>[['Qualität','Niedrig: ohne Schatten, schont Akku und schwache Geräte',seg('qual',[['niedrig','Niedrig'],['mittel','Mittel'],['hoch','Hoch']])],['Rauch','Abgase über Öfen und Generatoren',seg('rauch',[[true,'An'],[false,'Aus']])],['Bilder pro Sekunde anzeigen','',seg('fps',[[true,'An'],[false,'Aus']])]],
+ grafik:()=>[['Grafikstil','Werksmodell: Miniatur aus Pappe mit Tusche-Umrissen',seg('stil',[['modell','Werksmodell'],['klassisch','Klassisch']])],['Tiefenunschärfe','Nur im Werksmodell: unscharfer Bildrand wie bei einer Modellbahn',seg('unschaerfe',[[true,'An'],[false,'Aus']])],['Qualität','Niedrig: ohne Schatten, schont Akku und schwache Geräte',seg('qual',[['niedrig','Niedrig'],['mittel','Mittel'],['hoch','Hoch']])],['Rauch','Abgase über Öfen und Generatoren',seg('rauch',[[true,'An'],[false,'Aus']])],['Bilder pro Sekunde anzeigen','',seg('fps',[[true,'An'],[false,'Aus']])]],
  steuer:()=>[['Kamera-Tempo','Für Tasten und Bildschirmrand',regler('kamera',.4,2.5,.1,pz)],['Zoom umkehren','Mausrad andersherum',seg('zoomUm',[[false,'Normal'],[true,'Umgekehrt']])],['Kamera am Bildschirmrand bewegen','Maus an den Rand schieben',seg('rand',[[false,'Aus'],[true,'An']])]],
  ober:()=>[['Größe der Oberfläche','Tafeln, Leiste und Minimap',regler('ui',.75,1.4,.05,pz)],['Automatisch speichern','',seg('auto',[[20,'20 s'],[60,'1 min'],[300,'5 min']])]]};
 function einstZeigen(){$('einst').hidden=false;einstDraw();$('e-zu').focus()}
