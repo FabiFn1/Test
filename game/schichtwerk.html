@@ -706,6 +706,102 @@ const NBA={};// Ankerpunkte für Lampen, Dampf, Rauch
  // Abzug
  b.rohr('Stahl_Verzinkt',[-.9,wh+.3,.8],[-.9,wh+1.0,.8],.09);b.cyl('Stahl_Verzinkt',-.9,wh+1.0,.8,.13,.06,{r2:.03});
  nbFertig('elektroofen',b);NBA.elektroofen={lampe:[x1-.1,wh+.25,-zd+.15],bogen:[ox,.92,oz],dampf:[-.9,wh+1.1,.8],glut:[ox,.9,oz]}})();
+/* --- Material Solarzellen --- */
+(function(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle='#0b1c38';g.fillRect(0,0,256,256);for(let y=0;y<4;y++)for(let x=0;x<4;x++){const q=g.createLinearGradient(x*64,y*64,x*64+64,y*64+64);q.addColorStop(0,'#16345f');q.addColorStop(1,'#0a1a36');g.fillStyle=q;g.fillRect(x*64+2,y*64+2,60,60)}g.fillStyle='rgba(170,185,205,.8)';for(let i=0;i<=256;i+=64){g.fillRect(i-1,0,2,256);g.fillRect(0,i-1,256,2)}g.fillStyle='rgba(170,185,205,.25)';for(let i=32;i<256;i+=64)g.fillRect(i,0,1,256);
+ const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;mats.Solar=new T.MeshStandardMaterial({map:t,roughness:.16,metalness:.5,envMapIntensity:1.3})})();
+// Markierung „H“ mit Ring auf Landeflächen
+Bau.prototype.landeplatz=function(x,y,z,r){for(let i=0;i<16;i++){const a=i*.3927;this.add('Lack_Gelb',new T.BoxGeometry(r*.4,.012,.05),nbM(x+Math.cos(a)*r,y,z+Math.sin(a)*r,0,-a+Math.PI/2,0))}const h=r*.42;for(const s of[-1,1])this.box('Lack_Weiss',x,y-.006,z+s*h*.6,h*1.6,.012,.07);this.box('Lack_Weiss',x,y-.006,z,.07,.012,h*1.2);return this};
+Bau.prototype.tank=function(mat,x,z,r,h,y0){y0=y0||.1;this.cyl('Beton',x,y0,z,r+.05,.06,{seg:20});this.cyl(mat,x,y0+.06,z,r,h,{seg:24});this.lathe(mat,x,y0+.06+h,z,[[r,0],[r*.6,r*.16],[.02,r*.24]],{seg:24});this.cyl('Stahl_Verzinkt',x,y0+.06+h-.03,z,r+.012,.04,{seg:24,open:true});this.cyl('Stahl_Verzinkt',x,y0+.06+h*.5,z,r+.008,.03,{seg:24,open:true});return this};
+Bau.prototype.kolonne=function(mat,x,z,r,h){this.cyl('Beton',x,.1,z,r+.08,.12,{seg:12});this.cyl(mat,x,.22,z,r,h,{seg:16});this.kugel(mat,x,.22+h,z,r,{halb:true});for(let y=.95;y<h;y+=.8){this.cyl('Stahl_Verzinkt',x,y,z,r+.17,.025,{seg:10});this.cyl('Lack_Gelb',x,y+.17,z,r+.16,.016,{seg:10,open:true});for(let i=0;i<10;i++){const a=i*.628;this.box('Lack_Gelb',x+Math.cos(a)*(r+.16),y+.02,z+Math.sin(a)*(r+.16),.014,.16,.014)}}
+ this.box('Stahl_Verzinkt',x+r+.025,.22,z,.02,h,.09);return this};
+/* --- Raffinerie: Kolonnen, Rohrbrücke, Tanks und Fackel --- */
+(function(){const b=new Bau();b.box('Beton',0,0,0,2.96,.1,2.96);
+ b.kolonne('Stahl_Verzinkt',-.85,.85,.2,3.1);b.kolonne('Silo',-.2,1.05,.15,2.1);b.rohr('Stahl_Verzinkt',[-.85,2.9,.85],[-.2,2.9,.85],.04);b.rohr('Stahl_Verzinkt',[-.2,2.9,.85],[-.2,2.35,1.05],.04);
+ // Fackel
+ const fx=-1.2,fz=-1.2;b.box('Beton',fx,.1,fz,.36,.1,.36);b.cyl('Lack_Dunkel',fx,.2,fz,.045,4.0,{seg:8});b.cyl('Rost',fx,4.2,fz,.075,.16,{seg:10});for(const[dx,dz]of[[1,0],[-.5,.87],[-.5,-.87]]){b.rohr('Stahl_Verzinkt',[fx+dx*.2,.2,fz+dz*.2],[fx,2.6,fz],.012,{seg:4});b.rohr('Stahl_Verzinkt',[fx+dx*.2,.2,fz+dz*.2],[fx,1.3,fz],.012,{seg:4})}
+ // Prozessofen
+ b.box('Ziegel_Dunkel',-.55,.1,-.62,.74,.2,.66);b.box('Rost',-.55,.3,-.62,.7,.8,.62);b.dach('Rost','Rost',-.9,-.2,1.1,.24,-.93,-.31);b.cyl('Stahl_Verzinkt',-.55,1.3,-.62,.09,.9,{seg:10});b.cyl('Stahl_Verzinkt',-.55,2.2,-.62,.12,.05,{r2:.03,seg:10});
+ for(const z of[-.8,-.62,-.44])b.rohr('Kupfer',[-.2,.45,z],[-.05,.45,z],.02,{seg:5});b.wand('Glut',0,-.198,.42,-.62,.1,.08);
+ // Tanks
+ b.tank('Lack_Weiss',.74,.92,.42,.95);b.tank('Lack_Weiss',.74,-.92,.4,.75);b.gelaender('Lack_Gelb',.44,.62,1.04,.62,1.15,.14);b.box('Stahl_Verzinkt',1.18,.16,.92,.03,.95,.1);
+ // Rohrbrücke
+ for(const x of[-1.05,-.35,.35,1.0]){for(const z of[-.26,.26])b.box('Lack_Dunkel',x,.1,z,.05,.88,.05);b.box('Lack_Dunkel',x,.94,0,.05,.05,.57)}
+ b.rohr('Stahl_Verzinkt',[-1.2,1.04,-.15],[1.05,1.04,-.15],.045);b.rohr('Lack_Gelb',[-1.2,1.03,0],[1.05,1.03,0],.035);b.rohr('Lack_Rot',[-1.2,1.02,.15],[1.05,1.02,.15],.028);
+ b.rohr('Stahl_Verzinkt',[-.85,1.04,-.15],[-.85,1.04,.62],.045);b.rohr('Lack_Rot',[.74,1.02,.15],[.74,1.02,.5],.028);b.rohr('Lack_Gelb',[.74,1.03,0],[.74,1.03,-.52],.035);b.rohr('Stahl_Verzinkt',[-.55,1.04,-.15],[-.55,1.04,-.32],.045);
+ for(const x of[-1.2,1.05]){b.rohr('Stahl_Verzinkt',[x,1.04,-.15],[x,.2,-.15],.045);b.rohr('Lack_Gelb',[x,1.03,0],[x,.2,0],.035)}
+ // Pumpenhaus
+ b.box('Blech_Blau',.1,.1,-1.05,.5,.46,.5);b.dach('Blechdach','Blech_Blau',-.15,.35,.56,.14,-1.3,-.8,{ue:.04});b.cyl('Lack_Grau',.1,.22,-.72,.09,.2,{rz:Math.PI/2,seg:10});
+ nbFertig('raffinerie',b);NBA.raffinerie={lampe:[.1,.84,-1.05],fackel:[fx,4.38,fz],dampf:[-.55,2.3,-.62]}})();
+/* --- Chemiefabrik: Reaktoren im Stahlgerüst, Kugeltanks, Labor --- */
+(function(){const b=new Bau();b.box('Beton',0,0,0,2.96,.1,2.96);
+ b.box('Beton_Hell',-.98,.1,0,.74,.14,2.56);b.box('Paneel',-.98,.24,0,.7,.9,2.5);b.box('Paneel_Blau',-.98,.9,0,.715,.14,2.515);b.box('Dach',-.98,1.14,0,.76,.05,2.56);b.wand('Verglasung',0,-.618,.6,0,2.1,.32,7,1);b.wand('Verglasung',1,-.98,.6,1.262,.5,.32,2,1);
+ b.klima(-.98,1.19,-.8,.4,.4);b.klima(-.98,1.19,.6,.4,.5);b.rohr('Stahl_Verzinkt',[-.98,1.3,-.55],[-.98,1.3,.3],.05);
+ // Gerüst
+ for(const x of[-.42,.4])for(const z of[-1.0,0,1.0])b.box('Lack_Gelb',x,.1,z,.06,1.72,.06);for(const z of[-1.0,0,1.0])b.box('Lack_Gelb',-.01,1.76,z,.88,.06,.06);for(const x of[-.42,.4])b.box('Lack_Gelb',x,1.76,0,.06,.06,2.06);
+ b.box('Stahl_Verzinkt',-.01,1.0,0,.92,.03,2.1);b.gelaender('Lack_Gelb',.44,-1.04,.44,1.04,1.03,.2);b.gelaender('Lack_Gelb',-.44,1.04,.44,1.04,1.03,.2);b.gelaender('Lack_Gelb',-.44,-1.04,.44,-1.04,1.03,.2);
+ const R=[];for(const z of[-.52,.52]){b.lathe('Stahl_Verzinkt',-.01,.42,z,[[.05,0],[.3,.26],[.3,1.0],[.2,1.12],[.06,1.18]],{seg:20});for(const y of[.75,1.3])b.cyl('Lack_Blau',-.01,y,z,.31,.05,{seg:20,open:true});b.rohr('Stahl_Verzinkt',[-.01,.42,z],[-.01,.2,z],.04);b.rohr('Stahl_Verzinkt',[-.01,.2,z],[.6,.2,z],.04);R.push([-.01,1.6,z])}
+ // Kugeltanks
+ for(const z of[-.92,.92]){b.kugel('Lack_Weiss',.92,.62,z,.38,{seg:20,ring:14});b.cyl('Lack_Blau',.92,.6,z,.385,.04,{seg:20,open:true});for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]])b.rohr('Lack_Grau',[.92+dx*.27,.1,z+dz*.27],[.92+dx*.24,.55,z+dz*.24],.025,{seg:5});b.rohr('Stahl_Verzinkt',[.92,1.0,z],[.92,1.1,z],.03);b.rohr('Stahl_Verzinkt',[.92,1.1,z],[.42,1.1,z*.57],.03)}
+ // Wäscherkolonne
+ b.cyl('Beton',-.3,.1,1.28,.16,.1,{seg:10});b.cyl('Lack_Weiss',-.3,.2,1.28,.11,2.0,{seg:12});b.cyl('Lack_Blau',-.3,1.2,1.28,.115,.3,{seg:12,open:true});b.cyl('Stahl_Verzinkt',-.3,2.2,1.28,.14,.06,{r2:.05,seg:12});b.rohr('Stahl_Verzinkt',[-.3,.5,1.28],[-.01,.5,.82],.035);
+ b.schaltschrank(1.34,-.62-.0,0);for(const[x,z]of[[1.3,.55],[1.14,.5]])b.cyl('Lack_Blau',x,.1,z,.08,.26,{seg:10});
+ nbFertig('chemiefabrik',b);NBA.chemiefabrik={lampe:[.4,1.9,1.0],ruehr:R,dampf:[-.3,2.3,1.28]}})();
+/* --- Kernkraftwerk: Reaktorkuppel, Maschinenhaus, zwei Kühltürme --- */
+(function(){const b=new Bau();b.box('Beton',0,0,0,4.96,.1,4.96);
+ const rx=-1.3,rz=-1.05;b.cyl('Beton_Hell',rx,.1,rz,.98,1.5,{seg:32});b.kugel('Beton_Hell',rx,1.6,rz,.98,{halb:true,seg:32,ring:12});b.cyl('Beton',rx,1.52,rz,1.0,.1,{seg:32,open:true});b.cyl('Beton',rx,.1,rz,1.02,.2,{seg:32,open:true});b.cyl('Lack_Grau',rx,2.56,rz,.14,.1,{seg:10});
+ b.box('Beton',rx,.1,.12,2.0,1.05,.8);b.box('Dach',rx,1.15,.12,2.06,.05,.86);b.wand('Verglasung',2,rx-1.012,.72,.12,.6,.3,2,1);b.box('Beton',rx+1.15,.1,rz,.5,.8,.9);b.box('Dach',rx+1.15,.9,rz,.54,.04,.94);
+ // Maschinenhaus
+ const hx=-1.05,hz=1.5;b.box('Beton_Hell',hx,.1,hz,2.76,.18,1.56);b.box('Blech_Hell',hx,.28,hz,2.7,1.15,1.5);b.box('Paneel_Blau',hx,1.2,hz,2.72,.12,1.52);b.dach('Blechdach','Blech_Hell',hz-.75,hz+.75,1.43,.34,hx-1.35,hx+1.35,{ax:'x',ue:.06});
+ b.wand('Verglasung',1,hx,.75,hz+.762,2.3,.4,8,1);b.wand('Sektionaltor',2,hx-1.362,.6,hz,.9,.9);for(const x of[-.9,-.3,.3,.9])b.klima(hx+x,1.62,hz,.3,.26);
+ // Kühltürme
+ const TT=[[1.42,1.28],[1.42,-1.22]];for(const[tx,tz]of TT){b.lathe('Beton',tx,.1,tz,[[1.0,0],[.86,.8],[.7,2.0],[.64,2.8],[.67,3.5],[.75,4.05]],{seg:36});b.cyl('Beton_Hell',tx,4.15,tz,.75,.05,{seg:36,open:true});b.cyl('Lack_Dunkel',tx,4.0,tz,.72,.02,{seg:24});
+  for(let i=0;i<18;i++){const a=i*.349;b.rohr('Beton_Hell',[tx+Math.cos(a)*1.05,.1,tz+Math.sin(a)*1.05],[tx+Math.cos(a+.17)*.95,.6,tz+Math.sin(a+.17)*.95],.028,{seg:5})}}
+ // Abluftkamin
+ const sx=-2.15,sz=-2.15;b.cyl('Beton',sx,.1,sz,.2,.24,{seg:12});let y=.34,r=.13;for(let i=0;i<9;i++){const r2=r-.007;b.cyl(i%2?'Lack_Weiss':'Lack_Rot',sx,y,sz,r,.46,{r2,seg:12});y+=.46;r=r2}
+ // Dampfleitungen und Schaltanlage
+ b.rohr('Stahl_Verzinkt',[-.6,1.0,-.5],[-.6,1.0,.76],.09);b.rohr('Stahl_Verzinkt',[-1.6,1.0,-.2],[-1.6,1.0,.76],.09);b.rohr('Stahl_Verzinkt',[.3,.7,1.5],[.62,.7,1.4],.1);b.rohr('Stahl_Verzinkt',[.3,.45,1.1],[.75,.45,.9],.08);
+ for(const x of[-.95,-.45,.05]){b.box('Lack_Grau',x,.1,-2.12,.34,.42,.4);for(let i=0;i<4;i++)b.box('Stahl_Verzinkt',x-.13+i*.085,.14,-2.12,.014,.32,.46);for(const dz of[-.1,0,.1])b.cyl('Lack_Weiss',x,.52,-2.12+dz,.022,.14,{seg:6})}
+ for(const x of[-1.25,.35])b.box('Stahl_Verzinkt',x,.1,-1.78,.05,1.0,.05);b.box('Stahl_Verzinkt',-.45,1.08,-1.78,1.66,.05,.05);for(const x of[-.95,-.45,.05])b.rohr('Kupfer',[x,.66,-2.12],[x,1.08,-1.78],.01,{seg:4});
+ b.box('Paneel',2.12,.1,.03,.5,.42,.34);b.box('Dach',2.12,.52,.03,.56,.04,.4);
+ nbFertig('kernkraftwerk',b);NBA.kernkraftwerk={lampe:[hx+1.2,1.85,hz],dampf:TT.map(q=>[q[0],4.2,q[1]]),licht:[sx,y+.05,sz]}})();
+/* --- Zentrifuge: Halle mit großer Trommel und Kaskade --- */
+(function(){const b=new Bau(),hx=-.8;b.box('Beton',0,0,0,2.96,.1,2.96);
+ b.box('Beton_Hell',hx,.1,0,1.14,.16,2.64);b.box('Paneel',hx,.26,0,1.1,1.0,2.6);b.box('Lack_Gelb',hx,1.0,0,1.115,.12,2.615);b.box('Dach',hx,1.26,0,1.16,.05,2.66);b.wand('Verglasung',0,hx+.562,.7,0,2.0,.3,7,1);b.wand('Verglasung',2,hx-.562,.7,0,2.0,.3,7,1);
+ b.klima(hx,1.31,-.8,.44,.4);b.klima(hx,1.31,.8,.44,.4);b.rohr('Stahl_Verzinkt',[hx,1.42,-.58],[hx,1.42,.58],.05);
+ const cx=.52;b.cyl('Beton',cx,.1,0,.7,.14,{seg:28});b.cyl('Lack_Grau',cx,.24,0,.6,.82,{seg:28});for(const y of[.3,.62,.98])b.cyl('Stahl_Verzinkt',cx,y,0,.615,.06,{seg:28,open:true});b.cyl('Lack_Gelb',cx,.76,0,.607,.1,{seg:28,open:true});
+ for(let i=0;i<6;i++){const a=i*1.047+.5;b.box('Lack_Dunkel',cx+Math.cos(a)*.66,.1,Math.sin(a)*.66,.08,.5,.08)}
+ b.box('Lack_Blau',cx,.1,-.92,.34,.4,.3);b.cyl('Lack_Blau',cx,.34,-.74,.13,.2,{rx:Math.PI/2,seg:12});
+ for(const s of[-1,1]){for(let i=0;i<5;i++){const x=.05+i*.24;b.cyl('Lack_Weiss',x,.1,s*1.2,.075,.95,{seg:10});b.cyl('Lack_Gelb',x,.75,s*1.2,.078,.08,{seg:10,open:true});b.kugel('Lack_Weiss',x,1.05,s*1.2,.075,{halb:true,seg:10})}b.rohr('Stahl_Verzinkt',[-.05,1.16,s*1.2],[1.1,1.16,s*1.2],.03);b.rohr('Stahl_Verzinkt',[-.05,1.16,s*1.2],[-.24,1.16,s*1.2],.03)}
+ b.rohr('Stahl_Verzinkt',[cx,.5,.6],[cx,.5,1.12],.05);b.schaltschrank(1.34,-.62,0);
+ nbFertig('zentrifuge',b);NBA.zentrifuge={lampe:[hx+.4,1.4,1.1],deckel:[cx,1.08,0],licht:[cx,1.26,0]}})();
+/* --- Drohnenhafen: Landeplatz, Tower und Hangar --- */
+(function(){const b=new Bau();b.box('Beton',0,0,0,2.96,.08,2.96);
+ b.cyl('Beton',.1,.08,0,1.12,.12,{seg:8});b.cyl('Dach',.1,.2,0,1.04,.02,{seg:8});b.landeplatz(.1,.228,0,.8);
+ for(const[x,z]of[[1.3,1.3],[1.3,-1.3],[-1.3,1.3]])b.cyl('Lack_Dunkel',x,.08,z,.03,.05,{seg:6});
+ const tx=-1.2,tz=-1.2;b.box('Beton_Hell',tx,.08,tz,.34,1.3,.34);b.box('Stahl_Verzinkt',tx,1.38,tz,.56,.04,.56);for(let d=0;d<4;d++){const n=[[1,0],[0,1],[-1,0],[0,-1]][d];b.wand('Verglasung',d,tx+n[0]*.24,1.56,tz+n[1]*.24,.48,.28,2,1)}b.box('Lack_Dunkel',tx,1.7,tz,.58,.05,.58);b.rohr('Stahl_Verzinkt',[tx+.15,1.75,tz+.15],[tx+.15,2.3,tz+.15],.012,{seg:5});b.gelaender('Lack_Gelb',tx-.28,tz+.28,tx+.28,tz+.28,1.42,.12);
+ b.box('Beton_Hell',-1.1,.08,.55,.64,.08,1.36);b.box('Blech_Blau',-1.1,.16,.55,.6,.5,1.3);b.cyl('Blechdach',-1.1,.66,.55,.3,1.32,{rx:Math.PI/2,seg:16});b.wand('Sektionaltor',0,-.788,.42,.55,.9,.5);b.box('Lack_Gelb',-.78,.69,.55,.04,.04,1.0);
+ b.rohr('Stahl_Verzinkt',[1.3,.08,.75],[1.3,.95,.75],.014,{seg:5});b.cyl('Lack_Rot',1.19,.93,.75,.05,.22,{r2:.02,rz:Math.PI/2,seg:8});
+ b.box('Holz',.9,.08,-1.25,.3,.22,.26);b.box('Holz',.55,.08,-1.3,.24,.16,.22);b.cyl('Lack_Rot',-.55,.08,-1.3,.08,.26,{seg:10});
+ nbFertig('drohnenhafen',b);NBA.drohnenhafen={lampe:[-1.1,1.0,.55],rl:[tx,1.75,tz]}})();
+/* --- Wartungsstation: Werkstatt mit Dachlandeplatz und Radarmast --- */
+(function(){const b=new Bau(),x0=-1.36,x1=.56,zd=1.3,wh=1.1;
+ b.box('Beton',0,0,0,2.96,.1,2.96);b.box('Beton_Hell',(x0+x1)/2,.1,0,x1-x0+.04,.18,zd*2+.04);b.box('Blech_Hell',(x0+x1)/2,.28,0,x1-x0,wh-.18,zd*2);b.box('Lack_Rot',(x0+x1)/2,.98,0,x1-x0+.015,.14,zd*2+.015);
+ b.box('Beton_Hell',(x0+x1)/2,.1+wh,0,x1-x0+.08,.1,zd*2+.08);b.box('Dach',(x0+x1)/2,.2+wh,0,x1-x0-.06,.03,zd*2-.06);b.landeplatz(0,.238+wh,0,.55);
+ for(const z of[-.65,.65]){b.wand('Sektionaltor',0,x1+.012,.56,z,1.0,.72);b.box('Warnstreifen',x1+.03,.1,z-.55,.06,.5,.06);b.box('Warnstreifen',x1+.03,.1,z+.55,.06,.5,.06)}b.box('Lack_Rot',x1+.2,1.0,0,.4,.04,zd*2-.2);for(const z of[-1.15,0,1.15])b.rohr('Stahl_Verzinkt',[x1+.38,1.0,z],[x1+.02,1.2,z],.012,{seg:4});
+ for(const x of[-.9,-.2])b.fenster(1,x,.66,zd,.5,.34);for(const x of[-.9,-.2])b.fenster(3,x,.66,-zd,.5,.34);b.schild(0,x1+.013,1.14,0,3,.5);
+ // Radarmast
+ const mx=-1.08,mz=-1.04;for(const[dx,dz]of[[-1,-1],[1,-1],[-1,1],[1,1]]){b.rohr('Stahl_Verzinkt',[mx+dx*.12,wh+.2,mz+dz*.12],[mx+dx*.03,2.36,mz+dz*.03],.014,{seg:4})}for(const y of[1.6,1.95,2.3])b.box('Stahl_Verzinkt',mx,y,mz,.2-(y-1.6)*.14,.015,.2-(y-1.6)*.14);
+ // Hof: Ersatzteile, Gasflaschen, Kran
+ b.box('Holz',1.1,.1,1.15,.4,.26,.34);b.box('Holz',1.14,.36,1.13,.28,.2,.26);b.box('Holz',.82,.1,1.25,.24,.2,.24);for(const z of[-1.3,-1.16])b.cyl('Lack_Rot',1.3,.1,z,.055,.4,{seg:8});b.cyl('Lack_Blau',1.16,.1,-1.26,.055,.4,{seg:8});
+ b.box('Lack_Gelb',1.3,.1,.5,.1,.9,.1);b.box('Lack_Gelb',1.05,.94,.5,.6,.07,.07);b.rohr('Lack_Dunkel',[.82,.94,.5],[.82,.6,.5],.008,{seg:4});b.box('Lack_Dunkel',.82,.52,.5,.05,.08,.05);
+ b.klima(-.9,.23+wh,.8,.4,.4);
+ nbFertig('wartungsstation',b);NBA.wartungsstation={lampe:[x1-.1,wh+.26,zd-.15]}})();
+/* --- Solarpark: aufgeständerte Modulreihen mit Wechselrichter --- */
+(function(){const b=new Bau();b.box('Beton',0,0,0,2.96,.06,2.96);
+ for(const z of[-.92,0,.92]){b.add('Solar',new T.BoxGeometry(2.56,.03,.74),nbM(0,.5,z,.5,0,0),{s:2});b.add('Stahl_Verzinkt',new T.BoxGeometry(2.6,.03,.78),nbM(0,.48,z,.5,0,0));
+  for(const x of[-1.1,-.37,.37,1.1]){b.box('Stahl_Verzinkt',x,.06,z-.26,.04,.56,.04);b.box('Stahl_Verzinkt',x,.06,z+.28,.04,.24,.04);b.rohr('Stahl_Verzinkt',[x,.1,z+.28],[x,.56,z-.26],.01,{seg:4})}}
+ b.box('Lack_Grau',1.3,.06,-1.3,.26,.5,.22);for(let i=0;i<5;i++)b.box('Stahl_Verzinkt',1.2+i*.05,.1,-1.3,.012,.4,.26);b.rohr('Lack_Dunkel',[1.3,.1,-1.2],[1.3,.1,1.2],.025,{seg:6});
+ nbFertig('solar',b);NBA.solar={lampe:[1.3,.62,-1.3]}})();
 /* ====== Ende Neue Gebäudemodelle ====== */
 const CAP=1500,BC=20000;const dm=new T.Object3D(),mtx=new T.Matrix4(),pm=new T.Matrix4();const KM={};
 function inst(q,n,shadow=true){const m=new T.InstancedMesh(q.g,M(q.m),n);m.castShadow=shadow;m.receiveShadow=true;m.count=0;m.frustumCulled=false;scene.add(m);return m}
@@ -1238,13 +1334,13 @@ function gebaeudeUpdate(){const now=performance.now(),rdt=Math.min(.1,(now-gbLas
    case'generator':{const A=NBA.generator;if(SET.rauch&&an&&!weit&&Math.random()<dt*3){const p=lokal(e,A.rauch[0],A.rauch[1],A.rauch[2]);emit('rauch',p[0],p[1],p[2],0,.8,0,2.8,.2,1)}if(an)lichtAn(lokal(e,A.glut[0],A.glut[1],A.glut[2]),0xff6a1a,.001,true,.7);break}
    case'kraftwerk':{const A=NBA.kraftwerk;if(an&&!weit){if(Math.random()<dt*4.5){const p=lokal(e,A.dampf[0],A.dampf[1],A.dampf[2]);emit('dampf',p[0]+(Math.random()-.5)*.4,p[1],p[2]+(Math.random()-.5)*.4,0,.9+Math.random()*.3,0,7,.7,3.2)}
      if(SET.rauch&&Math.random()<dt*3){const p=lokal(e,A.rauch[0],A.rauch[1],A.rauch[2]);emit('rauch',p[0],p[1],p[2],0,.9,0,5,.25,1.6)}}lichtAn(lokal(e,A.licht[0],A.licht[1],A.licht[2]),0xff2a1a,.05,blink(e,.8,.25));break}
-   case'kernkraftwerk':if(an&&!weit&&Math.random()<dt*5){const p=lokal(e,1.33,4.3,1.2);emit('dampf',p[0]+(Math.random()-.5)*.8,p[1],p[2]+(Math.random()-.5)*.8,0,1.1+Math.random()*.4,0,9,1.2,5)}lichtAn(lokal(e,1.33,4.3,.45),0xff2a1a,.06,blink(e,.8,.25));break;
-   case'raffinerie':{const p=lokal(e,-.72,4.52,.76);if(an){if(!weit&&Math.random()<dt*40)emit('flamme',p[0]+(Math.random()-.5)*.05,p[1]+.05,p[2]+(Math.random()-.5)*.05,(Math.random()-.5)*.2+.15,.9+Math.random()*.6,(Math.random()-.5)*.2,.35+Math.random()*.25,.32,.06);lichtAn([p[0],p[1]+.25,p[2]],0xff7a20,.001,true,1.6+.3*Math.sin(t*17))}
-     if(an&&!weit&&Math.random()<dt*1.2){const q=lokal(e,.5,2.2,-.6);emit('dampf',q[0],q[1],q[2],0,.6,0,3.5,.3,1.3)}break}
-   case'chemiefabrik':for(const z of[.44,-.46]){set('ruehr_mot',-.6,1.3,z);set('ruehr_ach',-.6,1.48,z,0,ph*6,0)}if(an&&!weit&&Math.random()<dt*1.8){const p=lokal(e,.54,1.3,.66);emit('dampf',p[0],p[1],p[2],0,.55,0,3,.3,1.2)}break;
-   case'zentrifuge':set('zdeckel',0,1.45,0,0,ph*14,0);lichtAn(lokal(e,0,1.62,0),0x3aa0ff,.05,an&&blink(e,1.2,.3));break;
+   case'kernkraftwerk':if(an&&!weit&&Math.random()<dt*7){const q=NBA.kernkraftwerk.dampf[Math.random()<.5?0:1],p=lokal(e,q[0],q[1],q[2]);emit('dampf',p[0]+(Math.random()-.5)*.8,p[1],p[2]+(Math.random()-.5)*.8,0,1.1+Math.random()*.4,0,9,1.2,5)}{const q=NBA.kernkraftwerk.licht;lichtAn(lokal(e,q[0],q[1],q[2]),0xff2a1a,.06,blink(e,.8,.25))}break;
+   case'raffinerie':{const A=NBA.raffinerie,p=lokal(e,A.fackel[0],A.fackel[1],A.fackel[2]);if(an){if(!weit&&Math.random()<dt*40)emit('flamme',p[0]+(Math.random()-.5)*.05,p[1]+.05,p[2]+(Math.random()-.5)*.05,(Math.random()-.5)*.2+.15,.9+Math.random()*.6,(Math.random()-.5)*.2,.35+Math.random()*.25,.32,.06);lichtAn([p[0],p[1]+.25,p[2]],0xff7a20,.001,true,1.6+.3*Math.sin(t*17))}
+     if(an&&!weit&&Math.random()<dt*1.2){const q=lokal(e,A.dampf[0],A.dampf[1],A.dampf[2]);emit('dampf',q[0],q[1],q[2],0,.6,0,3.5,.3,1.3)}break}
+   case'chemiefabrik':for(const q of NBA.chemiefabrik.ruehr){set('ruehr_mot',q[0],q[1],q[2]);set('ruehr_ach',q[0],q[1]+.18,q[2],0,ph*6,0)}if(an&&!weit&&Math.random()<dt*1.8){const q=NBA.chemiefabrik.dampf,p=lokal(e,q[0],q[1],q[2]);emit('dampf',p[0],p[1],p[2],0,.55,0,3,.3,1.2)}break;
+   case'zentrifuge':{const A=NBA.zentrifuge;set('zdeckel',A.deckel[0],A.deckel[1],A.deckel[2],0,ph*14,0,.72,1,.72);lichtAn(lokal(e,A.licht[0],A.licht[1],A.licht[2]),0x3aa0ff,.05,an&&blink(e,1.2,.3));break}
    case'wartungsstation':set('radarfuss',-1.08,2.6,-1.04);set('radar',-1.08,2.88,-1.04,0,t*1.4+e.id,0);lichtAn(lokal(e,-1.08,2.42,-1.04),0xff2a1a,.045,blink(e,1,.25));break;
-   case'drohnenhafen':set('rl_fuss',-1.08,2.36,-1.04);lichtAn(lokal(e,-1.08,2.45,-1.04),0xff8a12,.055,blink(e,1.5,.5));for(const[a,b]of[[1.3,1.3],[1.3,-1.3],[-1.3,1.3]])lichtAn(lokal(e,a,.12,b),0x40ff70,.04,blink(e,.9,.3));break;
+   case'drohnenhafen':{const q=NBA.drohnenhafen.rl;set('rl_fuss',q[0],q[1],q[2]);lichtAn(lokal(e,q[0],q[1]+.09,q[2]),0xff8a12,.055,blink(e,1.5,.5))}for(const[a,b]of[[1.3,1.3],[1.3,-1.3],[-1.3,1.3]])lichtAn(lokal(e,a,.12,b),0x40ff70,.04,blink(e,.9,.3));break;
    case'raketensilo':for(const z of[.52,-.52])lichtAn(lokal(e,2.08,6.86,z),0xff2a1a,.06,blink(e,.7,.25));break}}
  for(const e of nodes){if(e.k==='zentrale'){mMat(e,M4);set('mast_z',-2.55,0,2.6);set('fahne',-2.55,3.85,2.6);lichtAn(lokal(e,2.24,5.96,-2.13),0xff2a1a,.07,((t*.6)%1)<.2)}
   else if(e.k==='grossmast'){lichtAn([e.x+.5,YL(e.z)+6.08,e.y+.5],0xff2a1a,.06,((t*.7+e.id*.13)%1)<.22)}}
