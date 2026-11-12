@@ -1188,13 +1188,15 @@ function rauschFeld(n,seed,okt){const R=rnd(seed),hf=new Float32Array(n*n);for(c
     float sd=texture2D(tS,p/nn).r;
     vec3 n=normalize(vec3((a.xy*.5+b.xy*.35+c.xy*.15)*mix(.35,.75,smoothstep(0.,.4,sd)),1.)).xzy;
     vec3 v=normalize(cameraPosition-vWP);
-    float fr=.02+.98*pow(1.-max(dot(n,v),0.),5.);
+    float fr=.05+.95*pow(1.-max(dot(n,v),0.),5.);
     vec2 ruv=vRC.xy/vRC.w+n.xz*.045;
     vec3 refl=rOn>.5?texture2D(tR,ruv).rgb:skyC;
     vec3 wc=mix(shallow,deep,smoothstep(.0,.55,sd));
     // Licht im Wasser: zur Sonne hin etwas heller, Streulicht
     wc*=.75+.5*max(dot(normalize(sunD),vec3(0.,1.,0.)),0.);
-    vec3 h=normalize(normalize(sunD)+v);float nh=max(dot(n,h),0.);float sp=pow(nh,420.)*6.+pow(nh,80.)*.03;
+    // Wellen aus jedem Blickwinkel: Flanken zur Sonne heller, abgewandte dunkler, Kämme leicht aufgehellt
+    vec2 Lh=normalize(sunD.xz+vec2(.0001));float well=dot(n.xz,Lh);wc*=1.+clamp(well*4.5,-.55,.9);wc+=vec3(.05,.085,.09)*smoothstep(.015,.06,1.-n.y);
+    vec3 h=normalize(normalize(sunD)+v);float nh=max(dot(n,h),0.);float sp=min(pow(nh,1400.)*2.2,.9)+pow(nh,120.)*.04;
     vec3 col=mix(wc,refl*.62,clamp(fr*.9,0.,1.))+sunC*sp*mix(.4,1.,smoothstep(0.,.3,sd));
     // Uferschaum: Brandungslinien, die zum Ufer laufen
     float br=texture2D(tN,p*.22+vec2(uT*.025,uT*.017)).x;
