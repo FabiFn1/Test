@@ -1985,8 +1985,8 @@ function klangStart(){const c=AU.c,G_=()=>{const g=c.createGain();g.gain.value=0
  KLANG.g.klack=G_();KLANG.g.klack.gain.value=1;KLANG.an=true}
 setInterval(()=>{if(!AU.c||AU.c.state!=='running'||!G)return;if(!KLANG.an)klangStart();const z={bohr:0,feuer:0,brumm:0,klack:0},r=Math.max(14,C.dist*.55);
  if(!paused&&!SHELL.titel)for(const e of machines){const a=KLANG.art[e.k];if(a&&e.st==='ok'&&Math.abs(e.x-C.x)<r&&Math.abs(e.y-C.z)<r)z[a]++}
- const nah=Math.max(0,Math.min(1,1-(C.dist-14)/90)),t=AU.c.currentTime;for(const a of['bohr','feuer','brumm'])KLANG.g[a].gain.setTargetAtTime(Math.min(1,z[a]/5)*nah*({bohr:.5,feuer:.22,brumm:.09}[a]),t,.5);
- if(z.klack&&t>KLANG.next){KLANG.next=t+.25+Math.random()*1.1/Math.min(4,z.klack);const v=.05*nah*Math.min(1,z.klack/3);if(v>.004){const o=AU.c.createOscillator(),g=AU.c.createGain();o.type='square';o.frequency.setValueAtTime(900+Math.random()*500,t);o.frequency.exponentialRampToValueAtTime(180,t+.07);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.connect(g);g.connect(AU.u);o.start(t);o.stop(t+.12)}}},350);
+ const nh=Math.max(0,Math.min(1,1-(C.dist-14)/45)),nah=nh*nh,t=AU.c.currentTime;for(const a of['bohr','feuer','brumm'])KLANG.g[a].gain.setTargetAtTime(Math.min(1,z[a]/16)*nah*({bohr:.15,feuer:.08,brumm:.035}[a]),t,.5);
+ if(z.klack&&t>KLANG.next){KLANG.next=t+.5+Math.random()*2.2/Math.min(4,z.klack);const v=.02*nah*Math.min(1,z.klack/10);if(v>.004){const o=AU.c.createOscillator(),g=AU.c.createGain();o.type='square';o.frequency.setValueAtTime(900+Math.random()*500,t);o.frequency.exponentialRampToValueAtTime(180,t+.07);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.connect(g);g.connect(AU.u);o.start(t);o.stop(t+.12)}}},350);
 /* --- Automatische Grafikqualität --- */
 {let fn=0,t0=performance.now(),schlecht=0,warm=0;(function mess(now){requestAnimationFrame(mess);fn++;if(now-t0<2000)return;const fps=fn*1000/(now-t0);fn=0;t0=now;
  if(SET.autoQ===false||window.__noloop||document.hidden||SHELL.titel||paused||SET.qual==='niedrig'||++warm<4){schlecht=0;return}
