@@ -243,7 +243,7 @@ const SILOTXT=SILO.toLocaleString('de-DE');const K={ // name, Größe, Kosten, S
  band:{n:'Band',s:1,c:{eisenplatte:1},v:1.6,info:'Transportiert Material. Ziehen legt mehrere Felder.'},
  schnellband:{n:'Schnellband',s:1,c:{eisenplatte:1,zahnrad:1},v:3.4,info:'Doppelt so schnell. Kann alte Bänder direkt überbauen.'},
  mast:{n:'Strommast',s:1,c:{eisenplatte:2,kupferplatte:1},info:'Versorgt Maschinen im Umkreis von 5 Feldern. Masten verbinden sich bis 9 Felder.'},
- bohrer:{n:'Bohrer',s:2,c:{eisenplatte:12},p:2,t:1.7,info:'Auf ein Rohstofffeld setzen. Mehr Erzfelder darunter bedeuten mehr Tempo.'},
+ bohrer:{n:'Bohrer',s:2,c:{eisenplatte:12},p:2,t:1.7,info:'Auf oder direkt neben ein Rohstofffeld setzen. Der Bohrer baut alles ab, was unter ihm und ein Feld um ihn herum liegt. Ab vier Erzfeldern in Reichweite läuft er mit vollem Tempo.'},
  schnellbohrer:{n:'Schnellbohrer',s:2,c:{stahl:10,zahnrad:10,schaltkreis:4},p:5,t:.6,info:'Fördert fast dreimal so schnell wie der Bohrer.'},
  ofen:{n:'Ofen',s:2,c:{stein:10},p:3,info:'Schmilzt Erz zu Platten, Stein zu Ziegeln und Platten plus Kohle zu Stahl.'},
  fertiger:{n:'Fertiger',s:3,c:{eisenplatte:20,ziegel:10},p:5,info:'Baut Bauteile. Das Rezept stellst du per Klick auf die Maschine ein.'},
@@ -322,7 +322,8 @@ function feeds(e,x,y,d){ // speist e das Feld x,y in Richtung d?
  if(!e)return false;if(isBelt(e))return e.r===d&&e.x+DX[d]===x&&e.y+DY[d]===y;if(e.k==='verteiler'||e.k==='kreuzung'||e.k==='sortierer')return true;if(e.out&&!K[e.k].gen){const o=outTile(e);return o[0]===x&&o[1]===y&&o[2]===d}return false}
 function shapes(){for(const b of belts){const d=b.r,back=(d+2)%4;const lf=Lv(b.x+DX[d],b.y+DY[d]),lb=Lv(b.x+DX[back],b.y+DY[back]);b.sl=lf===b.z+1?1:lb===b.z+1?-1:0;if(b.sl){b.cv=0;continue}const bk=feeds(at(b.x+DX[back],b.y+DY[back]),b.x,b.y,d);const l=(d+1)%4,rr=(d+3)%4;const fl=feeds(at(b.x+DX[l],b.y+DY[l]),b.x,b.y,(l+2)%4),fr=feeds(at(b.x+DX[rr],b.y+DY[rr]),b.x,b.y,(rr+2)%4);b.cv=bk?0:(fl&&!fr?1:fr&&!fl?-1:0)}}
 /* Bohrer */
-function oreInfo(e){const pump=e.k==='oelpumpe',c={};let pu=0;for(const[a,b]of foot(e.k,e.x,e.y)){const o=ORE[b*N+a];if(o&&AMT[b*N+a]>0&&(o===7)===pump&&!F[b*N+a]){c[o]=(c[o]||0)+1;pu+=PUR[b*N+a]}}let best=0,n=0;for(const o in c)if(c[o]>n){n=c[o];best=+o}e.ore=best;e.oreN=pump&&n?4:n;e.pur=n?(pu/(c[best]?Object.values(c).reduce((a,b)=>a+b,0):1))/2:1}
+function erzFeld(k,x,y){if(k==='oelpumpe')return foot(k,x,y);const s=K[k].s,r=[];for(let j=-1;j<=s;j++)for(let i=-1;i<=s;i++){const a=x+i,b=y+j;if(a>=0&&b>=0&&a<N&&b<N)r.push([a,b])}return r}
+function oreInfo(e){const pump=e.k==='oelpumpe',c={};let pu=0;for(const[a,b]of erzFeld(e.k,e.x,e.y)){const o=ORE[b*N+a];if(o&&AMT[b*N+a]>0&&(o===7)===pump&&!F[b*N+a]){c[o]=(c[o]||0)+1;pu+=PUR[b*N+a]}}let best=0,n=0;for(const o in c)if(c[o]>n){n=c[o];best=+o}e.ore=best;e.oreN=pump&&n?4:Math.min(4,n);e.pur=n?(pu/(c[best]?Object.values(c).reduce((a,b)=>a+b,0):1))/2:1}
 const PURN={.5:'arm',1:'normal',2:'reich'};
 /* Strom */
 function rangeOK(e,n){const r=n.k==='zentrale'?6:n.k==='grossmast'?2:5,s=K[e.k].s,ns=K[n.k].s;return e.x<n.x+ns+r&&e.x+s>n.x-r&&e.y<n.y+ns+r&&e.y+s>n.y-r}
@@ -346,7 +347,7 @@ function give(x,y,d,k,h){const e=at(x,y);if(!e)return false;
  if(e.k==='kreuzung'){const l=e.sl[d%2];if(l.length&&l[l.length-1].t<GAP)return false;l.push({k,d,t:0});return true}
  if(e.k==='zentrale'){deliver(k);return true}
  if(e.inv)return accept(e,k);return false}
-function mine(e){const k=ORES[e.ore];if(e.k==='oelpumpe'){e.out.push(k);return}const f=foot(e.k,e.x,e.y);for(let q=0;q<f.length;q++){e.mi=((e.mi||0)+1)%f.length;const i=f[e.mi][1]*N+f[e.mi][0];if(ORE[i]===e.ore&&AMT[i]>0&&!F[i]){AMT[i]--;PT[PID[i]]--;e.out.push(k);stats(e).g++;if(!AMT[i]){oreInfo(e);dirtyK=true}return}}oreInfo(e)}
+function mine(e){const k=ORES[e.ore];if(e.k==='oelpumpe'){e.out.push(k);return}const f=erzFeld(e.k,e.x,e.y);for(let q=0;q<f.length;q++){e.mi=((e.mi||0)+1)%f.length;const i=f[e.mi][1]*N+f[e.mi][0];if(ORE[i]===e.ore&&AMT[i]>0&&!F[i]){AMT[i]--;PT[PID[i]]--;e.out.push(k);stats(e).g++;if(!AMT[i]){oreInfo(e);dirtyK=true}return}}oreInfo(e)}
 function total(e){let n=0;for(const i in e.inv)n+=e.inv[i];return n}
 const RB=new Set(Object.values(REZ).map(r=>r.b));const base=q=>K[q].as||q;
 function accept(e,k){if(e.k==='lagerkiste'){if(total(e)>=200)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='versand'){if(total(e)>=60)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='bahnhof'){if(!e.link||total(e)>=200)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='drohnenhafen'){if(!e.link||total(e)>=40)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='raketensilo'){if(k!=='raketenteil'||(e.inv.raketenteil||0)>=SILO||e.launch!==undefined)return false;e.inv.raketenteil=(e.inv.raketenteil||0)+1;return true}if(K[e.k].burn){const fu=K[e.k].fuel||'kohle';if(k!==fu||(e.inv[fu]||0)>=4)return false;e.inv[fu]=(e.inv[fu]||0)+1;return true}
@@ -996,8 +997,8 @@ function tileOf(w,s){return[Math.floor(w[0]-(s-1)/2),Math.floor(w[1]-(s-1)/2)]}
 function afford(k,mult=1){for(const i in K[k].c)if((G.stock[i]||0)<K[k].c[i]*mult)return false;return true}
 function pay(k,sg=-1){for(const i in K[k].c)G.stock[i]=(G.stock[i]||0)+sg*K[k].c[i]}
 function canPlace(k,x,y){const lv=Lv(x,y);if(lv<1)return false;for(const[a,b]of foot(k,x,y)){if(a<0||b<0||a>=N||b>=N)return false;if(Lv(a,b)!==lv)return false;const e=at(a,b);if(e&&!(isBelt(e)&&(BK(k)||k==='verteiler'||k==='kreuzung'||k==='sortierer')))return false}
- if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe'){let n=0;for(const[a,b]of foot(k,x,y)){const o=ORE[b*N+a];if(o&&!F[b*N+a]&&(o===7)===(k==='oelpumpe'))n++}if(!n)return false}return true}
-function place(k,x,y,r,quiet){if(!canPlace(k,x,y)){if(!quiet){const ev=foot(k,x,y).every(([a,b])=>Lv(a,b)===Lv(x,y));toast(Lv(x,y)<1?'Hier ist Wasser. Füll es mit einem Fundament auf.':!ev?'Der Boden ist hier nicht eben. Bau zuerst ein Fundament.':k==='oelpumpe'?'Ölpumpen gehören auf eine Ölquelle.':k.includes('bohrer')?'Bohrer müssen auf einem Rohstofffeld stehen.':'Dieser Platz ist belegt.')}return false}
+ if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe'){let n=0;for(const[a,b]of erzFeld(k,x,y)){const o=ORE[b*N+a];if(o&&AMT[b*N+a]>0&&!F[b*N+a]&&(o===7)===(k==='oelpumpe'))n++}if(!n)return false}return true}
+function place(k,x,y,r,quiet){if(!canPlace(k,x,y)){if(!quiet){const ev=foot(k,x,y).every(([a,b])=>Lv(a,b)===Lv(x,y));toast(Lv(x,y)<1?'Hier ist Wasser. Füll es mit einem Fundament auf.':!ev?'Der Boden ist hier nicht eben. Bau zuerst ein Fundament.':k==='oelpumpe'?'Ölpumpen gehören auf eine Ölquelle.':k.includes('bohrer')?'Bohrer brauchen ein Rohstofffeld unter sich oder direkt daneben.':'Dieser Platz ist belegt.')}return false}
  const ex=at(x,y);if(ex&&isBelt(ex)){if(ex.k===k&&ex.r===r)return false;if(ex.k===k){ex.r=r;ex.it.forEach(q=>q.t=Math.min(q.t,1));dirtyB=true;relist();return true}}
  if(!afford(k)){if(!quiet||!toastEl.dataset.m)toast('Nicht genug Material: '+costTxt(k));return false}
  pay(k);let it=[];const br=ex?ex.r:0;if(ex){it=ex.it;pay(ex.k,1);del(ex)}const e=add(k,x,y,k==='kreuzung'&&ex?(br+1)%4:r,isBelt({k})?{it}:{});if(pickRez&&pickRez[0]===k)e.rez=pickRez[1];relist();return true}
@@ -2149,7 +2150,7 @@ inspLive=function(){if(!sel||!E.has(sel.id)||$('insp').hidden)return;const e=sel
  else if(e.k==='verteiler')txt='Teilt Material auf die offenen Ausgänge auf.';else if(e.k==='sortierer')txt=e.f?ITEMS[e.f][0]+' läuft geradeaus, alles andere zur Seite.':'Ohne Filter teilt er gleichmäßig auf.';
  else if(hat){
   if(e.rez&&REZ[e.rez]&&$('iprog'))$('iprog').style.width=Math.min(100,e.prog/REZ[e.rez].t*100)+'%';
-  if(e.ore!==undefined){if(e.ore){Z('Rohstoff',ITEMS[ORES[e.ore]][0]);Z('Förderung',f2(TS(e)*e.oreN/4*e.pur/k.t*60)+'/min');Z('Vorkommen',PURN[e.pur]||'gemischt');if(e.k!=='oelpumpe')Z('Rest hier',foot(e.k,e.x,e.y).reduce((a,[x,y])=>a+AMT[y*N+x],0).toLocaleString('de-DE'))}else Z('Vorkommen','erschöpft','stoer')}
+  if(e.ore!==undefined){if(e.ore){Z('Rohstoff',ITEMS[ORES[e.ore]][0]);Z('Förderung',f2(TS(e)*e.oreN/4*e.pur/k.t*60)+'/min');Z('Vorkommen',PURN[e.pur]||'gemischt');if(e.k!=='oelpumpe')Z('Rest in Reichweite',erzFeld(e.k,e.x,e.y).filter(([x,y])=>ORE[y*N+x]===e.ore).reduce((a,[x,y])=>a+AMT[y*N+x],0).toLocaleString('de-DE'))}else Z('Vorkommen','erschöpft','stoer')}
   if(k.gen)Z('Leistung',(k.burn&&e.burn<=0?0:k.gen)+' MW',k.burn&&e.burn<=0?'stoer':'gut');if(k.burn)Z('Verbrauch',f2(60/k.burn)+' '+ITEMS[k.fuel||'kohle'][0]+'/min');
   if(k.p){Z('Strombedarf',f2(k.p*(e.oc||1)*(e.oc||1)*TIER[e.tier||0].pw)+' MW');Z('Netz',e.net?(e.net.sat*100).toFixed(0)+' %':'nicht angeschlossen',e.net?(e.net.sat>=.99?'gut':e.net.sat>.5?'mit':'stoer'):'stoer')}else if(k.gen)Z('Netz',e.net?'angeschlossen':'nicht angeschlossen',e.net?'gut':'stoer');
   if(wears(e)){const q=kennz([e]),hp=e.hp??1;Z('Zustand',Math.round(hp*100)+' %',hp>.5?'gut':hp>.25?'mit':'stoer');Z('Tier',(e.tier||0)+1);Z('OEE',Math.round(q.oee*100)+' %');Z('Ausschuss',(q.sc*100).toFixed(1)+' %'+(e.rej?' · Box '+e.rej+'/30':''),e.rej>20?'stoer':'')}
