@@ -1523,7 +1523,7 @@ function sfx(n){if(!AU.c||AU.c.state!=='running'||!SET.sfx||!SET.master)return;c
   case'abriss':rausch(t,.28,.22,'bandpass',1400,180,1.5);ton(300,'sawtooth',t,.18,.05,null,80);break;
   case'fehler':ton(150,'sawtooth',t,.09,.08);ton(118,'sawtooth',t+.11,.13,.08);break;
   case'meilenstein':[523.3,659.3,784,1046.5].forEach((f,i)=>{ton(f,'triangle',t+i*.11,.55,.13);ton(f*2,'sine',t+i*.11,.3,.03)});ton(261.6,'sine',t+.33,1.2,.12);break;
-  case'donner':rausch(t,2.6,.5,'lowpass',240,50,.6);rausch(t+.15,1.2,.3,'lowpass',900,120,.5);ton(48,'sine',t,2.2,.3,null,30);break;
+  case'donner':rausch(t,2.6,.22,'lowpass',240,50,.6);rausch(t+.15,1.2,.12,'lowpass',900,120,.5);ton(48,'sine',t,2.2,.12,null,30);break;
   case'pfiff':ton(880,'square',t,.35,.05);ton(1108,'square',t,.35,.04);ton(880,'square',t+.45,.5,.05);ton(1108,'square',t+.45,.5,.04);break;
   case'kasse':ton(1318.5,'square',t,.08,.04);ton(1760,'square',t+.07,.18,.04);break;
   case'rakete':rausch(t,4,.35,'lowpass',120,1600,.7);ton(55,'sawtooth',t,3.5,.12,null,110);[392,523.3,659.3,784].forEach((f,i)=>ton(f,'triangle',t+1+i*.2,1.4,.1));break}}
@@ -1955,7 +1955,7 @@ function wetter(dtR){if(!G)return;const an=SET.wetter!==false;if(!G.wetter||G.t>
  // Regen
  const tr=WET.tropfen,nT=SET.qual==='niedrig'?700:2600;tr.visible=rg>.03;if(tr.visible){tr.material.opacity=.42*rg*(1-.5*n);const o=GB.ob,p=WET.tp,f=paused?0:dtR*30;o.rotation.set(0,C.yaw,.12);o.scale.set(1,1,1);for(let i=0;i<nT;i++){p[i*3+1]-=f*(.9+(i%7)*.03);p[i*3]+=f*.12;if(p[i*3+1]<-1){p[i*3+1]=44;p[i*3]=Math.random()*70-35;p[i*3+2]=Math.random()*70-35}o.position.set(C.x+p[i*3],p[i*3+1],C.z+p[i*3+2]);o.updateMatrix();tr.setMatrixAt(i,o.matrix)}tr.count=nT;tr.instanceMatrix.needsUpdate=true}
  // Regenrauschen
- if(AU.c&&AU.c.state==='running'){if(!WET.gain){const s=AU.c.createBufferSource();s.buffer=AU.noise;s.loop=true;const f=AU.c.createBiquadFilter();f.type='bandpass';f.frequency.value=2600;f.Q.value=.4;WET.gain=AU.c.createGain();WET.gain.gain.value=0;s.connect(f);f.connect(WET.gain);WET.gain.connect(AU.u);s.start()}WET.gain.gain.setTargetAtTime(SHELL.titel||paused?0:rg*.16,AU.c.currentTime,.6)}}
+ if(AU.c&&AU.c.state==='running'){if(!WET.gain){const s=AU.c.createBufferSource();s.buffer=AU.noise;s.loop=true;const f=AU.c.createBiquadFilter();f.type='bandpass';f.frequency.value=2600;f.Q.value=.4;WET.gain=AU.c.createGain();WET.gain.gain.value=0;s.connect(f);f.connect(WET.gain);WET.gain.connect(AU.u);s.start()}WET.gain.gain.setTargetAtTime(SHELL.titel||paused?0:rg*.04,AU.c.currentTime,.6)}}
 WET.grau=new T.Color();
 {const _u=umweltUpdate;umweltUpdate=function(){_u();UM.ws.value*=1-.8*WET.bew;if(UM.fuell)UM.fuell.intensity+=UM.himmel.material.uniforms.blitz.value*2.6}}
 {let wl=performance.now();const _c=camUp;camUp=function(dt){_c(dt);const now=performance.now(),d=Math.min(.2,(now-wl)/1000);wl=now;if(UM.wegV!==zugV){UM.wegV=zugV;wegBauen()}wetter(d)}}
