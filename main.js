@@ -1,6 +1,10 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
+// Bildrate nicht auf 60 begrenzen: Das Spiel regelt sie selbst (Einstellungen > Grafik > Bildrate begrenzen)
+app.commandLine.appendSwitch('disable-frame-rate-limit');
+app.commandLine.appendSwitch('disable-gpu-vsync');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1600,
