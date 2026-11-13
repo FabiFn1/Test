@@ -28,19 +28,14 @@ Zum Testen ohne Bauen: `npm run prepare-assets && npm start`.
 
 ## Aufbau
 
-- `game/schichtwerk.html` – das Spiel (Quelle, wird auch als Claude-Artifact veröffentlicht)
-- `app/index.html` – daraus erzeugte Offline-Version (`npm run prepare-assets`)
+Der Quellcode liegt in `src/` und wird in der Reihenfolge aus `src/manifest.json` zu einer Datei zusammengesetzt.
+
+- `src/sim/` – Simulation: Daten, Karte, Zustand, Betrieb, Züge, Mitarbeiter, Träger
+- `src/render/` – 3D: Szene, Gebäudemodelle, Gelände-Kacheln, Wasser, Wetter, Figuren
+- `src/ui/` – Oberfläche: Bedienung, Leitwarte, Menüs, Maschinenfenster, Blaupausen
+- `src/save/` – Spielstände, Karten, Schwierigkeit
+- `src/core/` – Vorspann, Hauptschleife, Start
+- `src/assets/` – eingebettete Modelle und Texturen
+- `game/schichtwerk.html` – erzeugt mit `npm run build:game` (wird auch als Claude-Artifact veröffentlicht)
+- `app/index.html` – Offline-Version für Electron und Android (`npm run prepare-assets`)
 - `main.js` – Electron-Fenster
-- `scripts/prepare-assets.js` – kopiert three.js und Schriften nach `app/vendor/`
-
-## Android
-
-Die Android-App wird mit Capacitor gebaut (Ordner `android/`). Bei jedem Push baut
-GitHub Actions die Datei `Schichtwerk.apk`: Tab **Actions** → „Android-APK bauen“ →
-Artifact `Schichtwerk-Android` herunterladen, entpacken und die APK auf dem Handy öffnen.
-Dafür muss „Apps aus unbekannten Quellen installieren“ für den Browser bzw. Dateimanager erlaubt sein.
-
-Selbst bauen (Android-SDK und Java 21 nötig): `npm run android:apk`.
-
-Steuerung auf dem Handy: ein Finger bewegt die Karte bzw. baut, zwei Finger verschieben,
-zoomen und drehen. Die Knöpfe rechts unten drehen Bauwerke, legen Werkzeuge ab usw.

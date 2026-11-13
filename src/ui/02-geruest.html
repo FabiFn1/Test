@@ -1,0 +1,98 @@
+</style>
+<canvas id="c" tabindex="0" aria-label="Werkskarte"></canvas>
+<section id="ms" class="tafel" aria-label="Meilenstein"></section>
+<section id="lager" class="tafel" aria-label="Lager der Zentrale">
+  <div id="strom"><div><span class="etikett">Strom</span><span id="stromtxt"></span></div><i><b id="strombar"></b></i></div>
+  <div class="etikett" style="display:flex;justify-content:space-between"><span>Lager Zentrale</span><span id="cr" style="color:var(--signal)"></span></div><div id="items"></div>
+  <div id="takt"><button id="b0" title="Pause (Leertaste)">II</button><button id="b1" class="an">1×</button><button id="b2">3×</button><button id="blw" title="Leitwarte (L)">Leitwarte</button><button id="bh" title="Hilfe (H)">Hilfe</button><button id="bneu">Neu</button></div>
+</section>
+<nav id="leiste" class="tafel" aria-label="Baumenü"></nav>
+<div id="tip"></div>
+<section id="insp" class="tafel" hidden></section>
+<canvas id="mini" width="256" height="256" aria-label="Minimap"></canvas>
+<div id="lw" hidden><div role="dialog" aria-label="Leitwarte">
+  <div id="mkopf2"><h2>Leitwarte</h2><button id="lt-ov" class="an">Übersicht</button><button id="lt-auf">Aufträge</button><button id="lt-log">SPS-Logik</button><span class="fuell"></span><button id="lwzu">Schließen</button></div>
+  <div id="lwbody"></div></div></div>
+<div id="toast" hidden></div>
+<div id="menu" hidden><div role="dialog" aria-label="Baumenü">
+  <div id="mkopf"><h2>Baumenü</h2><button id="tbau" class="an">Bauwerke</button><button id="tbaum">Technikbaum</button><span class="fuell"></span><span class="etikett">Tab schließt</span><button id="mzu">Schließen</button></div>
+  <div id="mbau"><div id="mkarten"></div><div id="mdetail"></div></div>
+  <div id="mbaum" hidden><div id="baum"></div><div id="ketten"><div class="etikett">Rezepte</div><div id="ktliste"></div></div></div>
+</div></div>
+<div id="hilfe" hidden><div>
+  <h1>Schichtwerk</h1>
+  <div>Baue Rohstoffe ab, verarbeite sie und liefere alles per Band in die Zentrale. Jeder Meilenstein schaltet neue Maschinen frei. Dein Ziel ist der Start einer Rakete.</div>
+  <table>
+    <tr><td>WASD / Pfeile</td><td>Karte bewegen</td></tr>
+    <tr><td>Rechte Maustaste ziehen</td><td>Karte bewegen</td></tr>
+    <tr><td>Mausrad</td><td>Zoomen</td></tr>
+    <tr><td>Mausradtaste ziehen</td><td>Kamera stufenlos drehen und neigen</td></tr>
+    <tr><td>Q / E</td><td>Kamera in 45°-Schritten drehen</td></tr>
+    <tr><td>Tab</td><td>Baumenü und Technikbaum, dort legst du Bauwerke auf die Zahlen</td></tr>
+    <tr><td>1–9, 0</td><td>Bauwerk aus der Leiste wählen</td></tr>
+    <tr><td>Rechtsklick auf Leiste</td><td>Platz freiräumen</td></tr>
+    <tr><td>F</td><td>Pipette: Maschine unter der Maus samt Rezept und Richtung übernehmen</td></tr>
+    <tr><td>M</td><td>Minimap vergrößern, Klick springt dorthin</td></tr>
+    <tr><td>R</td><td>Bauwerk drehen, der gelbe Pfeil zeigt den Ausgang</td></tr>
+    <tr><td>Linke Maustaste ziehen</td><td>Bänder legen, quer über ein Band entsteht eine Kreuzung</td></tr>
+    <tr><td>Fundament ziehen</td><td>Fläche auf Höhe des Startfelds auffüllen, auf ebenem Boden eine Ebene hoch, R baut höher</td></tr>
+    <tr><td>Bänder an Kanten</td><td>Überwinden eine Ebene von selbst, rot heißt: Stufe zu hoch</td></tr>
+    <tr><td>X</td><td>Abriss-Werkzeug, volle Kosten zurück</td></tr>
+    <tr><td>Rechtsklick / Esc</td><td>Werkzeug ablegen</td></tr>
+    <tr><td>Klick auf Maschine</td><td>Details und Rezept</td></tr>
+    <tr><td>Strg + ziehen</td><td>Bereich markieren und alles darin abreißen</td></tr>
+    <tr><td>Entf</td><td>Bauwerk unter der Maus abreißen, bei einem Band die ganze Strecke</td></tr>
+    <tr><td>Strg+C / Strg+V</td><td>Rezept und Einstellungen einer Maschine kopieren und in eine andere einfügen</td></tr>
+    <tr><td>Maustaste halten</td><td>Bauwerk beim Ziehen mehrfach setzen</td></tr>
+    <tr><td>Züge</td><td>Zwei Bahnhöfe bauen, mit Gleisen verbinden, am ersten das Ziel wählen. Ein Zug fährt 100 Teile auf einmal</td></tr>
+    <tr><td>Material in die Zentrale</td><td>Per Band direkt hinein, oder ohne Band: Versandstation bauen und Band hineinführen</td></tr>
+    <tr><td>Material aus der Zentrale</td><td>Greifarm mit dem Rücken an die Zentrale setzen, anklicken und Material wählen</td></tr>
+    <tr><td>Pfeile am Boden</td><td>Gelb: Ausgang der Maschine. Grün (im Baumodus): hier nimmt sie Material an. Rot: Ausschuss</td></tr>
+    <tr><td>Leertaste</td><td>Pause</td></tr>
+  </table>
+  <div>Die Lampe auf jeder Maschine zeigt den Zustand: grün läuft, gelb wartet auf Material, rot hat keinen Strom oder der Ausgang ist blockiert.</div>
+  <button id="hzu">Schicht beginnen</button>
+</div></div>
+<div id="ende" hidden><div><h1>Rakete gestartet.</h1><div>Dein Werk hat es bis ins All geschafft. Du kannst weiterbauen und weitere Raketen starten.</div><button id="endezu">Weiterbauen</button></div></div>
+<div id="frage" hidden><div><h2>Neues Spiel starten?</h2><div>Dein aktuelles Werk wird gelöscht.</div><div class="reihe"><button id="janeu">Ja, neu anfangen</button><button id="neinneu">Abbrechen</button></div></div></div>
+
+<div id="laden"><div><div class="streifen"></div><h1>Schichtwerk</h1><div class="etikett" id="ladetxt">Werk wird geladen …</div><i><b id="ladebar"></b></i></div></div>
+<div id="titel" hidden><div class="spalte">
+  <div style="display:grid;gap:12px"><div class="streifen" style="width:120px"></div><h1>Schicht&shy;werk</h1><div class="unter">Fabrik-Aufbau · vom Erz zur Rakete</div></div>
+  <div class="liste" id="tliste">
+    <button id="t-weiter" class="haupt">Weiterspielen<small id="t-info"></small></button>
+    <button id="t-neu">Neues Spiel</button>
+    <button id="t-einst">Einstellungen</button>
+    <button id="t-hilfe">Steuerung</button>
+    <button id="t-ueber">Über das Spiel</button>
+  </div>
+  <div class="fuss">Version 1.1 · Spielstand wird automatisch gespeichert</div>
+</div><div></div></div>
+<div id="pause" hidden><div role="dialog" aria-label="Pause">
+  <div class="streifen"></div><h2>Pause</h2>
+  <div class="kenn" id="p-kenn"></div>
+  <div class="liste" style="max-width:none">
+    <button id="p-weiter" class="haupt">Weiterspielen<kbd>Esc</kbd></button>
+    <button id="p-speichern">Speichern</button>
+    <button id="p-einst">Einstellungen</button>
+    <button id="p-hilfe">Steuerung</button>
+    <button id="p-neu">Neues Spiel</button>
+    <button id="p-titel">Zum Hauptmenü</button>
+  </div>
+</div></div>
+<div id="einst" hidden><div role="dialog" aria-label="Einstellungen">
+  <div class="kopf"><h2>Einstellungen</h2><button id="e-audio" class="an">Audio</button><button id="e-grafik">Grafik</button><button id="e-steuer">Steuerung</button><button id="e-ober">Oberfläche</button></div>
+  <div class="koerper" id="e-body"></div>
+  <div class="fussz"><button id="e-reset">Standard wiederherstellen</button><span></span><button id="e-zu" class="an">Fertig</button></div>
+</div></div>
+<div id="ueber" hidden><div role="dialog" aria-label="Über das Spiel">
+  <div class="streifen"></div><h2>Schichtwerk</h2>
+  <div>Ein Fabrik-Aufbauspiel: Erz abbauen, schmelzen, verarbeiten und per Band in die Zentrale liefern. 31 Meilensteine führen vom ersten Bohrer bis zum Raketenstart.</div>
+  <div class="matt">Version 1.1 · 3D mit three.js · Musik und Geräusche werden live im Browser erzeugt.</div>
+  <div class="reihe"><button id="u-zu">Zurück</button></div>
+</div></div>
+<div id="gesp">Gespeichert</div>
+<div id="fps" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>

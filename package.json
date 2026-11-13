@@ -1,7 +1,7 @@
 {
   "name": "schichtwerk",
   "productName": "Schichtwerk",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Schichtwerk – Fabrik-Aufbauspiel",
   "main": "main.js",
   "author": "FabiFn1",
@@ -11,7 +11,8 @@
     "prepare-assets": "node scripts/prepare-assets.js",
     "dist": "npm run prepare-assets && electron-builder --win nsis portable --publish never",
     "android:sync": "npm run prepare-assets && cap sync android",
-    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "build:game": "node scripts/build-game.js"
   },
   "build": {
     "appId": "de.fabifn1.schichtwerk",
