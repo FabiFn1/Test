@@ -229,8 +229,11 @@ html.titel .tafel,html.titel #mini,html.titel #tbar,html.titel #tip,html.titel #
 <div id="fps" hidden></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>var SW=(function(i){"use strict";class a{constructor(){this.liste=new Map}an(t,e,r=0){const n=this.liste.get(t)??[];return n.push({fn:e,rang:r}),n.sort((h,M)=>h.rang-M.rang),this.liste.set(t,n),()=>this.aus(t,e)}aus(t,e){const r=this.liste.get(t);if(!r)return;const n=r.findIndex(h=>h.fn===e);n>=0&&r.splice(n,1)}melde(t,...e){const r=this.liste.get(t);if(r)for(const n of r.slice())try{n.fn(...e)}catch(h){console.error(`Fehler im Hörer für „${t}“`,h)}}anzahl(t){return this.liste.get(t)?.length??0}}const f="schichtwerk";class d{getItem(t){try{return localStorage.getItem(t)}catch{return null}}setItem(t,e){localStorage.setItem(t,e)}removeItem(t){try{localStorage.removeItem(t)}catch{}}}class c{constructor(t,e){if(this.nativ=t,this.daten=new Map(Object.entries(t.alleLesen())),this.daten.size===0&&e&&typeof e.key=="function")for(let r=0;r<(e.length??0);r++){const n=e.key(r);if(!n||!n.startsWith(f))continue;const h=e.getItem(n);h!==null&&this.setItem(n,h)}}getItem(t){return this.daten.has(t)?this.daten.get(t):null}setItem(t,e){this.daten.set(t,e),this.nativ.schreiben(t,e)}removeItem(t){this.daten.delete(t)&&this.nativ.loeschen(t)}}function o(s){if(s)try{return new c(s,typeof localStorage<"u"?localStorage:void 0)}catch(t){console.error("Dateiablage nicht verfügbar, nutze localStorage",t)}return new d}class g{constructor(t){if(this.rest=0,this.schritte=0,!(t.hz>0))throw new Error("hz muss größer als 0 sein");this.h=1/t.hz,this.max=Math.max(1,t.maxSchritte|0),this.schritt=t.schritt}vor(t){if(!(t>0))return 0;this.rest+=t;let e=0;for(;this.rest>=this.h&&e<this.max;)this.schritt(this.h),this.rest-=this.h,e++;return e===this.max&&this.rest>=this.h&&(this.rest=0),this.schritte+=e,e}get alpha(){return Math.min(1,this.rest/this.h)}zuruecksetzen(){this.rest=0}}class m{constructor(){this.letzt=-1/0,this.bilder=0}faellig(t,e){return e>0&&t-this.letzt<1e3/e-1.2?!1:(this.letzt=t,this.bilder++,!0)}}class z{constructor(t,e){this.netz=t,this.platz=e,this.n=0,this.verworfen=0}beginne(){this.n=0,this.verworfen=0}setze(t,e){return this.n>=this.platz?(this.verworfen++,!1):(this.netz.setMatrixAt(this.n,t),e!==void 0&&this.netz.setColorAt&&this.netz.setColorAt(this.n,e),this.n++,!0)}abschliessen(){this.netz.count=this.n,this.netz.instanceMatrix.needsUpdate=!0,this.netz.instanceColor&&(this.netz.instanceColor.needsUpdate=!0)}}const l=5,S=3;function I(s,t){return{stock:{...s},ms:0,del:{},total:{},speed:1,won:!1,help:!1,cam:null,v:l,carve:[],rockets:0,cr:500,arb:3,...t??{}}}function w(s){return!s||(s.v??0)<l}const v=s=>`schichtwerk-${s}`,b=s=>`schichtwerk-meta-${s}`,E=s=>`schichtwerk-alt-${s}`,k=s=>+s.split("-")[1]||1;function y(s,t){const e={ms:s.ms,t:s.t??0,schw:s.schw,frei:s.frei,seed:s.seed??0};return t!==void 0&&(e.d=t),e}const u=globalThis.swNativ,A=u,P=o(u),p=new a;return i.Bildtakt=m,i.DateiAblage=c,i.Ereignisse=a,i.InstanzPuffer=z,i.PLAETZE=S,i.SPIELSTAND_VERSION=l,i.Simulationsschleife=g,i.ablageWaehlen=o,i.altSchluessel=E,i.desktop=A,i.ereignisse=p,i.istVeraltet=w,i.metaSchluessel=b,i.neuerSpielstand=I,i.platzInfo=y,i.platzSchluessel=v,i.platzVon=k,i.speicher=P,Object.defineProperty(i,Symbol.toStringTag,{value:"Module"}),i})({});</script>
 <script>
 'use strict';
+/* Kern-Module (src/kern, von Vite gebaut): Ablage, Ereignis-Bus, Simulationstakt, Instanz-Puffer */
+const SPEICHER=SW.speicher,EV=SW.ereignisse;
 if(!window.THREE){document.body.insertAdjacentHTML('beforeend','<div id="fehler">Die 3D-Bibliothek konnte nicht geladen werden. Bitte lade die Seite neu.</div>');throw new Error('THREE fehlt')}
 /* ====== Daten ====== */
 const BK=k=>k==='band'||k==='schnellband'||k==='expressband'||k==='leitung';let GV=0;const FL=new Set(['rohoel','schmierstoff','treibstoff','schwefelsaeure']);const N=1024,CX=N/2,OX=CX-48,DX=[1,0,-1,0],DY=[0,1,0,-1],GAP=.25;
@@ -309,7 +312,7 @@ const UI={toast(){},msDraw(){},toolsDraw(){},ende(){},wires(){},removed(){}};con
 
 let G,nextId=1;const E=new Map();let grid=new Int32Array(N*N);let belts=[],machines=[],splits=[],nodes=[],gens=[];
 let dirtyB=true,dirtyK=true,dirtyP=true,byKind={};
-function fresh(){G={stock:{...START_STOCK},ms:0,del:{},total:{},speed:1,won:false,help:false,cam:null,v:5,carve:[],rockets:0,cr:500,arb:3};Object.assign(G,window.NEUOPT||{});weltNeu();AMT.set(AMT0);patchTotals();E.clear();grid.fill(0);nextId=1;F.fill(0);genTer();
+function fresh(){G=SW.neuerSpielstand(START_STOCK,window.NEUOPT);weltNeu();AMT.set(AMT0);patchTotals();E.clear();grid.fill(0);nextId=1;F.fill(0);genTer();
  const o=OX;add('zentrale',45+o,45+o,0);add('bohrer',37+o,47+o,0);add('band',39+o,47+o,0);add('band',40+o,47+o,0);add('ofen',41+o,47+o,0);add('band',43+o,47+o,0);add('band',44+o,47+o,0);add('mast',40+o,45+o,0);add('mast',36+o,45+o,0);relist()}
 function ents(k){return[...E.values()].filter(e=>e.k===k)}
 function foot(k,x,y){const s=K[k].s,r=[];for(let j=0;j<s;j++)for(let i=0;i<s;i++)r.push([x+i,y+j]);return r}
@@ -971,10 +974,11 @@ const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3
 for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=true;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
 const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
-function drawItems(){const c={lump:0,plate:0,part:0};const put=(k,x,y,z)=>{const t=ITEMS[k][2];if(c[t]>=IC)return;dm.position.set(x,y,z);dm.rotation.set(0,0,0);dm.scale.set(1,1,1);dm.updateMatrix();IM[t].setMatrixAt(c[t],dm.matrix);IM[t].setColorAt(c[t],icol[k]);c[t]++};
- for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:Math.min(acc,1/30)*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
+function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
+ for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
- for(const t in IM){IM[t].count=c[t];IM[t].instanceMatrix.needsUpdate=true;if(IM[t].instanceColor)IM[t].instanceColor.needsUpdate=true}}
+ for(const t in IP)IP[t].abschliessen()}
 // Leitungen
 const wires=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0x1a1f22}));scene.add(wires);
 function drawWires(){const a=[];const c=n=>n.k==='zentrale'?[n.x+3,3.36+YL(n.z),n.y+3]:[n.x+.5,(n.k==='grossmast'?5.9:3.62)+YL(n.z),n.y+.5];for(const[i,j]of links){const u=c(i),v=c(j);let pv=u;for(let t=1;t<=6;t++){const f=t/6,q=[u[0]+(v[0]-u[0])*f,u[1]+(v[1]-u[1])*f-.55*Math.sin(Math.PI*f),u[2]+(v[2]-u[2])*f];a.push(...pv,...q);pv=q}}wires.geometry.setAttribute('position',new T.Float32BufferAttribute(a,3));wires.geometry.computeBoundingSphere()}
@@ -1116,7 +1120,7 @@ function inspLive(){if(!sel||!E.has(sel.id)||$('insp').hidden)return;const e=sel
 UI.toast=s=>toast(s);UI.msDraw=()=>msDraw();UI.toolsDraw=()=>toolsDraw();UI.ende=()=>{$('ende').hidden=false};UI.wires=()=>drawWires();UI.removed=e=>{if(sel===e)select(null)};
 function setSpeed(s){paused=s===0;if(s)G.speed=s;$('b0').classList.toggle('an',paused);$('b1').classList.toggle('an',!paused&&G.speed===1);$('b2').classList.toggle('an',!paused&&G.speed===3)}
 $('b0').onclick=()=>setSpeed(paused?G.speed:0);$('b1').onclick=()=>setSpeed(1);$('b2').onclick=()=>setSpeed(3);$('bh').onclick=()=>{$('hilfe').hidden=false};$('hzu').onclick=()=>{$('hilfe').hidden=true;G.help=true;canvas.focus()};$('endezu').onclick=()=>{$('ende').hidden=true};
-$('bneu').onclick=()=>{$('frage').hidden=false};$('neinneu').onclick=()=>{$('frage').hidden=true};$('janeu').onclick=()=>{$('frage').hidden=true;try{localStorage.removeItem(SK)}catch(e){}fresh();buildTerrain();dirtyF=true;select(null);setTool(null);msDraw();toolsDraw();dirtyB=dirtyK=true;toast('Neue Schicht gestartet.')};
+$('bneu').onclick=()=>{$('frage').hidden=false};$('neinneu').onclick=()=>{$('frage').hidden=true};$('janeu').onclick=()=>{$('frage').hidden=true;try{SPEICHER.removeItem(SK)}catch(e){}fresh();buildTerrain();dirtyF=true;select(null);setTool(null);msDraw();toolsDraw();dirtyB=dirtyK=true;toast('Neue Schicht gestartet.')};
 /* Minimap */
 let miniB=null;function miniBase(){const c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),hx=h=>[h>>16&255,h>>8&255,h&255];for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x,o=ORE[i],l=TER[i];const q=o?hx(ROCKCOL[o]):l<1?[44,84,102]:[92+l*14,96+l*13,70+l*12];if(o===7){q[0]=170;q[1]=60;q[2]=190}const w=i*4;im.data[w]=q[0];im.data[w+1]=q[1];im.data[w+2]=q[2];im.data[w+3]=255}g.putImageData(im,0,0);miniB=c}
 function miniDraw(){if(!miniB)miniBase();const g=$('mini').getContext('2d');g.drawImage(miniB,0,0);g.fillStyle='#22d0ff';for(const b of belts)g.fillRect(b.x,b.y,1,1);g.fillStyle='#ffc21f';for(const e of machines)g.fillRect(e.x,e.y,K[e.k].s,K[e.k].s);g.fillStyle='#ff4a3c';for(const n of nodes)if(n.k==='zentrale')g.fillRect(n.x,n.y,6,6);const r=C.dist*.62;g.strokeStyle='#fff';g.lineWidth=1;g.strokeRect(C.x-r,C.z-r*.62,2*r,2*r*.62)}
@@ -1128,9 +1132,9 @@ function makeIcons(){const r=new T.WebGLRenderer({alpha:true,antialias:true,pres
  icons.menu='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 54"><g fill="#f0b429"><rect x="8" y="8" width="16" height="16"/><rect x="30" y="8" width="16" height="16"/><rect x="8" y="30" width="16" height="16"/><rect x="30" y="30" width="16" height="16"/></g></svg>');
  icons.x='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 54"><path d="M14 14l26 26M40 14L14 40" stroke="#e2574c" stroke-width="7"/></svg>')}
 /* Speichern */
-let SK='schichtwerk-1';try{SK='schichtwerk-'+(+localStorage.getItem('schichtwerk-slot')||1)}catch(e){}
-function save(){try{G.ore=[];for(let i=0;i<AMT.length;i++)if(AMT[i]!==AMT0[i])G.ore.push(i,AMT[i]);G.fund=[];for(let i=0;i<F.length;i++)if(F[i])G.fund.push(i,F[i]);const es=[...E.values()].map(e=>{const o={k:e.k,x:e.x,y:e.y,r:e.r,z:e.z,oid:e.id};for(const f of['it','inv','out','prog','rez','burn','buf','nx','sl','oc','f','link','fly','zug','launch','h','hp','kaputt','off','tier','rej','lm','s','jobs','zu','prio','bau','bau0','repW'])if(e[f]!==undefined)o[f]=e[f];return o});localStorage.setItem(SK,JSON.stringify({G,es,c:[C.tx,C.tz,C.tyaw,C.tdist]}))}catch(e){}}
-function load(){try{const s=JSON.parse(localStorage.getItem(SK));if(!s)return false;if((s.G.v||0)<5){try{localStorage.setItem(SK.replace('schichtwerk-','schichtwerk-alt-'),localStorage.getItem(SK));localStorage.removeItem(SK);localStorage.removeItem('schichtwerk-meta-'+SK.split('-')[1])}catch(e){}window.__altSave=true;return false}G=s.G;weltNeu();const alt=(G.v||0)<3;if(alt){const m=i=>(Math.floor(i/96)+OX)*N+i%96+OX;for(const o of s.es){o.x+=OX;o.y+=OX;delete o.z;if(o.sl&&!Array.isArray(o.sl[0]))delete o.sl}G.carve=(G.carve||[]).map(m);if(G.fund)for(let i=0;i<G.fund.length;i+=2)G.fund[i]=m(G.fund[i]);if(s.c){s.c[0]+=OX;s.c[1]+=OX}}G.carve=G.carve||[];genTer(G.carve);F.fill(0);for(let i=0;i<(G.fund||[]).length;i+=2)F[G.fund[i]]=G.fund[i+1];const alt2=(G.v||0)<4;if(alt2){const nm=OLDL[Math.min(G.ms,OLDL.length-1)],ix=MS.findIndex(m=>m.n===(OLDMS[nm]||nm));if(G.ms>0)G.ms=Math.max(0,ix);G.del={};G.seen=G.seen||[];for(const o of s.es)delete o.z;const cv=new Set(G.carve);for(const o of s.es){const q=K[o.k].s;for(let j=-3;j<q+3;j++)for(let i=-3;i<q+3;i++){const a=o.x+i,b=o.y+j;if(a>=0&&b>=0&&a<N&&b<N&&TER[b*N+a]!==1)cv.add(b*N+a)}}G.carve=[...cv];genTer(G.carve);G.v=4}AMT.set(AMT0);for(let i=0;i<(G.ore||[]).length;i+=2)AMT[G.ore[i]]=G.ore[i+1];patchTotals();E.clear();grid.fill(0);nextId=1;const idm={};for(const o of s.es){const{k,x,y,r,oid,...x2}=o;idm[oid]=add(k,x,y,r,x2).id}for(const e of E.values())if(e.link)e.link=idm[e.link];relist();if(s.c){[C.tx,C.tz,C.tyaw,C.tdist]=s.c;C.x=C.tx;C.z=C.tz;C.yaw=C.tyaw;C.dist=C.tdist}return true}catch(e){return false}}
+let SK='schichtwerk-1';try{SK='schichtwerk-'+(+SPEICHER.getItem('schichtwerk-slot')||1)}catch(e){}
+function save(){try{G.ore=[];for(let i=0;i<AMT.length;i++)if(AMT[i]!==AMT0[i])G.ore.push(i,AMT[i]);G.fund=[];for(let i=0;i<F.length;i++)if(F[i])G.fund.push(i,F[i]);const es=[...E.values()].map(e=>{const o={k:e.k,x:e.x,y:e.y,r:e.r,z:e.z,oid:e.id};for(const f of['it','inv','out','prog','rez','burn','buf','nx','sl','oc','f','link','fly','zug','launch','h','hp','kaputt','off','tier','rej','lm','s','jobs','zu','prio','bau','bau0','repW'])if(e[f]!==undefined)o[f]=e[f];return o});SPEICHER.setItem(SK,JSON.stringify({G,es,c:[C.tx,C.tz,C.tyaw,C.tdist]}))}catch(e){}}
+function load(){try{const s=JSON.parse(SPEICHER.getItem(SK));if(!s)return false;if(SW.istVeraltet(s.G)){try{SPEICHER.setItem(SK.replace('schichtwerk-','schichtwerk-alt-'),SPEICHER.getItem(SK));SPEICHER.removeItem(SK);SPEICHER.removeItem('schichtwerk-meta-'+SK.split('-')[1])}catch(e){}window.__altSave=true;return false}G=s.G;weltNeu();const alt=(G.v||0)<3;if(alt){const m=i=>(Math.floor(i/96)+OX)*N+i%96+OX;for(const o of s.es){o.x+=OX;o.y+=OX;delete o.z;if(o.sl&&!Array.isArray(o.sl[0]))delete o.sl}G.carve=(G.carve||[]).map(m);if(G.fund)for(let i=0;i<G.fund.length;i+=2)G.fund[i]=m(G.fund[i]);if(s.c){s.c[0]+=OX;s.c[1]+=OX}}G.carve=G.carve||[];genTer(G.carve);F.fill(0);for(let i=0;i<(G.fund||[]).length;i+=2)F[G.fund[i]]=G.fund[i+1];const alt2=(G.v||0)<4;if(alt2){const nm=OLDL[Math.min(G.ms,OLDL.length-1)],ix=MS.findIndex(m=>m.n===(OLDMS[nm]||nm));if(G.ms>0)G.ms=Math.max(0,ix);G.del={};G.seen=G.seen||[];for(const o of s.es)delete o.z;const cv=new Set(G.carve);for(const o of s.es){const q=K[o.k].s;for(let j=-3;j<q+3;j++)for(let i=-3;i<q+3;i++){const a=o.x+i,b=o.y+j;if(a>=0&&b>=0&&a<N&&b<N&&TER[b*N+a]!==1)cv.add(b*N+a)}}G.carve=[...cv];genTer(G.carve);G.v=4}AMT.set(AMT0);for(let i=0;i<(G.ore||[]).length;i+=2)AMT[G.ore[i]]=G.ore[i+1];patchTotals();E.clear();grid.fill(0);nextId=1;const idm={};for(const o of s.es){const{k,x,y,r,oid,...x2}=o;idm[oid]=add(k,x,y,r,x2).id}for(const e of E.values())if(e.link)e.link=idm[e.link];relist();if(s.c){[C.tx,C.tz,C.tyaw,C.tdist]=s.c;C.x=C.tx;C.z=C.tz;C.yaw=C.tyaw;C.dist=C.tdist}return true}catch(e){return false}}
 
 /* ====== Leitwarte ====== */
 let lwTab='ov';
@@ -1150,10 +1154,12 @@ function logDraw(){const b=$('lwbody'),kx=G.kx||[];if(!fx('Kraftwerk')){b.innerH
 for(const[t,n]of[['ov','ov'],['auf','auf'],['log','log']])$('lt-'+t).onclick=()=>{lwTab=n;lwDraw()};$('lwzu').onclick=()=>lwOpen(false);$('blw').onclick=()=>lwOpen(true);
 
 /* ====== Schleife ====== */
-let miniT=0,last=performance.now(),acc=0,hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
+let miniT=0,last=performance.now(),hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
+/* Simulation in festen 30 Schritten je Sekunde, unabhängig von der Bildrate */
+const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:8,schritt:h=>step(h)});
 function frame(now){if(window.__noloop&&!window.__once)return;window.__once=false;const dt=Math.min((now-last)/1000,.1);last=now;panKeys(dt);camUp(dt);
  const chg=dirtyF||dirtyP||dirtyB||dirtyK;if(dirtyF)rebuildF();if(dirtyP)relist();if(dirtyB)rebuildB();if(dirtyK)rebuildK();if(chg)updateDeco();
- if(!paused){acc+=dt*G.speed;let n=0;const h=1/30;while(acc>=h&&n<8){step(h);acc-=h;n++}if(n===8)acc=0;
+ if(!paused){SIM.vor(dt*G.speed);
   pwT+=dt;if(pwT>.25){pwT=0;power()}trick+=dt*G.speed;if(trick>3){trick=0;if((G.stock.eisenplatte||0)<30)G.stock.eisenplatte=(G.stock.eisenplatte||0)+1}
   beltOff=(beltOff-dt*G.speed*1.6)%1;beltTex.offset.x=beltOff;
   const t=now/500;for(const k of['bohrer','schnellbohrer','fertiger','montagewerk','praezision','recycler','generator','greifer','langgreifer']){const l=byKind[k]||[];if(!l.length)continue;for(const{m,q}of KM[k]){if(!q.spin)continue;for(let i=0;i<l.length;i++){const e=l[i];if(k==='greifer'||k==='langgreifer')m.setMatrixAt(i,pmat(e,q,(e.h?Math.PI:0)+Math.PI*Math.min(1,e.t/.55)));else if(e.st==='ok')m.setMatrixAt(i,pmat(e,q,t*3+i))}m.instanceMatrix.needsUpdate=true}}}
@@ -1506,8 +1512,8 @@ function gebaeudeUpdate(){const now=performance.now(),rdt=Math.min(.1,(now-gbLas
 /* ====== Spielhülle: Einstellungen, Ton, Titel, Pause ====== */
 const EK='schichtwerk-einst';
 const SET_STD={fpsMax:144,symbole:true,autoQ:true,leben:true,wetter:true,nacht:true,ao:true,gras:true,spiegel:true,master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
-const SET={...SET_STD};try{Object.assign(SET,JSON.parse(localStorage.getItem(EK))||{})}catch(e){}
-function setSave(){try{localStorage.setItem(EK,JSON.stringify(SET))}catch(e){}}
+const SET={...SET_STD};try{Object.assign(SET,JSON.parse(SPEICHER.getItem(EK))||{})}catch(e){}
+function setSave(){try{SPEICHER.setItem(EK,JSON.stringify(SET))}catch(e){}}
 
 /* --- Ton: alles wird live mit WebAudio erzeugt --- */
 const AU={c:null,m:null,s:null,mu:null,u:null,noise:null,last:{},beat:0,next:0};
@@ -1565,7 +1571,7 @@ let lastSave=0,saveWarn=0;
  lastSave=performance.now();if(!ok){if(performance.now()-saveWarn>60000){saveWarn=performance.now();toast('Speichern fehlgeschlagen: Der Browser-Speicher ist voll.')}}else if(force!==undefined||SHELL.zeig){const g=$('gesp');g.classList.add('an');setTimeout(()=>g.classList.remove('an'),1400)}return ok}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
 // Wartungsaufträge nach dem Laden den neuen Maschinen-IDs zuordnen
-{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(localStorage.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
+{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(SPEICHER.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
 function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${m} min`:`${m} min`}
 
 /* --- Grafik --- */
@@ -1702,7 +1708,7 @@ document.body.insertAdjacentHTML('beforeend',`<div id="erfpop" hidden><div class
 <div id="erfolge" hidden><div role="dialog" aria-label="Erfolge"><h2>Erfolge</h2><div class="etikett zahl" id="erfzahl"></div><div id="erfliste"></div><div class="fussz"><button id="erfzu" class="an">Zurück</button></div></div></div>
 <section id="tut" class="tafel" hidden aria-label="Einweisung"><div class="streifen"></div><div class="kopf"><span class="etikett" id="tutnr"></span><button id="tutweg">Überspringen</button></div><div id="tuttxt"></div><i><b id="tutbar"></b></i></section>`);
 const erfQ=[];let erfT=0;
-function erfCheck(){G.erf=G.erf||{};for(const[id,n,txt,f]of ERF){if(G.erf[id]!==undefined)continue;let ok=false;try{ok=f()}catch(e){}if(ok){G.erf[id]=Math.floor(G.t||0);erfQ.push([n,txt])}}
+function erfCheck(){G.erf=G.erf||{};for(const[id,n,txt,f]of ERF){if(G.erf[id]!==undefined)continue;let ok=false;try{ok=f()}catch(e){}if(ok){G.erf[id]=Math.floor(G.t||0);erfQ.push([n,txt]);EV.melde('erfolg',id)}}
  if(erfQ.length&&$('erfpop').hidden&&!SHELL.titel){let[n,txt]=erfQ.shift();if(erfQ.length>2){n=(erfQ.length+1)+' Erfolge freigeschaltet';txt='Schau im Menü unter Erfolge nach.';erfQ.length=0}$('erfname').textContent=n;$('erftext').textContent=txt;$('erfpop').hidden=false;sfx('kasse');clearTimeout(erfT);erfT=setTimeout(()=>{$('erfpop').hidden=true},4200)}}
 function erfZeigen(){const e=G.erf||{},n=ERF.filter(q=>e[q[0]]!==undefined).length;$('erfzahl').textContent=`${n} von ${ERF.length} freigeschaltet`;$('erfliste').innerHTML=ERF.map(([id,nm,txt])=>`<div class="erf${e[id]!==undefined?' da':''}"><b>${e[id]!==undefined?'✓ ':''}${nm}</b><span>${txt}</span></div>`).join('');$('erfolge').hidden=false;$('erfzu').focus()}
 $('erfzu').onclick=()=>{$('erfolge').hidden=true};
@@ -1837,10 +1843,10 @@ function weltNeu(){weltErz(G.seed||0,{leicht:2,schwer:.85}[G.schw]||1);AMT0.set(
 {const _v=avail;avail=function(){return G.frei?TOOLS.slice():_v()}}
 {const _b=buildFund;buildFund=function(a,b){if(G.frei)G.stock.stein=Math.max(G.stock.stein||0,100000);_b(a,b)}}
 const SLOTS=3,slotNr=()=>+SK.split('-')[1]||1,MK=n=>'schichtwerk-meta-'+n;
-function slotInfo(n){try{const m=JSON.parse(localStorage.getItem(MK(n)));if(m)return m;const s=localStorage.getItem('schichtwerk-'+n);if(!s)return null;const g=JSON.parse(s).G;return{ms:g.ms,t:g.t||0,schw:g.schw,frei:g.frei,seed:g.seed||0}}catch(e){return null}}
+function slotInfo(n){try{const m=JSON.parse(SPEICHER.getItem(MK(n)));if(m)return m;const s=SPEICHER.getItem('schichtwerk-'+n);if(!s)return null;return SW.platzInfo(JSON.parse(s).G)}catch(e){return null}}
 function slotText(m){if(!m)return'leer';const d=m.d?new Date(m.d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'';return`Meilenstein ${Math.min(m.ms+1,MS.length)} · ${spielzeit(m.t)} · ${m.frei?'Freies Bauen':{leicht:'Leicht',schwer:'Schwer'}[m.schw]||'Normal'}${d?' · '+d:''}`}
-{const _s=save;save=function(f){const ok=_s(f);if(ok&&G)try{localStorage.setItem(MK(slotNr()),JSON.stringify({ms:G.ms,t:G.t||0,schw:G.schw,frei:G.frei,seed:G.seed||0,d:Date.now()}))}catch(e){}return ok}}
-function slotSetzen(n){SK='schichtwerk-'+n;try{localStorage.setItem('schichtwerk-slot',String(n))}catch(e){}}
+{const _s=save;save=function(f){const ok=_s(f);if(ok&&G)try{SPEICHER.setItem(MK(slotNr()),JSON.stringify(SW.platzInfo(G,Date.now())))}catch(e){}return ok}}
+function slotSetzen(n){SK='schichtwerk-'+n;try{SPEICHER.setItem('schichtwerk-slot',String(n))}catch(e){}}
 function weltAufbauen(neu,ohneT){if(!ohneT)buildTerrain();dirtyF=dirtyB=dirtyK=true;select(null);setTool(null);miniDraw();msDraw();toolsDraw();power();hud();if(neu){C.tx=C.x=CX-6;C.tz=C.z=CX;C.tyaw=C.yaw=.55;C.tdist=C.dist=44}}
 function slotLaden(n){if(n!==slotNr()&&SHELL.hatSpiel)save(true);slotSetzen(n);window.NEUOPT=null;const had=load();if(!had)fresh();weltAufbauen(!had);$('staende').hidden=true;titelZeigen();if(had)toast('Spielstand '+n+' geladen.')}
 document.head.insertAdjacentHTML('beforeend',`<style>
@@ -1869,12 +1875,12 @@ neuesSpiel=function(){let f=[1,2,3].find(n=>!slotInfo(n));NEU.slot=f||slotNr();N
 $('p-neu').onclick=neuesSpiel;$('t-neu').onclick=neuesSpiel;
 $('neu').addEventListener('click',ev=>{const b=ev.target.closest('.seg button');if(!b)return;const id=b.parentNode.id,v=b.dataset.v;if(id==='n-slot')NEU.slot=+v;else if(id==='n-karte')NEU.karte=v;else if(id==='n-schw')NEU.schw=v;else NEU.frei=v==='true';neuDraw()});
 $('n-zu').onclick=()=>{$('neu').hidden=true};
-{const _j=$('janeu').onclick;$('janeu').onclick=()=>{if(NEU.slot!==slotNr()&&SHELL.hatSpiel)save(true);slotSetzen(NEU.slot);try{localStorage.removeItem(MK(NEU.slot))}catch(e){}window.NEUOPT={seed:NEU.karte==='zufall'?NEU.seed:0,schw:NEU.schw,frei:NEU.frei};_j();window.NEUOPT=null;weltAufbauen(true,true);$('neu').hidden=true;if(G.frei)toast('Freies Bauen: Alle Bauwerke sind frei und kosten nichts.')}}
+{const _j=$('janeu').onclick;$('janeu').onclick=()=>{if(NEU.slot!==slotNr()&&SHELL.hatSpiel)save(true);slotSetzen(NEU.slot);try{SPEICHER.removeItem(MK(NEU.slot))}catch(e){}window.NEUOPT={seed:NEU.karte==='zufall'?NEU.seed:0,schw:NEU.schw,frei:NEU.frei};_j();window.NEUOPT=null;weltAufbauen(true,true);$('neu').hidden=true;if(G.frei)toast('Freies Bauen: Alle Bauwerke sind frei und kosten nichts.')}}
 $('n-start').onclick=()=>{if(slotInfo(NEU.slot)){$('frage').querySelector('h2').textContent='Spielstand '+NEU.slot+' überschreiben?';$('frage').firstElementChild.children[1].textContent='Das Werk auf diesem Platz wird gelöscht.';$('frage').hidden=false;$('neinneu').focus()}else $('janeu').onclick()};
 function slotsDraw(){$('s-liste').innerHTML=[1,2,3].map(n=>{const m=slotInfo(n),akt=n===slotNr();return`<div class="slot${akt?' akt':''}"><div><b>Spielstand ${n}${akt?' · aktiv':''}</b><small>${slotText(m)}</small></div><div class="reihe">${m&&!akt?`<button data-l="${n}">Laden</button>`:''}${m?`<button data-x="${n}">Löschen</button>`:''}</div></div>`}).join('')}
 function slotsZeigen(){if(SHELL.hatSpiel)save(true);slotsDraw();$('staende').hidden=false;$('s-zu').focus()}
 $('s-zu').onclick=()=>{$('staende').hidden=true;titelZeigen()};
-$('staende').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;if(d.l)slotLaden(+d.l);else if(d.x){if(b.dataset.ok){const n=+d.x;try{localStorage.removeItem('schichtwerk-'+n);localStorage.removeItem(MK(n))}catch(e){}if(n===slotNr()){window.NEUOPT=null;fresh();weltAufbauen(true);SHELL.hatSpiel=false}slotsDraw()}else{b.dataset.ok='1';b.textContent='Wirklich löschen?'}}});
+$('staende').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;if(d.l)slotLaden(+d.l);else if(d.x){if(b.dataset.ok){const n=+d.x;try{SPEICHER.removeItem('schichtwerk-'+n);SPEICHER.removeItem(MK(n))}catch(e){}if(n===slotNr()){window.NEUOPT=null;fresh();weltAufbauen(true);SHELL.hatSpiel=false}slotsDraw()}else{b.dataset.ok='1';b.textContent='Wirklich löschen?'}}});
 {const b=document.createElement('button');b.id='t-slots';b.textContent='Spielstände';b.onclick=slotsZeigen;$('t-erf').before(b)}
 addEventListener('keydown',ev=>{for(const id of['staende','neu'])if(!$(id).hidden&&$('frage').hidden){if(ev.target.tagName==='INPUT'&&ev.key!=='Escape')return;ev.stopImmediatePropagation();if(ev.key==='Escape'){ev.preventDefault();$(id).hidden=true;if(id==='staende')titelZeigen()}return}},true);
 /* ====== Züge ====== */
@@ -2371,8 +2377,8 @@ const repKosten=m=>Math.max(1,Math.ceil((1-(m.hp??1))/.25-1e-6));
 function repMit(m){const k=repKosten(m),n=Math.min(k,Math.floor(G.stock.ersatzteil||0));if(n<1)return 0;G.stock.ersatzteil-=n;if(n>=k)repair(m);else{m.hp=Math.min(1,(m.hp??1)+.25*n);if(m.hp>0)m.kaputt=false}return n}
 /* ====== Blaupausen ====== */
 K.bp={n:'Blaupause setzen',s:1,c:{},info:''};
-const BP={l:[],akt:null};try{BP.l=JSON.parse(localStorage.getItem('schichtwerk-blaupausen'))||[]}catch(e){}
-const bpSave=()=>{try{localStorage.setItem('schichtwerk-blaupausen',JSON.stringify(BP.l))}catch(e){}};
+const BP={l:[],akt:null};try{BP.l=JSON.parse(SPEICHER.getItem('schichtwerk-blaupausen'))||[]}catch(e){}
+const bpSave=()=>{try{SPEICHER.setItem('schichtwerk-blaupausen',JSON.stringify(BP.l))}catch(e){}};
 function bpAusKomplex(x){const s=new Set();for(let y=x.y0;y<=x.y1;y++)for(let i=x.x0;i<=x.x1;i++){const e=at(i,y);if(e&&e.k!=='zentrale')s.add(e)}if(!s.size)return null;let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const e of s){const g=K[e.k].s;x0=Math.min(x0,e.x);y0=Math.min(y0,e.y);x1=Math.max(x1,e.x+g);y1=Math.max(y1,e.y+g)}
  return{name:x.name,w:x1-x0,h:y1-y0,it:[...s].map(e=>{const o={k:e.k,x:e.x-x0,y:e.y-y0,r:e.r||0};for(const f of['rez','f','oc','prio'])if(e[f]!==undefined)o[f]=e[f];if(e.zu)o.zu={...e.zu};return o})}}
 function bpDreh(bp,n){let{w,h}=bp,it=bp.it.map(o=>({...o}));for(let q=0;q<n;q++){for(const o of it){const g=K[o.k].s,nx=h-o.y-g,ny=o.x;o.x=nx;o.y=ny;o.r=(o.r+1)%4}[w,h]=[h,w]}return{w,h,it}}
@@ -2394,7 +2400,7 @@ $('lw').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)
  else if(d.bs!==undefined){BP.akt=BP.l[+d.bs];lwOpen(false);setTool('bp');toast('Blaupause wählen: Klick setzt sie, R dreht, Rechtsklick legt ab.')}else if(d.bd!==undefined){if(!d.ok){b.dataset.ok='1';b.textContent='Wirklich löschen?';return}BP.l.splice(+d.bd,1);bpSave();bpDraw()}});
 /* ====== Bildrate, Vollbild, Rohrleitungen ====== */
 window.__fr=0;
-{const _f=frame;let letzt=0;frame=function(now){const lim=SET.fpsMax||0;if(lim&&!window.__noloop&&now-letzt<1000/lim-1.2){requestAnimationFrame(frame);return}letzt=now;window.__fr++;_f(now)}}
+{const _f=frame,takt=new SW.Bildtakt();frame=function(now){if(!takt.faellig(now,window.__noloop?0:SET.fpsMax||0)){requestAnimationFrame(frame);return}window.__fr=takt.bilder;_f(now)}}
 function vollbild(){const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen().catch(()=>toast('Vollbild ist hier nicht möglich. Probier F11.'))}
 for(const[id,vor]of[['p-voll','p-hilfe'],['t-voll','t-hilfe']]){const b=document.createElement('button');b.id=id;b.textContent='Vollbild an/aus';b.onclick=vollbild;$(vor).before(b)}
 // Kacheln: höchstens eine nahe Kachel jedes zweite Bild, Bewuchs nur für neue Kacheln abgleichen
@@ -2420,6 +2426,8 @@ function rohreBauen(){const o=GB.ob;let nh=0,nk=0,ns=0;for(const b of belts){if(
 {const _b=rebuildB;rebuildB=function(){_b();rohreBauen()}}
 ERKL['Antrieb']=['Flüssigkeiten und Rohre','Mit der Ölpumpe kommen Flüssigkeiten ins Werk: Rohöl, Schmierstoff, Treibstoff und Schwefelsäure.',['Flüssigkeiten laufen nur durch Rohrleitungen, nicht über Bänder. Feste Stoffe passen nicht ins Rohr.','Rohre verlegst du wie Bänder: Werkzeug wählen und ziehen. Sie kosten je Feld 1 Rohr.','Führ das Rohr direkt in die Maschine oder in die Zentrale. Greifarme können aus Rohren nichts entnehmen.','Verteiler funktionieren auch als Abzweig für Rohre.'],'Kunststoff und Gummi sind fest und laufen weiter über Bänder.'];
 /* ====== Start ====== */
+// Desktop-Fassung: Erfolge an Steam weitergeben
+if(SW.desktop&&SW.desktop.erfolg)EV.an('erfolg',id=>SW.desktop.erfolg(id));
 window.__g={lwOpen,kennz,kxM,reparieren,tierUp,fx,AMT,REZ,MS,miniDraw,PATCHES,ORE,PUR,updateDeco,get byKind(){return byKind},menuOpen,menuTab,assign,F,TER,Lv,buildFund,removeFund,buildTerrain,msDraw,frame:(n)=>{for(let i=0;i<(n||1);i++){window.__once=true;frame(performance.now())}},get G(){return G},E,at,place,step,power,setTool,remove,ents,relist,give,deliver,save,load,fresh,C,scr(x,z){const v=new T.Vector3(x,YL(Lv(Math.floor(x),Math.floor(z))),z).project(cam);return[(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]},get tool(){return tool},get sel(){return sel},get nets(){return nets},get machines(){return machines},get belts(){return belts}};
 Promise.all(pending).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{makeIcons();const hadSave=load();if(!hadSave)fresh();buildTerrain();dirtyF=true;miniDraw();setSpeed(1);SHELL.boot(hadSave);msDraw();toolsDraw();power();C.x=C.tx;C.z=C.tz;requestAnimationFrame(frame)});
 

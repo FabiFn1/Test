@@ -22,10 +22,11 @@ const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3
 for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=true;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
 const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
-function drawItems(){const c={lump:0,plate:0,part:0};const put=(k,x,y,z)=>{const t=ITEMS[k][2];if(c[t]>=IC)return;dm.position.set(x,y,z);dm.rotation.set(0,0,0);dm.scale.set(1,1,1);dm.updateMatrix();IM[t].setMatrixAt(c[t],dm.matrix);IM[t].setColorAt(c[t],icol[k]);c[t]++};
- for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:Math.min(acc,1/30)*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
+function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
+ for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
- for(const t in IM){IM[t].count=c[t];IM[t].instanceMatrix.needsUpdate=true;if(IM[t].instanceColor)IM[t].instanceColor.needsUpdate=true}}
+ for(const t in IP)IP[t].abschliessen()}
 // Leitungen
 const wires=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0x1a1f22}));scene.add(wires);
 function drawWires(){const a=[];const c=n=>n.k==='zentrale'?[n.x+3,3.36+YL(n.z),n.y+3]:[n.x+.5,(n.k==='grossmast'?5.9:3.62)+YL(n.z),n.y+.5];for(const[i,j]of links){const u=c(i),v=c(j);let pv=u;for(let t=1;t<=6;t++){const f=t/6,q=[u[0]+(v[0]-u[0])*f,u[1]+(v[1]-u[1])*f-.55*Math.sin(Math.PI*f),u[2]+(v[2]-u[2])*f];a.push(...pv,...q);pv=q}}wires.geometry.setAttribute('position',new T.Float32BufferAttribute(a,3));wires.geometry.computeBoundingSphere()}

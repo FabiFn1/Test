@@ -1,6 +1,6 @@
 /* ====== Bildrate, Vollbild, Rohrleitungen ====== */
 window.__fr=0;
-{const _f=frame;let letzt=0;frame=function(now){const lim=SET.fpsMax||0;if(lim&&!window.__noloop&&now-letzt<1000/lim-1.2){requestAnimationFrame(frame);return}letzt=now;window.__fr++;_f(now)}}
+{const _f=frame,takt=new SW.Bildtakt();frame=function(now){if(!takt.faellig(now,window.__noloop?0:SET.fpsMax||0)){requestAnimationFrame(frame);return}window.__fr=takt.bilder;_f(now)}}
 function vollbild(){const d=document;if(d.fullscreenElement)d.exitFullscreen();else d.documentElement.requestFullscreen&&d.documentElement.requestFullscreen().catch(()=>toast('Vollbild ist hier nicht möglich. Probier F11.'))}
 for(const[id,vor]of[['p-voll','p-hilfe'],['t-voll','t-hilfe']]){const b=document.createElement('button');b.id=id;b.textContent='Vollbild an/aus';b.onclick=vollbild;$(vor).before(b)}
 // Kacheln: höchstens eine nahe Kachel jedes zweite Bild, Bewuchs nur für neue Kacheln abgleichen

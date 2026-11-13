@@ -2,7 +2,6 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
-require('./build-game.js');
 let s = fs.readFileSync(path.join(root, 'game', 'schichtwerk.html'), 'utf8');
 const swap = (from, to) => { if (!s.includes(from)) throw new Error('Nicht gefunden: ' + from); s = s.replace(from, to); };
 swap('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap', 'vendor/fonts.css');

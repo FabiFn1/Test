@@ -3,7 +3,7 @@ const UI={toast(){},msDraw(){},toolsDraw(){},ende(){},wires(){},removed(){}};con
 
 let G,nextId=1;const E=new Map();let grid=new Int32Array(N*N);let belts=[],machines=[],splits=[],nodes=[],gens=[];
 let dirtyB=true,dirtyK=true,dirtyP=true,byKind={};
-function fresh(){G={stock:{...START_STOCK},ms:0,del:{},total:{},speed:1,won:false,help:false,cam:null,v:5,carve:[],rockets:0,cr:500,arb:3};Object.assign(G,window.NEUOPT||{});weltNeu();AMT.set(AMT0);patchTotals();E.clear();grid.fill(0);nextId=1;F.fill(0);genTer();
+function fresh(){G=SW.neuerSpielstand(START_STOCK,window.NEUOPT);weltNeu();AMT.set(AMT0);patchTotals();E.clear();grid.fill(0);nextId=1;F.fill(0);genTer();
  const o=OX;add('zentrale',45+o,45+o,0);add('bohrer',37+o,47+o,0);add('band',39+o,47+o,0);add('band',40+o,47+o,0);add('ofen',41+o,47+o,0);add('band',43+o,47+o,0);add('band',44+o,47+o,0);add('mast',40+o,45+o,0);add('mast',36+o,45+o,0);relist()}
 function ents(k){return[...E.values()].filter(e=>e.k===k)}
 function foot(k,x,y){const s=K[k].s,r=[];for(let j=0;j<s;j++)for(let i=0;i<s;i++)r.push([x+i,y+j]);return r}

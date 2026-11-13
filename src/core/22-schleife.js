@@ -1,8 +1,10 @@
 /* ====== Schleife ====== */
-let miniT=0,last=performance.now(),acc=0,hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
+let miniT=0,last=performance.now(),hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
+/* Simulation in festen 30 Schritten je Sekunde, unabhängig von der Bildrate */
+const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:8,schritt:h=>step(h)});
 function frame(now){if(window.__noloop&&!window.__once)return;window.__once=false;const dt=Math.min((now-last)/1000,.1);last=now;panKeys(dt);camUp(dt);
  const chg=dirtyF||dirtyP||dirtyB||dirtyK;if(dirtyF)rebuildF();if(dirtyP)relist();if(dirtyB)rebuildB();if(dirtyK)rebuildK();if(chg)updateDeco();
- if(!paused){acc+=dt*G.speed;let n=0;const h=1/30;while(acc>=h&&n<8){step(h);acc-=h;n++}if(n===8)acc=0;
+ if(!paused){SIM.vor(dt*G.speed);
   pwT+=dt;if(pwT>.25){pwT=0;power()}trick+=dt*G.speed;if(trick>3){trick=0;if((G.stock.eisenplatte||0)<30)G.stock.eisenplatte=(G.stock.eisenplatte||0)+1}
   beltOff=(beltOff-dt*G.speed*1.6)%1;beltTex.offset.x=beltOff;
   const t=now/500;for(const k of['bohrer','schnellbohrer','fertiger','montagewerk','praezision','recycler','generator','greifer','langgreifer']){const l=byKind[k]||[];if(!l.length)continue;for(const{m,q}of KM[k]){if(!q.spin)continue;for(let i=0;i<l.length;i++){const e=l[i];if(k==='greifer'||k==='langgreifer')m.setMatrixAt(i,pmat(e,q,(e.h?Math.PI:0)+Math.PI*Math.min(1,e.t/.55)));else if(e.st==='ok')m.setMatrixAt(i,pmat(e,q,t*3+i))}m.instanceMatrix.needsUpdate=true}}}

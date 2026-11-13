@@ -1,8 +1,8 @@
 /* ====== Spielhülle: Einstellungen, Ton, Titel, Pause ====== */
 const EK='schichtwerk-einst';
 const SET_STD={fpsMax:144,symbole:true,autoQ:true,leben:true,wetter:true,nacht:true,ao:true,gras:true,spiegel:true,master:.8,sfx:.8,musik:.5,umgebung:.5,qual:TOUCH?'mittel':'hoch',rauch:true,fps:false,kamera:1,zoomUm:false,rand:false,ui:1,auto:20};
-const SET={...SET_STD};try{Object.assign(SET,JSON.parse(localStorage.getItem(EK))||{})}catch(e){}
-function setSave(){try{localStorage.setItem(EK,JSON.stringify(SET))}catch(e){}}
+const SET={...SET_STD};try{Object.assign(SET,JSON.parse(SPEICHER.getItem(EK))||{})}catch(e){}
+function setSave(){try{SPEICHER.setItem(EK,JSON.stringify(SET))}catch(e){}}
 
 /* --- Ton: alles wird live mit WebAudio erzeugt --- */
 const AU={c:null,m:null,s:null,mu:null,u:null,noise:null,last:{},beat:0,next:0};
@@ -60,7 +60,7 @@ let lastSave=0,saveWarn=0;
  lastSave=performance.now();if(!ok){if(performance.now()-saveWarn>60000){saveWarn=performance.now();toast('Speichern fehlgeschlagen: Der Browser-Speicher ist voll.')}}else if(force!==undefined||SHELL.zeig){const g=$('gesp');g.classList.add('an');setTimeout(()=>g.classList.remove('an'),1400)}return ok}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
 // Wartungsaufträge nach dem Laden den neuen Maschinen-IDs zuordnen
-{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(localStorage.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
+{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(SPEICHER.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
 function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${m} min`:`${m} min`}
 
 /* --- Grafik --- */

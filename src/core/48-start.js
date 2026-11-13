@@ -1,4 +1,6 @@
 /* ====== Start ====== */
+// Desktop-Fassung: Erfolge an Steam weitergeben
+if(SW.desktop&&SW.desktop.erfolg)EV.an('erfolg',id=>SW.desktop.erfolg(id));
 window.__g={lwOpen,kennz,kxM,reparieren,tierUp,fx,AMT,REZ,MS,miniDraw,PATCHES,ORE,PUR,updateDeco,get byKind(){return byKind},menuOpen,menuTab,assign,F,TER,Lv,buildFund,removeFund,buildTerrain,msDraw,frame:(n)=>{for(let i=0;i<(n||1);i++){window.__once=true;frame(performance.now())}},get G(){return G},E,at,place,step,power,setTool,remove,ents,relist,give,deliver,save,load,fresh,C,scr(x,z){const v=new T.Vector3(x,YL(Lv(Math.floor(x),Math.floor(z))),z).project(cam);return[(v.x+1)/2*innerWidth,(1-v.y)/2*innerHeight]},get tool(){return tool},get sel(){return sel},get nets(){return nets},get machines(){return machines},get belts(){return belts}};
 Promise.all(pending).then(()=>new Promise(r=>setTimeout(r,60))).then(()=>{makeIcons();const hadSave=load();if(!hadSave)fresh();buildTerrain();dirtyF=true;miniDraw();setSpeed(1);SHELL.boot(hadSave);msDraw();toolsDraw();power();C.x=C.tx;C.z=C.tz;requestAnimationFrame(frame)});
 

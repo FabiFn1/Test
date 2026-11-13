@@ -1,7 +1,7 @@
 /* ====== Blaupausen ====== */
 K.bp={n:'Blaupause setzen',s:1,c:{},info:''};
-const BP={l:[],akt:null};try{BP.l=JSON.parse(localStorage.getItem('schichtwerk-blaupausen'))||[]}catch(e){}
-const bpSave=()=>{try{localStorage.setItem('schichtwerk-blaupausen',JSON.stringify(BP.l))}catch(e){}};
+const BP={l:[],akt:null};try{BP.l=JSON.parse(SPEICHER.getItem('schichtwerk-blaupausen'))||[]}catch(e){}
+const bpSave=()=>{try{SPEICHER.setItem('schichtwerk-blaupausen',JSON.stringify(BP.l))}catch(e){}};
 function bpAusKomplex(x){const s=new Set();for(let y=x.y0;y<=x.y1;y++)for(let i=x.x0;i<=x.x1;i++){const e=at(i,y);if(e&&e.k!=='zentrale')s.add(e)}if(!s.size)return null;let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const e of s){const g=K[e.k].s;x0=Math.min(x0,e.x);y0=Math.min(y0,e.y);x1=Math.max(x1,e.x+g);y1=Math.max(y1,e.y+g)}
  return{name:x.name,w:x1-x0,h:y1-y0,it:[...s].map(e=>{const o={k:e.k,x:e.x-x0,y:e.y-y0,r:e.r||0};for(const f of['rez','f','oc','prio'])if(e[f]!==undefined)o[f]=e[f];if(e.zu)o.zu={...e.zu};return o})}}
 function bpDreh(bp,n){let{w,h}=bp,it=bp.it.map(o=>({...o}));for(let q=0;q<n;q++){for(const o of it){const g=K[o.k].s,nx=h-o.y-g,ny=o.x;o.x=nx;o.y=ny;o.r=(o.r+1)%4}[w,h]=[h,w]}return{w,h,it}}

@@ -2,6 +2,7 @@
  "ui/00-kopf.html",
  "ui/01-stil.css",
  "ui/02-geruest.html",
+ "@kern",
  "core/03-vorspann.js",
  "sim/10-daten.js",
  "sim/11-karte.js",
