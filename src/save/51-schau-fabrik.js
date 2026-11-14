@@ -3,9 +3,10 @@
    Greifarme legen Material aus dem Lager aufs Band, jede Maschine greift sich ihre Zutaten und legt ihr Erzeugnis zurück.
    Flüssigkeiten laufen in einem Rohr-Rundlauf zwischen den beiden Reihen. Rohstoffe und einfache Teile kommen per Drohne von den Vorkommen. */
 function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3],yT=zy-2,yB=zy+9,m1=zy+3,m2=zy+4,c0=zx+9;let gebaut=0;
- const OBEN=['batterie','akkupack','logikmodul','prozessor','computer','sensor','raketensteuerung','rotor','lager','aluminium','aluminium','turbine','zement','betonteil','verbundplatte','hitzeschild','rahmen','triebwerk','sprengstoff'],
-  UNTEN=['stahl','blech','schaltkreis','kabel','saeure','rotor','stator','motor','lager','getriebe','antrieb'],
-  FEST=['eisenplatte','kohle','kupferplatte','draht','stahl','stahlblech','schaltkreis','kunststoff','kabel','schwefel','stein','gummi','glas','bauxit','schraube','eisenstange','rohr','zahnrad'],
+ const OBEN=['batterie','akkupack','logikmodul','prozessor','computer','sensor','raketensteuerung','lager','rotor','aluminium','aluminium','turbine','zement','betonteil','verbundplatte','hitzeschild','rahmen','triebwerk','sprengstoff'],
+  UNTEN=['stahl','blech','schaltkreis','kabel','saeure','stator','motor','getriebe','antrieb'],
+  // Reihenfolge: zuerst die Nordseite (letzte Station am Ring, für seltene Stoffe), zuletzt die erste Station im Osten
+  FEST=['zahnrad','kupferplatte','glas','stahlblech','stahl','rohr','gummi','kunststoff','schwefel','eisenstange','schaltkreis','kohle','bauxit','draht','kabel','stein','schraube','eisenplatte'],
   NASS=['schwefelsaeure','treibstoff','schmierstoff'],nT=OBEN.length,cr=c0+5*nT,xe=cr+4;
  for(const e of[...E.values()])if(e.k!=='zentrale')del(e);
  /* 0. Baufeld einebnen */
@@ -20,7 +21,7 @@ function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3],y
  bahn('expressband',[[zx+7,zy+5],[zx+7,zy+7],[zx-2,zy+7],[zx-2,zy-2],[xe,yT],[xe,yB],[zx+5,yB],[zx+5,zy+5]]);
  const platz=[];for(let i=0;i<6;i++)platz.push([zx+i,zy-1,3]);for(let i=0;i<6;i++)platz.push([zx-1,zy+i,2]);for(let i=0;i<5;i++)platz.push([zx+i,zy+6,1]);platz.push([zx+6,zy+5,0]);
  // Takt je Stoff: was viele Maschinen brauchen, wird öfter aufgelegt
- const TAKT={kabel:1,draht:2,schraube:2,kohle:2,stein:2,bauxit:2,eisenplatte:2,schaltkreis:2,kupferplatte:8,glas:8,stahl:8,stahlblech:8,eisenstange:8};
+ const TAKT={eisenplatte:1,schraube:1,stein:1,kabel:1,draht:1,bauxit:2,kohle:2,schaltkreis:2,zahnrad:8,kupferplatte:8,glas:8,stahlblech:8};
  FEST.forEach((k,j)=>P('greifer',platz[j][0],platz[j][1],platz[j][2],{f:k,gt:TAKT[k]||4}));
  /* 2. Rakete: letzte Maschine der oberen Reihe, greift von Norden und Osten; die Teile laufen in das Silo südlich des Werks */
  P('praezision',cr,yT+2,2,{rez:'raketenteil'});['rahmen','triebwerk','raketensteuerung'].forEach((k,j)=>P('greifer',cr+j,yT+1,1,{f:k}));['akkupack','sprengstoff','rahmen'].forEach((k,j)=>P('greifer',cr+3,yT+2+j,2,{f:k}));
@@ -48,7 +49,7 @@ function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3],y
  const erz=abbau(1,['platte'],8)+abbau(1,['platte','zahnrad'],2)+abbau(1,['platte','stange'],2)+abbau(1,['platte','stange','schraube'],2)+abbau(1,['platte','rohr'],2)+abbau(2,['kupfer'],3)+abbau(2,['kupfer','draht'],4)
   +abbau(4,[],4)+abbau(3,[],3)+abbau(5,['glas'],3)+abbau(6,[],4)+abbau(8,[],4)+abbau(7,['kunststoff'],3)+abbau(7,['gummi'],3)+abbau(7,['treibstoff'],2)+abbau(7,['schmierstoff'],2);
  /* 7. Komplexe, Halle, Lager */
- relist();const cu=i=>c0+5*(nT-2-i);G.kx=[{id:1,name:'Antriebsbau',x0:cu(10),y0:yB-4,x1:cu(5)+4,y1:yB-1},{id:2,name:'Elektronik',x0:c0+10,y0:yT+1,x1:c0+34,y1:yT+4},{id:3,name:'Raumfahrt',x0:c0+55,y0:yT+1,x1:cr+3,y1:yT+4}];G.kxN=3;
+ relist();const cu=i=>c0+5*(nT-2-i);G.kx=[{id:1,name:'Antriebsbau',x0:cu(8),y0:yB-4,x1:cu(5)+4,y1:yB-1},{id:2,name:'Elektronik',x0:c0+10,y0:yT+1,x1:c0+34,y1:yT+4},{id:3,name:'Raumfahrt',x0:c0+55,y0:yT+1,x1:cr+3,y1:yT+4}];G.kxN=3;
  if(!hallePruefen(G.kx[0]))G.kx[0].halle=true;
  for(const k in ITEMS)if(k!=='rakete'&&k!=='ausschuss'&&k!=='raketenteil')G.stock[k]=Math.max(G.stock[k]||0,1500);G.cr=Math.max(G.cr||0,50000);G.arb=Math.max(G.arb||0,12);G.help=true;G.tut=-1;
  relist();power();weltAufbauen(false);C.tx=C.x=zx+40;C.tz=C.z=zc[1]+2;C.tyaw=C.yaw=.5;C.tdist=C.dist=80;
