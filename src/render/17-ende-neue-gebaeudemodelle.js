@@ -1,5 +1,5 @@
 /* ====== Ende Neue Gebäudemodelle ====== */
-const CAP=1500,BC=20000;const dm=new T.Object3D(),mtx=new T.Matrix4(),pm=new T.Matrix4();const KM={};
+const CAP=6000,BC=40000;const dm=new T.Object3D(),mtx=new T.Matrix4(),pm=new T.Matrix4();const KM={};
 function inst(q,n,shadow=true){const m=new T.InstancedMesh(q.g,M(q.m),n);m.castShadow=shadow;m.receiveShadow=true;m.count=0;m.frustumCulled=false;scene.add(m);return m}
 for(const k of Object.keys(K)){if(!MODELS[k]||k==='fundament'||k==='gleis')continue;const n=k==='mast'||k==='verteiler'||k==='kreuzung'?CAP:k==='zentrale'?1:600;KM[k]=MODELS[k].map(q=>({m:inst(q,n),q}))}
 function pmat(e,q,spin){const s=K[e.k].s,a=-e.r*Math.PI/2;dm.position.set(e.x+s/2,YL(e.z),e.y+s/2);dm.rotation.set(0,a,0);dm.scale.set(1,e.bau?Math.max(.05,1-e.bau/e.bau0):1,1);dm.updateMatrix();mtx.copy(dm.matrix);if(q.piv){dm.position.set(q.piv[0],q.piv[1],q.piv[2]);dm.rotation.set(0,spin||0,0);dm.updateMatrix();mtx.multiply(dm.matrix)}return mtx}
@@ -18,13 +18,13 @@ function rebuildB(){shapes();const c={0:0,1:0,'-1':0,u:0,d:0};for(const b of bel
 const FM=MODELS.fundament.map(q=>inst(q,16000));let dirtyF=true;
 function rebuildF(){let n=0;dm.rotation.set(0,0,0);dm.scale.set(1,1,1);for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;if(F[i]>TER[i])for(let l=F[i];l>TER[i]&&n<16000;l--){dm.position.set(x+.5,YL(l),y+.5);dm.updateMatrix();for(const m of FM)m.setMatrixAt(n,dm.matrix);n++}}for(const m of FM){m.count=n;m.instanceMatrix.needsUpdate=true}drawGrid(true);dirtyF=false}
 // Material auf Bändern
-const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3),part:new T.CylinderGeometry(.13,.13,.11,8)};const IM={};const IC=12000;
+const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3),part:new T.CylinderGeometry(.13,.13,.11,8)};const IM={};const IC=24000;
 for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=true;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
 const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
 const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
 function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- for(const b of belts){if(b.k==='leitung'||b.hh)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+ const sicht=C.dist*1.25+30;for(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
