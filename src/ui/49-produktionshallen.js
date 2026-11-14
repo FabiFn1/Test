@@ -6,6 +6,7 @@ const hallen=()=>(G&&G.kx||[]).filter(x=>x.halle);
 function hallenFeld(){HAL.feld.fill(0);for(const x of hallen())for(let y=x.y0;y<=x.y1;y++)HAL.feld.fill(x.id,y*N+x.x0,y*N+x.x1+1);for(const e of E.values())e.hh=HAL.feld[e.y*N+e.x]||0;HAL.neu=true}
 // Zählt jede Übergabe über eine Hallengrenze (Band, Rohr, Greifarm, Maschinenausgang)
 HALZ=function(x,y,d,k){const a=HAL.feld[y*N+x],b=HAL.feld[(y-DY[d])*N+x-DX[d]];if(a===b)return;if(a){const o=hallenIO(a).ein;o[k]=(o[k]||0)+1}if(b){const o=hallenIO(b).aus;o[k]=(o[k]||0)+1}};
+function hallenZaehlen(id,art,k){const o=hallenIO(id)[art];o[k]=(o[k]||0)+1}
 function hallenIO(id){let o=HAL.io.get(id);if(!o){o={ein:{},aus:{},ein0:null,aus0:null,t:0};HAL.io.set(id,o)}return o}
 // Je Minute: letzte volle Minute, davor Hochrechnung der laufenden
 function hallenRate(id,art){const o=hallenIO(id),r={};if(o[art+'0']){Object.assign(r,o[art+'0']);return r}const f=60/Math.max(5,o.t);for(const k in o[art])r[k]=Math.round(o[art][k]*f);return r}

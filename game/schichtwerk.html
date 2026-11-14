@@ -1871,15 +1871,15 @@ document.body.insertAdjacentHTML('beforeend',`<div id="neu" hidden><div role="di
 <div id="staende" hidden><div role="dialog" aria-label="Spielstände"><div class="streifen"></div><h2>Spielstände</h2><div id="s-liste" style="display:grid;gap:6px"></div><div class="reihe"><button id="s-zu" class="an">Zurück</button></div></div></div>`);
 const NEU={slot:1,karte:'standard',seed:0,schw:'normal',frei:false};
 function neuDraw(){const sg=(id,opts,cur)=>{$(id).innerHTML=opts.map(([v,n])=>`<button data-v="${v}" class="${String(cur)===String(v)?'an':''}">${n}</button>`).join('')};
- sg('n-slot',[1,2,3].map(n=>[n,n+(slotInfo(n)?' · belegt':' · frei')]),NEU.slot);sg('n-karte',[['standard','Standard'],['zufall','Zufällig']],NEU.karte);sg('n-schw',[['leicht','Leicht'],['normal','Normal'],['schwer','Schwer']],NEU.schw);sg('n-mod',[[false,'Normal'],[true,'Freies Bauen']],NEU.frei);
+ sg('n-slot',[1,2,3].map(n=>[n,n+(slotInfo(n)?' · belegt':' · frei')]),NEU.slot);sg('n-karte',[['standard','Standard'],['zufall','Zufällig']],NEU.karte);sg('n-schw',[['leicht','Leicht'],['normal','Normal'],['schwer','Schwer']],NEU.schw);sg('n-mod',[[false,'Normal'],[true,'Freies Bauen'],['schau','Schau-Fabrik']],NEU.frei);
  $('n-seedinfo').innerHTML=NEU.karte==='zufall'?`Kartennummer <input id="n-seed" type="number" min="1" max="99999" value="${NEU.seed}" aria-label="Kartennummer">`:'Die bekannte Karte';
  $('n-schwinfo').textContent={leicht:'Halbe Meilenstein-Mengen, doppelt so reiche Vorkommen',normal:'Die ausgewogene Standardeinstellung',schwer:'Anderthalbfache Mengen, ärmere Vorkommen'}[NEU.schw];
- $('n-modinfo').textContent=NEU.frei?'Alle Bauwerke frei, Bauen kostet nichts':'Meilensteine schalten Bauwerke frei';const i=$('n-seed');if(i)i.onchange=()=>{NEU.seed=Math.max(1,Math.min(99999,+i.value||1))}}
+ $('n-modinfo').textContent=NEU.frei==='schau'?'Ein laufendes Beispielwerk mit Halle und Straßen, freies Bauen':NEU.frei?'Alle Bauwerke frei, Bauen kostet nichts':'Meilensteine schalten Bauwerke frei';const i=$('n-seed');if(i)i.onchange=()=>{NEU.seed=Math.max(1,Math.min(99999,+i.value||1))}}
 neuesSpiel=function(){let f=[1,2,3].find(n=>!slotInfo(n));NEU.slot=f||slotNr();NEU.karte='standard';NEU.schw='normal';NEU.frei=false;NEU.seed=1+Math.floor(Math.random()*99998);neuDraw();$('neu').hidden=false;$('n-start').focus()};
 $('p-neu').onclick=neuesSpiel;$('t-neu').onclick=neuesSpiel;
-$('neu').addEventListener('click',ev=>{const b=ev.target.closest('.seg button');if(!b)return;const id=b.parentNode.id,v=b.dataset.v;if(id==='n-slot')NEU.slot=+v;else if(id==='n-karte')NEU.karte=v;else if(id==='n-schw')NEU.schw=v;else NEU.frei=v==='true';neuDraw()});
+$('neu').addEventListener('click',ev=>{const b=ev.target.closest('.seg button');if(!b)return;const id=b.parentNode.id,v=b.dataset.v;if(id==='n-slot')NEU.slot=+v;else if(id==='n-karte')NEU.karte=v;else if(id==='n-schw')NEU.schw=v;else NEU.frei=v==='schau'?'schau':v==='true';neuDraw()});
 $('n-zu').onclick=()=>{$('neu').hidden=true};
-{const _j=$('janeu').onclick;$('janeu').onclick=()=>{if(NEU.slot!==slotNr()&&SHELL.hatSpiel)save(true);slotSetzen(NEU.slot);try{SPEICHER.removeItem(MK(NEU.slot))}catch(e){}window.NEUOPT={seed:NEU.karte==='zufall'?NEU.seed:0,schw:NEU.schw,frei:NEU.frei};_j();window.NEUOPT=null;weltAufbauen(true,true);$('neu').hidden=true;if(G.frei)toast('Freies Bauen: Alle Bauwerke sind frei und kosten nichts.')}}
+{const _j=$('janeu').onclick;$('janeu').onclick=()=>{if(NEU.slot!==slotNr()&&SHELL.hatSpiel)save(true);slotSetzen(NEU.slot);try{SPEICHER.removeItem(MK(NEU.slot))}catch(e){}window.NEUOPT={seed:NEU.karte==='zufall'?NEU.seed:0,schw:NEU.schw,frei:!!NEU.frei};_j();window.NEUOPT=null;weltAufbauen(true,true);$('neu').hidden=true;if(NEU.frei==='schau')schauFabrik();else if(G.frei)toast('Freies Bauen: Alle Bauwerke sind frei und kosten nichts.')}}
 $('n-start').onclick=()=>{if(slotInfo(NEU.slot)){$('frage').querySelector('h2').textContent='Spielstand '+NEU.slot+' überschreiben?';$('frage').firstElementChild.children[1].textContent='Das Werk auf diesem Platz wird gelöscht.';$('frage').hidden=false;$('neinneu').focus()}else $('janeu').onclick()};
 function slotsDraw(){$('s-liste').innerHTML=[1,2,3].map(n=>{const m=slotInfo(n),akt=n===slotNr();return`<div class="slot${akt?' akt':''}"><div><b>Spielstand ${n}${akt?' · aktiv':''}</b><small>${slotText(m)}</small></div><div class="reihe">${m&&!akt?`<button data-l="${n}">Laden</button>`:''}${m?`<button data-x="${n}">Löschen</button>`:''}</div></div>`}).join('')}
 function slotsZeigen(){if(SHELL.hatSpiel)save(true);slotsDraw();$('staende').hidden=false;$('s-zu').focus()}
@@ -2183,7 +2183,7 @@ inspLive=function(){if(!sel||!E.has(sel.id)||$('insp').hidden)return;const e=sel
 NOWEAR.add('versand');LAMP.versand=NBA.versand.lampe;MHOEHE.versand=1.1;
 function versandStep(e,dt){const z=nodes.find(n=>n.k==='zentrale');if(!z){e.st='wait';return}
  if(e.fly){e.st='ok';e.fly.t+=dt/e.fly.dur;if(e.fly.t>=1){for(const i of e.fly.l)deliver(i);G.versand=(G.versand||0)+e.fly.l.length;e.fly=null}return}
- const n=total(e);if(!n){e.st='wait';e.idle=0;return}e.st='ok';e.idle=(e.idle||0)+dt;const cap=[10,20,30][e.tier||0];if(n>=cap||e.idle>3){const l=[];for(const i in e.inv)while(e.inv[i]>0&&l.length<cap){e.inv[i]--;l.push(i)}e.idle=0;e.fly={t:0,dur:Math.hypot(z.x+3-e.x-1,z.y+3-e.y-1)/14+2,l}}}
+ const n=total(e);if(!n){e.st='wait';e.idle=0;return}e.st='ok';e.idle=(e.idle||0)+dt;const cap=[10,20,30][e.tier||0];if(n>=cap||e.idle>3){const l=[];for(const i in e.inv)while(e.inv[i]>0&&l.length<cap){e.inv[i]--;l.push(i)}e.idle=0;if(e.hh)for(const i of l)hallenZaehlen(e.hh,'aus',i);e.fly={t:0,dur:Math.hypot(z.x+3-e.x-1,z.y+3-e.y-1)/14+2,l}}}
 {const _r=renderBild;renderBild=function(){const z=nodes.find(n=>n.k==='zentrale');if(z)for(const e of byKind.versand||[]){if(!e.fly)continue;const n=DRN[0].count;if(n>=200)break;const u=e.fly.t,a=lokal(e,...NBA.versand.start),bx=z.x+3,bz=z.y+3,q=Math.sin(Math.PI*u),y=a[1]*(1-u)+(YL(z.z)+3.6)*u+Math.min(q*2.5,1)*6;
   dm.position.set(a[0]+(bx-a[0])*u,y,a[2]+(bz-a[2])*u);dm.rotation.set(0,Math.atan2(a[0]-bx,a[2]-bz),0);dm.scale.set(1,1,1);dm.updateMatrix();for(const m of DRN){m.setMatrixAt(n,dm.matrix);m.count=n+1;m.instanceMatrix.needsUpdate=true}}_r()}}
 ERF.push(['versand','Luftfracht','Schick 1.000 Teile per Versandstation in die Zentrale.',()=>(G.versand||0)>=1000]);
@@ -2438,6 +2438,7 @@ const hallen=()=>(G&&G.kx||[]).filter(x=>x.halle);
 function hallenFeld(){HAL.feld.fill(0);for(const x of hallen())for(let y=x.y0;y<=x.y1;y++)HAL.feld.fill(x.id,y*N+x.x0,y*N+x.x1+1);for(const e of E.values())e.hh=HAL.feld[e.y*N+e.x]||0;HAL.neu=true}
 // Zählt jede Übergabe über eine Hallengrenze (Band, Rohr, Greifarm, Maschinenausgang)
 HALZ=function(x,y,d,k){const a=HAL.feld[y*N+x],b=HAL.feld[(y-DY[d])*N+x-DX[d]];if(a===b)return;if(a){const o=hallenIO(a).ein;o[k]=(o[k]||0)+1}if(b){const o=hallenIO(b).aus;o[k]=(o[k]||0)+1}};
+function hallenZaehlen(id,art,k){const o=hallenIO(id)[art];o[k]=(o[k]||0)+1}
 function hallenIO(id){let o=HAL.io.get(id);if(!o){o={ein:{},aus:{},ein0:null,aus0:null,t:0};HAL.io.set(id,o)}return o}
 // Je Minute: letzte volle Minute, davor Hochrechnung der laufenden
 function hallenRate(id,art){const o=hallenIO(id),r={};if(o[art+'0']){Object.assign(r,o[art+'0']);return r}const f=60/Math.max(5,o.t);for(const k in o[art])r[k]=Math.round(o[art][k]*f);return r}
@@ -2522,6 +2523,36 @@ function strassenBauen(){const o=GB.ob,l=byKind.strasse||[];let ng=0,np=0,nl=0;o
 EV.an('gebaeude',strassenBauen);
 // Laternen gehen in der Dämmerung an
 EV.an('bild',()=>{const n=Math.min(1,Math.max(0,(TN.n-.25)*2.5));STR.kopfM.emissiveIntensity=n*4;STR.scheinM.opacity=n*.55;STR.schein.visible=n>.02});
+/* ====== Schau-Fabrik: ein laufendes Beispielwerk zum Ansehen und Weiterbauen ====== */
+function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3];let gebaut=0;
+ const setz=(k,x,y,r,opt)=>{if(!place(k,x,y,r,true))return null;const e=at(x,y);if(!e||e.k!==k)return null;delete e.bau;delete e.bau0;e.st='wait';if(opt)Object.assign(e,opt);gebaut++;return e};
+ const weg=l=>{for(const e of l)if(e){del(e);gebaut--}};
+ const frei3=(x,y,s)=>{for(let j=0;j<s;j++)for(let i=0;i<s;i++)if(at(x+i,y+j)||ORE[(y+j)*N+x+i])return false;return canPlace(s===3?'solar':'mast',x,y)};
+ // Solarpark mit Mast in der Nähe eines Punkts
+ const strom=(px,py,r0,r1)=>{for(let r=r0;r<=r1;r++)for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const x=px+i,y=py+j;if(x<2||y<2||x>N-6||y>N-6||!frei3(x,y,3))continue;
+   for(const[a,b]of[[x+3,y+1],[x-1,y+1],[x+1,y+3],[x+1,y-1]])if(!at(a,b)&&canPlace('mast',a,b)){const s=setz('solar',x,y,0);if(!s)continue;if(setz('mast',a,b,0))return s;weg([s])}}return null};
+ /* 1. Rohstoffe: Bohrer, Ofen und Versandstation direkt hintereinander auf den nächsten Vorkommen */
+ const einheit=(t,rez,x,y)=>{const b=setz('bohrer',x,y,0);if(!b)return false;oreInfo(b);if(b.ore!==t||b.oreN<3){weg([b]);return false}
+  const o=rez?setz('ofen',x+2,y,0,{rez}):b,v=o&&setz('versand',x+(rez?4:2),y,0);if(!v){weg(rez?[b,o]:[b]);return false}
+  const m=[[x+1,y+2],[x+1,y-1],[x+3,y+2],[x+3,y-1]].map(([a,c])=>!at(a,c)&&canPlace('mast',a,c)?[a,c]:null).find(q=>q),ma=m&&setz('mast',m[0],m[1],0),s=ma&&strom(x+2,y,3,9);
+  if(!s){weg([b,rez?o:null,v,ma]);return false}return true};
+ const abbau=(t,rez,soll)=>{const l=PATCHES.filter(p=>p[0]===t).sort((a,b)=>Math.hypot(a[1]-zc[0],a[2]-zc[1])-Math.hypot(b[1]-zc[0],b[2]-zc[1])).slice(0,3);let n=0;
+  for(const[,cx,cy,r]of l)for(let y=Math.floor(cy-r-2);y<=cy+r&&n<soll;y+=3)for(let x=Math.floor(cx-r-2);x<=cx+r&&n<soll;x+=2)if(einheit(t,rez,x,y)){n++;x+=8}return n};
+ const erz={eisen:abbau(1,'platte',10),kupfer:abbau(2,'kupfer',5),ziegel:abbau(3,'ziegel',2),kohle:abbau(4,null,2)};
+ /* 2. Teilefertigung rund um die Zentrale: Greifarme holen Material aus dem Lager, Drohnen bringen die Teile zurück */
+ const zelle=(seite,j,rez)=>{const ein=Object.keys(REZ[rez].in),f=i=>ein[Math.min(i,ein.length-1)];let m,v;
+  if(seite==='n'){const x=zx+3*j;m=setz('fertiger',x,zy-4,3,{rez});v=setz('versand',x,zy-6,3);for(let i=0;i<3;i++)setz('greifer',x+i,zy-1,3,{f:f(i)})}
+  else if(seite==='s'){const x=zx+3*j;m=setz('fertiger',x,zy+7,1,{rez});v=setz('versand',x,zy+10,1);for(let i=0;i<3;i++)setz('greifer',x+i,zy+6,1,{f:f(i)})}
+  else{const y=zy+3*j;m=setz('fertiger',zx+7,y,0,{rez});v=setz('versand',zx+10,y,0);for(let i=0;i<3;i++)setz('greifer',zx+6,y+i,0,{f:f(i)})}return m&&v};
+ zelle('n',0,'zahnrad');zelle('n',1,'stange');zelle('s',0,'draht');zelle('s',1,'schaltkreis');zelle('o',0,'rohr');zelle('o',1,'f1');
+ for(let i=0;i<7;i++)strom(zc[0],zc[1],9,16);
+ /* 3. Halle, Komplex, Straßen */
+ G.kx=[{id:1,name:'Teilefertigung',x0:zx,y0:zy-6,x1:zx+5,y1:zy-2,halle:true},{id:2,name:'Elektrik',x0:zx,y0:zy+6,x1:zx+5,y1:zy+11}];G.kxN=2;
+ const R=14;for(let i=-R;i<=R;i++)for(const[x,y]of[[zc[0]+i,zc[1]-R],[zc[0]+i,zc[1]+R],[zc[0]-R,zc[1]+i],[zc[0]+R,zc[1]+i]])if(!at(x,y)&&!ORE[y*N+x])setz('strasse',x,y,0);
+ for(let i=7;i<R;i++)if(!at(zc[0]-i,zc[1]+5))setz('strasse',zc[0]-i,zc[1]+5,0);
+ Object.assign(G.stock,{eisenplatte:Math.max(G.stock.eisenplatte||0,3000),kupferplatte:Math.max(G.stock.kupferplatte||0,3000),stein:2000});G.cr=Math.max(G.cr||0,20000);G.help=true;G.tut=-1;
+ relist();power();weltAufbauen(false,true);C.tx=C.x=zc[0];C.tz=C.z=zc[1];C.tdist=C.dist=58;
+ toast(`Schau-Fabrik steht: ${erz.eisen+erz.kupfer+erz.ziegel+erz.kohle} Förderanlagen, 6 Fertiger, eine Produktionshalle. Bau einfach weiter.`);return{gebaut,erz}}
 /* ====== Start ====== */
 // Desktop-Fassung: Erfolge an Steam weitergeben
 if(SW.desktop&&SW.desktop.erfolg)EV.an('erfolg',id=>SW.desktop.erfolg(id));
