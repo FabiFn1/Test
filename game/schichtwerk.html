@@ -437,7 +437,7 @@ const $=id=>document.getElementById(id);const T=THREE;const canvas=$('c');
 let ren;try{ren=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'})}catch(e){document.body.insertAdjacentHTML('beforeend','<div id="fehler">Dein Browser kann gerade kein WebGL starten. Aktiviere die Hardware-Beschleunigung und lade neu.</div>');throw e}
 ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=.82;
 let groundTx=null,terrainG=null;const scene=new T.Scene();scene.fog=new T.Fog(0xc9d3d6,230,640);
-const cam=new T.PerspectiveCamera(36,1,1,1200);
+const cam=new T.PerspectiveCamera(36,1,1,2400);
 // Himmel und Umgebungslicht
 (function(){const c=document.createElement('canvas');c.width=64;c.height=512;const g=c.getContext('2d');const l=g.createLinearGradient(0,0,0,512);l.addColorStop(0,'#5f93c4');l.addColorStop(.36,'#a9c8dc');l.addColorStop(.495,'#e6e4da');l.addColorStop(.51,'#7a7a68');l.addColorStop(1,'#4d4f43');g.fillStyle=l;g.fillRect(0,0,64,512);const t=new T.CanvasTexture(c);t.mapping=T.EquirectangularReflectionMapping;t.colorSpace=T.SRGBColorSpace;scene.background=t;const pm=new T.PMREMGenerator(ren);scene.environment=pm.fromEquirectangular(t).texture;scene.environmentIntensity=.75;pm.dispose()})();
 const sun=new T.DirectionalLight(0xfff0dc,3.1);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;scene.add(sun,sun.target);
@@ -979,7 +979,7 @@ const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
 const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
 function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- const sicht=C.dist*1.25+30;for(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+ const sicht=C.dist>240?-1:C.dist*1.25+30; // weit herausgezoomt sind die Teile auf den Bändern nicht mehr zu erkennenfor(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
@@ -1040,7 +1040,7 @@ canvas.addEventListener('pointerleave',()=>{hoverT=null});canvas.addEventListene
  if(drag&&drag.x){const q=[Math.floor(w[0]),Math.floor(w[1])],e=at(...q);if(drag.fx)removeFund(...q);else if(e)remove(e)}else if(drag)drag.b=hover.slice();});
 canvas.addEventListener('pointerup',ev=>{if(orbit){orbit=null;return}if(rpan){const c=!moved&&ev.button===2;rpan=null;if(c)setTool(null);return}
  if(drag&&drag.g){for(const[x,y]of linePath(drag.g,drag.b)){if(!place(drag.gk,x,y,0,true)&&!afford(drag.gk))break}}if(drag&&drag.f)buildFund(drag.f,drag.b);if(drag&&drag.kx){G.kx=G.kx||[];G.kxN=(G.kxN||0)+1;const a=drag.kx,c=drag.b;G.kx.push({id:G.kxN,name:'Komplex '+G.kxN,x0:Math.min(a[0],c[0]),y0:Math.min(a[1],c[1]),x1:Math.max(a[0],c[0]),y1:Math.max(a[1],c[1])});setTool(null);lwOpen(true);drag=null;return}if(drag&&drag.a){const l=linePath(drag.a,drag.b);let n=0;for(let i=0;i<l.length;i++){const[x,y,d]=l[i];if(crossHere(x,y,d,i===0,i===l.length-1)){if(place('kreuzung',x,y,d,true))n++;continue}if(place(tool,x,y,d,true))n++;else if(!afford(tool))break}if(!n&&l.length===1&&!at(l[0][0],l[0][1]))toast('Hier kann kein Band liegen.')}drag=null});
-canvas.addEventListener('wheel',ev=>{ev.preventDefault();C.tdist=T.MathUtils.clamp(C.tdist*Math.pow(1.0015,ev.deltaY),14,260)},{passive:false});
+canvas.addEventListener('wheel',ev=>{ev.preventDefault();C.tdist=T.MathUtils.clamp(C.tdist*Math.pow(1.0015,ev.deltaY),14,560)},{passive:false});
 function clampC(){C.tx=T.MathUtils.clamp(C.tx,0,N);C.tz=T.MathUtils.clamp(C.tz,0,N)}
 addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT')return;const k=ev.key.toLowerCase();if(k==='l'){lwOpen($('lw').hidden);return}if(k==='escape'&&!$('lw').hidden){lwOpen(false);return}if(k==='tab'){ev.preventDefault();menuOpen($('menu').hidden);return}if(k==='escape'&&!$('menu').hidden){menuOpen(false);return}keys[k]=true;
  if(k==='m'){$('mini').classList.toggle('gross');miniDraw()}else if(k==='f'){const e=at(hover[0],hover[1]);if(e&&avail().includes(e.k)){setTool(e.k);rot=e.r||0;pickRez=e.rez?[e.k,e.rez]:null}}else if(k==='r'){if(tool==='fundament')fundUp=(fundUp+1)%3;else rot=(rot+(ev.shiftKey?3:1))%4}else if(k==='x')setTool(tool==='x'?null:'x');else if(k==='escape'){setTool(null);select(null);$('hilfe').hidden=true}else if(k==='h')$('hilfe').hidden=!$('hilfe').hidden;else if(k===' '){ev.preventDefault();setSpeed(paused?(G.speed||1):0)}
@@ -1187,7 +1187,7 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
    stopLP();lp=setTimeout(()=>{lp=null;if(mode==='pending'){mode='done';if(tool){setTool(null);toast('Werkzeug abgelegt')}else select(null)}},600)}
   else if(tp.size===2){stopLP();if(mode==='game'){drag=null}mode='gesture';gest=two()}},true);
  canvas.addEventListener('pointermove',ev=>{if(ev.__fwd||ev.pointerType!=='touch')return;ev.stopImmediatePropagation();const p=tp.get(ev.pointerId);if(!p)return;const dx=ev.clientX-p.x,dy=ev.clientY-p.y;p.x=ev.clientX;p.y=ev.clientY;
-  if(mode==='gesture'){if(tp.size<2)return;const g=two();panBy(g.x-gest.x,g.y-gest.y);C.tdist=T.MathUtils.clamp(C.tdist*gest.d/g.d,14,260);let dw=g.w-gest.w;if(dw>Math.PI)dw-=2*Math.PI;if(dw<-Math.PI)dw+=2*Math.PI;C.tyaw-=dw;gest=g;return}
+  if(mode==='gesture'){if(tp.size<2)return;const g=two();panBy(g.x-gest.x,g.y-gest.y);C.tdist=T.MathUtils.clamp(C.tdist*gest.d/g.d,14,560);let dw=g.w-gest.w;if(dw>Math.PI)dw-=2*Math.PI;if(dw<-Math.PI)dw+=2*Math.PI;C.tyaw-=dw;gest=g;return}
   if(!first||ev.pointerId!==first.id)return;first.x=ev.clientX;first.y=ev.clientY;
   if(mode==='pending'&&Math.hypot(ev.clientX-first.sx,ev.clientY-first.sy)>10){stopLP();if(pipette||!tool){mode='pan';panBy(ev.clientX-first.sx,ev.clientY-first.sy);return}if(dragTool()){mode='game';fwd('pointerdown',first.sx,first.sy,ev.pointerId)}else mode='aim'}
   if(mode==='pan')panBy(dx,dy);else if(mode==='game'||mode==='aim')fwd('pointermove',ev.clientX,ev.clientY,ev.pointerId)},true);
@@ -1967,7 +1967,7 @@ WET.tropfen=(function(){const g=new T.PlaneGeometry(.025,1.1),m=new T.InstancedM
 function wetterWechsel(){const r=Math.random(),alt=G.wetter&&G.wetter.typ;let typ=r<.46?'klar':r<.68?'wolkig':r<.84?'regen':r<.92?'gewitter':'nebel';if(typ===alt)typ=alt==='klar'?'wolkig':'klar';G.wetter={typ,bis:(G.t||0)+(typ==='klar'?240+Math.random()*260:110+Math.random()*150)}}
 function wetter(dtR){if(!G)return;const an=SET.wetter!==false;if(!G.wetter||G.t>G.wetter.bis||!WET.typen[G.wetter.typ])wetterWechsel();const z=an?WET.typen[G.wetter.typ]:[0,0,0],k=Math.min(1,dtR*.25);
  WET.bew+=(z[0]-WET.bew)*k;WET.regen+=(z[1]-WET.regen)*k;WET.nebel+=(z[2]-WET.nebel)*k;const n=TN.n,b=WET.bew,rg=WET.regen,nb=WET.nebel;
- sun.intensity*=1-.6*b;scene.fog.near=230-170*Math.max(nb,rg*.35);scene.fog.far=640-430*nb-180*rg*(1-nb);scene.fog.color.lerp(WET.grau.setRGB(.52,.56,.6).multiplyScalar(1-.85*n),Math.max(b*.7,nb));
+ sun.intensity*=1-.6*b;const weit=Math.max(0,C.dist-200);scene.fog.near=230-170*Math.max(nb,rg*.35)+weit;scene.fog.far=640-430*nb-180*rg*(1-nb)+weit*1.8;scene.fog.color.lerp(WET.grau.setRGB(.52,.56,.6).multiplyScalar(1-.85*n),Math.max(b*.7,nb));
  UM.himmel.material.uniforms.bew.value=Math.max(b,nb*.9);UM.ws.value*=1-.8*b;if(UM.nass)UM.nass.value+=((rg>.3?1:0)-UM.nass.value)*Math.min(1,dtR*.08);groundMat.roughness=.96-.4*(UM.nass?UM.nass.value:0);
  // Blitz
  if(an&&G.wetter.typ==='gewitter'&&rg>.6&&!paused){WET.nb-=dtR;if(WET.nb<=0){WET.nb=5+Math.random()*10;WET.blitz=1;setTimeout(()=>sfx('donner'),500+Math.random()*1800)}}WET.blitz=Math.max(0,WET.blitz-dtR*5);const bl=WET.blitz>.5||WET.blitz>.15&&WET.blitz<.3?1:0;UM.himmel.material.uniforms.blitz.value=bl;if(UM.fuell)UM.fuell.intensity+=bl*2.6;
@@ -2415,7 +2415,7 @@ function vollbild(){const d=document;if(d.fullscreenElement)d.exitFullscreen();e
 for(const[id,vor]of[['p-voll','p-hilfe'],['t-voll','t-hilfe']]){const b=document.createElement('button');b.id=id;b.textContent='Vollbild an/aus';b.onclick=vollbild;$(vor).before(b)}
 // Kacheln: höchstens eine nahe Kachel jedes zweite Bild, Bewuchs nur für neue Kacheln abgleichen
 function decoKachel(k){const ch=new Set();for(const i of k.tiles){const l=KA.deco.get(i);if(!l)continue;const o=grid[i]||F[i]>TER[i]||(ORE[i]&&!AMT[i])||UM.weg[i]>120?1:0;if(o!==KA.occ[i]){KA.occ[i]=o;for(const[m,q]of l){m.instanceMatrix.array.set(o?ZERO:m.userData.b.subarray(q*16,q*16+16),q*16);ch.add(m)}}}for(const m of ch)m.instanceMatrix.needsUpdate=true}
-{let bild=0;kachelUpdate=function(){const CH=KA.CH,nc=N/CH,cx=Math.floor(C.x/CH),cz=Math.floor(C.z/CH),nah=3,fern=Math.min(13,Math.max(7,Math.ceil((C.dist*1.6+150)/CH))),t0=performance.now(),start=KA.neu,zeit=start?900:2.5;bild++;
+{let bild=0;kachelUpdate=function(){const CH=KA.CH,nc=N/CH,cx=Math.floor(C.x/CH),cz=Math.floor(C.z/CH),nah=3,fern=Math.min(C.dist>260?19:13,Math.max(7,Math.ceil((C.dist*1.6+150)/CH))),t0=performance.now(),start=KA.neu,zeit=start?900:2.5;bild++;
  for(const[key,k]of KA.m){const d=Math.max(Math.abs(k.ci-cx),Math.abs(k.cj-cz));if(d>fern+2){kachelWeg(k);KA.m.delete(key)}}
  let naheGebaut=0;for(let r=0;r<=fern;r++){for(let j=cz-r;j<=cz+r;j++)for(let i=cx-r;i<=cx+r;i++){if(Math.max(Math.abs(i-cx),Math.abs(j-cz))!==r||i<0||j<0||i>=nc||j>=nc)continue;const key=j*nc+i,k=KA.m.get(key),lod=r<=nah?0:1;
    if(k&&(k.lod===lod||(k.lod===0&&r<=nah+1)))continue;

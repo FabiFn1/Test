@@ -50,7 +50,7 @@ WET.tropfen=(function(){const g=new T.PlaneGeometry(.025,1.1),m=new T.InstancedM
 function wetterWechsel(){const r=Math.random(),alt=G.wetter&&G.wetter.typ;let typ=r<.46?'klar':r<.68?'wolkig':r<.84?'regen':r<.92?'gewitter':'nebel';if(typ===alt)typ=alt==='klar'?'wolkig':'klar';G.wetter={typ,bis:(G.t||0)+(typ==='klar'?240+Math.random()*260:110+Math.random()*150)}}
 function wetter(dtR){if(!G)return;const an=SET.wetter!==false;if(!G.wetter||G.t>G.wetter.bis||!WET.typen[G.wetter.typ])wetterWechsel();const z=an?WET.typen[G.wetter.typ]:[0,0,0],k=Math.min(1,dtR*.25);
  WET.bew+=(z[0]-WET.bew)*k;WET.regen+=(z[1]-WET.regen)*k;WET.nebel+=(z[2]-WET.nebel)*k;const n=TN.n,b=WET.bew,rg=WET.regen,nb=WET.nebel;
- sun.intensity*=1-.6*b;scene.fog.near=230-170*Math.max(nb,rg*.35);scene.fog.far=640-430*nb-180*rg*(1-nb);scene.fog.color.lerp(WET.grau.setRGB(.52,.56,.6).multiplyScalar(1-.85*n),Math.max(b*.7,nb));
+ sun.intensity*=1-.6*b;const weit=Math.max(0,C.dist-200);scene.fog.near=230-170*Math.max(nb,rg*.35)+weit;scene.fog.far=640-430*nb-180*rg*(1-nb)+weit*1.8;scene.fog.color.lerp(WET.grau.setRGB(.52,.56,.6).multiplyScalar(1-.85*n),Math.max(b*.7,nb));
  UM.himmel.material.uniforms.bew.value=Math.max(b,nb*.9);UM.ws.value*=1-.8*b;if(UM.nass)UM.nass.value+=((rg>.3?1:0)-UM.nass.value)*Math.min(1,dtR*.08);groundMat.roughness=.96-.4*(UM.nass?UM.nass.value:0);
  // Blitz
  if(an&&G.wetter.typ==='gewitter'&&rg>.6&&!paused){WET.nb-=dtR;if(WET.nb<=0){WET.nb=5+Math.random()*10;WET.blitz=1;setTimeout(()=>sfx('donner'),500+Math.random()*1800)}}WET.blitz=Math.max(0,WET.blitz-dtR*5);const bl=WET.blitz>.5||WET.blitz>.15&&WET.blitz<.3?1:0;UM.himmel.material.uniforms.blitz.value=bl;if(UM.fuell)UM.fuell.intensity+=bl*2.6;

@@ -15,7 +15,7 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
    stopLP();lp=setTimeout(()=>{lp=null;if(mode==='pending'){mode='done';if(tool){setTool(null);toast('Werkzeug abgelegt')}else select(null)}},600)}
   else if(tp.size===2){stopLP();if(mode==='game'){drag=null}mode='gesture';gest=two()}},true);
  canvas.addEventListener('pointermove',ev=>{if(ev.__fwd||ev.pointerType!=='touch')return;ev.stopImmediatePropagation();const p=tp.get(ev.pointerId);if(!p)return;const dx=ev.clientX-p.x,dy=ev.clientY-p.y;p.x=ev.clientX;p.y=ev.clientY;
-  if(mode==='gesture'){if(tp.size<2)return;const g=two();panBy(g.x-gest.x,g.y-gest.y);C.tdist=T.MathUtils.clamp(C.tdist*gest.d/g.d,14,260);let dw=g.w-gest.w;if(dw>Math.PI)dw-=2*Math.PI;if(dw<-Math.PI)dw+=2*Math.PI;C.tyaw-=dw;gest=g;return}
+  if(mode==='gesture'){if(tp.size<2)return;const g=two();panBy(g.x-gest.x,g.y-gest.y);C.tdist=T.MathUtils.clamp(C.tdist*gest.d/g.d,14,560);let dw=g.w-gest.w;if(dw>Math.PI)dw-=2*Math.PI;if(dw<-Math.PI)dw+=2*Math.PI;C.tyaw-=dw;gest=g;return}
   if(!first||ev.pointerId!==first.id)return;first.x=ev.clientX;first.y=ev.clientY;
   if(mode==='pending'&&Math.hypot(ev.clientX-first.sx,ev.clientY-first.sy)>10){stopLP();if(pipette||!tool){mode='pan';panBy(ev.clientX-first.sx,ev.clientY-first.sy);return}if(dragTool()){mode='game';fwd('pointerdown',first.sx,first.sy,ev.pointerId)}else mode='aim'}
   if(mode==='pan')panBy(dx,dy);else if(mode==='game'||mode==='aim')fwd('pointermove',ev.clientX,ev.clientY,ev.pointerId)},true);

@@ -5,7 +5,7 @@ function vollbild(){const d=document;if(d.fullscreenElement)d.exitFullscreen();e
 for(const[id,vor]of[['p-voll','p-hilfe'],['t-voll','t-hilfe']]){const b=document.createElement('button');b.id=id;b.textContent='Vollbild an/aus';b.onclick=vollbild;$(vor).before(b)}
 // Kacheln: höchstens eine nahe Kachel jedes zweite Bild, Bewuchs nur für neue Kacheln abgleichen
 function decoKachel(k){const ch=new Set();for(const i of k.tiles){const l=KA.deco.get(i);if(!l)continue;const o=grid[i]||F[i]>TER[i]||(ORE[i]&&!AMT[i])||UM.weg[i]>120?1:0;if(o!==KA.occ[i]){KA.occ[i]=o;for(const[m,q]of l){m.instanceMatrix.array.set(o?ZERO:m.userData.b.subarray(q*16,q*16+16),q*16);ch.add(m)}}}for(const m of ch)m.instanceMatrix.needsUpdate=true}
-{let bild=0;kachelUpdate=function(){const CH=KA.CH,nc=N/CH,cx=Math.floor(C.x/CH),cz=Math.floor(C.z/CH),nah=3,fern=Math.min(13,Math.max(7,Math.ceil((C.dist*1.6+150)/CH))),t0=performance.now(),start=KA.neu,zeit=start?900:2.5;bild++;
+{let bild=0;kachelUpdate=function(){const CH=KA.CH,nc=N/CH,cx=Math.floor(C.x/CH),cz=Math.floor(C.z/CH),nah=3,fern=Math.min(C.dist>260?19:13,Math.max(7,Math.ceil((C.dist*1.6+150)/CH))),t0=performance.now(),start=KA.neu,zeit=start?900:2.5;bild++;
  for(const[key,k]of KA.m){const d=Math.max(Math.abs(k.ci-cx),Math.abs(k.cj-cz));if(d>fern+2){kachelWeg(k);KA.m.delete(key)}}
  let naheGebaut=0;for(let r=0;r<=fern;r++){for(let j=cz-r;j<=cz+r;j++)for(let i=cx-r;i<=cx+r;i++){if(Math.max(Math.abs(i-cx),Math.abs(j-cz))!==r||i<0||j<0||i>=nc||j>=nc)continue;const key=j*nc+i,k=KA.m.get(key),lod=r<=nah?0:1;
    if(k&&(k.lod===lod||(k.lod===0&&r<=nah+1)))continue;

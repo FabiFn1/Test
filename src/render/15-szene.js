@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id);const T=THREE;const canvas=$('c');
 let ren;try{ren=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'})}catch(e){document.body.insertAdjacentHTML('beforeend','<div id="fehler">Dein Browser kann gerade kein WebGL starten. Aktiviere die Hardware-Beschleunigung und lade neu.</div>');throw e}
 ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=.82;
 let groundTx=null,terrainG=null;const scene=new T.Scene();scene.fog=new T.Fog(0xc9d3d6,230,640);
-const cam=new T.PerspectiveCamera(36,1,1,1200);
+const cam=new T.PerspectiveCamera(36,1,1,2400);
 // Himmel und Umgebungslicht
 (function(){const c=document.createElement('canvas');c.width=64;c.height=512;const g=c.getContext('2d');const l=g.createLinearGradient(0,0,0,512);l.addColorStop(0,'#5f93c4');l.addColorStop(.36,'#a9c8dc');l.addColorStop(.495,'#e6e4da');l.addColorStop(.51,'#7a7a68');l.addColorStop(1,'#4d4f43');g.fillStyle=l;g.fillRect(0,0,64,512);const t=new T.CanvasTexture(c);t.mapping=T.EquirectangularReflectionMapping;t.colorSpace=T.SRGBColorSpace;scene.background=t;const pm=new T.PMREMGenerator(ren);scene.environment=pm.fromEquirectangular(t).texture;scene.environmentIntensity=.75;pm.dispose()})();
 const sun=new T.DirectionalLight(0xfff0dc,3.1);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;scene.add(sun,sun.target);
