@@ -3,11 +3,11 @@ K.bp={n:'Blaupause setzen',s:1,c:{},info:''};
 const BP={l:[],akt:null};try{BP.l=JSON.parse(SPEICHER.getItem('schichtwerk-blaupausen'))||[]}catch(e){}
 const bpSave=()=>{try{SPEICHER.setItem('schichtwerk-blaupausen',JSON.stringify(BP.l))}catch(e){}};
 function bpAusKomplex(x){const s=new Set();for(let y=x.y0;y<=x.y1;y++)for(let i=x.x0;i<=x.x1;i++){const e=at(i,y);if(e&&e.k!=='zentrale')s.add(e)}if(!s.size)return null;let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const e of s){const g=K[e.k].s;x0=Math.min(x0,e.x);y0=Math.min(y0,e.y);x1=Math.max(x1,e.x+g);y1=Math.max(y1,e.y+g)}
- return{name:x.name,w:x1-x0,h:y1-y0,it:[...s].map(e=>{const o={k:e.k,x:e.x-x0,y:e.y-y0,r:e.r||0};for(const f of['rez','f','oc','prio'])if(e[f]!==undefined)o[f]=e[f];if(e.zu)o.zu={...e.zu};return o})}}
+ return{name:x.name,w:x1-x0,h:y1-y0,it:[...s].map(e=>{const o={k:e.k,x:e.x-x0,y:e.y-y0,r:e.r||0};for(const f of['rez','f','oc','prio','gt'])if(e[f]!==undefined)o[f]=e[f];if(e.zu)o.zu={...e.zu};return o})}}
 function bpDreh(bp,n){let{w,h}=bp,it=bp.it.map(o=>({...o}));for(let q=0;q<n;q++){for(const o of it){const g=K[o.k].s,nx=h-o.y-g,ny=o.x;o.x=nx;o.y=ny;o.r=(o.r+1)%4}[w,h]=[h,w]}return{w,h,it}}
 function bpKosten(bp){const c={};for(const o of bp.it)for(const i in K[o.k].c)c[i]=(c[i]||0)+K[o.k].c[i];return c}
 function bpSetzen(bp,x0,y0){const b=bpDreh(bp,rot),a=avail();let n=0,fehlt=0,gesperrt=0;const reih=b.it.slice().sort((p,q)=>K[q.k].s-K[p.k].s);
- for(const o of reih){if(!a.includes(o.k)){gesperrt++;continue}const x=x0+o.x,y=y0+o.y;if(!canPlace(o.k,x,y)||at(x,y)){fehlt++;continue}if(!afford(o.k)){fehlt++;continue}if(place(o.k,x,y,o.r,true)){const e=at(x,y);if(e){for(const f of['rez','f','oc','prio'])if(o[f]!==undefined)e[f]=o[f];if(o.zu)e.zu={...o.zu}}n++}else fehlt++}
+ for(const o of reih){if(!a.includes(o.k)){gesperrt++;continue}const x=x0+o.x,y=y0+o.y;if(!canPlace(o.k,x,y)||at(x,y)){fehlt++;continue}if(!afford(o.k)){fehlt++;continue}if(place(o.k,x,y,o.r,true)){const e=at(x,y);if(e){for(const f of['rez','f','oc','prio','gt'])if(o[f]!==undefined)e[f]=o[f];if(o.zu)e.zu={...o.zu}}n++}else fehlt++}
  toast(`Blaupause „${bp.name}“: ${n} von ${b.it.length} Bauwerken gesetzt`+(gesperrt?`, ${gesperrt} noch gesperrt`:'')+(fehlt?`, ${fehlt} ohne Platz oder Material`:'')+'.');return n}
 canvas.addEventListener('pointerdown',ev=>{if(tool!=='bp'||ev.button!==0||ev.ctrlKey||!BP.akt)return;ev.stopImmediatePropagation();ev.preventDefault();const w=pick(ev);if(!w)return;bpSetzen(BP.akt,Math.floor(w[0]),Math.floor(w[1]))},true);
 {const _g=ghostUp;ghostUp=function(){_g();if(tool!=='bp'||!BP.akt)return;const b=bpDreh(BP.akt,rot),a=avail(),hx=hoverT?hoverT[0]:hover[0],hy=hoverT?hoverT[1]:hover[1];let n=0;IO.feld.visible=false;arrows.count=0;ghost.visible=false;
