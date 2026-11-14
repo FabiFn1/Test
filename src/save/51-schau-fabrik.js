@@ -59,7 +59,7 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
   for(const k in bahnen){const b=bahnen[k],l=b.zapf[b.zapf.length-1];if(!l)continue;bahn(art(k),[...(b.basis?[[b.xi+1,y0+2],[b.xi+1,b.y]]:[[b.start,b.y]]),[l.x,b.y],[l.x,tief(l)]],voll(k))}
   for(const k in bahnen){const b=bahnen[k];for(const z of b.zapf.slice(0,-1)){bahn(art(k),[[z.x,b.y+1],[z.x,tief(z)]],voll(k));P('verteiler',z.x,b.y,0,{zu:{l:true}})}
    for(const m of b.her||[])bahn(art(k),[[m.c+1,my+3],[m.rc,my+3],[m.rc,b.y]],voll(k));
-   if(b.basis)for(let j=1;j<b.k;j++)bahn(art(k),[[b.xi+2*j+1,y0+2],[b.xi+2*j+1,b.y]],k)}
+   if(b.basis)for(let j=1;j<b.k;j++)bahn(art(k),[[b.xi+2*j+1,y0+2],[b.xi+2*j+1,b.y]],voll(k))}
   // Solarfeld unter dem Werk
   let s=0;for(let r=0;r<p.sr;r++){const y=my+8+r*4;for(let i=0;i<p.proReihe&&s<p.sol;i++,s++)P('solar',p.xm+3*i,y,0);for(let x=p.xm+1;x<p.xe;x+=6)P('mast',x,y+3,0)}
   bahn('strasse',[[p.x0-2,p.unten+3],[p.xe+3,p.unten+3]])}
