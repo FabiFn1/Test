@@ -20,7 +20,8 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
  for(const e of[...E.values()])if(e.k!=='zentrale')del(e);
  const bau=rez=>{const b=REZ[rez].b;return b==='ofen'?'elektroofen':b==='fertiger'?'montagewerk':b},art=k=>FL.has(stoff(k))?'leitung':'expressband',voll=k=>k==='raketenteil'?null:stoff(k);
  /* 1. Plan je Werk: Lieferstationen, Maschinenplätze, Bänder je Stoff, Zeilen im Bus */
- const plane=(w,x0,y0)=>{const flug=Math.hypot(x0-zc[0],y0+12-zc[1])/14+2,bahnen={},M=[],B=[];
+ // A: Spiegelachse für Werke westlich der Zentrale (Planposition x liegt real bei A-x, die Lieferstationen also auf der Seite zur Zentrale)
+ const plane=(w,x0,y0,A=null)=>{const flug=Math.hypot((A===null?x0:A-x0)-zc[0],y0+12-zc[1])/14+2,bahnen={},M=[],B=[];
   // Je Grundstoff so viele Bänder, dass keines über 20 Teile/s tragen muss, und so viele Lieferstationen, wie Bedarf und Flugweite verlangen
   for(const k in w.basis){const rate=w.basis[k]*tempo,nl=Math.max(1,Math.ceil(rate/20)),ns=Math.max(1,Math.ceil(rate*flug/30*1.2/nl));for(let j=0;j<nl;j++)B.push({key:j?k+'#'+(j+1):k,k,ns})}
   const nb=B.length,sum=B.reduce((a,b)=>a+b.ns,0);let cx=x0+2*sum+3,mw=0;
@@ -34,22 +35,29 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
   if(w.silo){bahnen.raketenteil.zapf.push({x:cx+2});ab.push({k:'raketensilo',x:cx});cx+=6;mw+=20}
   const zeilen=[];for(const k in bahnen){const b=bahnen[k];b.zapf.sort((p,q)=>p.x-q.x);if(b.basis||!b.zapf.length)continue;const ende=b.zapf[b.zapf.length-1].x;let z=zeilen.findIndex(e=>e<b.start-1);if(z<0){z=zeilen.length;zeilen.push(0)}zeilen[z]=ende;b.y=y0+3+nb+z}
   const my=y0+3+nb+zeilen.length+1,xm=x0+2*sum+3,proReihe=Math.max(1,Math.floor((cx-xm)/3)),sol=Math.ceil(mw/10)+2,sr=Math.ceil(sol/proReihe),ksol=Math.ceil(sum*.6)+1,kpro=Math.max(1,Math.floor((2*sum+2)/3)),ksr=Math.ceil(ksol/kpro);
-  return{w,x0,y0,B,sum,bahnen,M,ab,my,xm,xe:cx,sol,proReihe,sr,ksol,kpro,ksr,kopf:5+4*ksr,unten:my+8+sr*4+1,box:[x0-3,y0-6-4*ksr,cx+4,my+8+sr*4+3]}};
+  const box=[x0-3,y0-6-4*ksr,cx+4,my+8+sr*4+3];return{w,x0,y0,A,B,sum,bahnen,M,ab,my,xm,xe:cx,sol,proReihe,sr,ksol,kpro,ksr,kopf:5+4*ksr,unten:my+8+sr*4+1,box,rb:A===null?box:[A-box[2],box[1],A-box[0],box[3]]}};
  const ALLE=[];for(let i=0;i<mal;i++)for(const w of WERKE)ALLE.push({...w,name:w.name+(mal>1?' '+(i+1):'')});
  // Die Werke stehen untereinander östlich der Zentrale; reicht die Höhe der Karte nicht, kommt eine zweite Spalte im Westen dazu
- const PL=[],hoehe=w=>{const p=plane(w,zx+16,zy);return p.unten-p.y0+p.kopf+14},gesamt=ALLE.reduce((a,w)=>a+hoehe(w),0),zwei=gesamt>N-40,halb=zwei?Math.ceil(ALLE.length/2):ALLE.length;
- for(const[von,bis,west]of[[0,halb,false],[halb,ALLE.length,true]]){const l=ALLE.slice(von,bis);if(!l.length)continue;const h=l.reduce((a,w)=>a+hoehe(w),0);let yc=Math.max(14,Math.min(N-14-h,zy+3-Math.round(h/2)));
-  for(const w of l){let x0=zx+16;if(west){const q=plane(w,0,yc);x0=Math.max(20,zx-14-(q.xe-q.x0))}const p0=plane(w,x0,yc+12),p=plane(w,x0,yc+p0.kopf+3);PL.push(p);yc=p.unten+12}}
- const inBox=(x,y)=>PL.some(p=>x>=p.box[0]&&x<=p.box[2]&&y>=p.box[1]&&y<=p.box[3]);
+ // Werke auf zwei Spalten verteilen: Osten ab der Zentrale, Westen bis zur Zentrale, jede Spalte um die Zentrale herum zentriert (kurze Drohnenflüge).
+ const PL=[],mass=w=>{const p=plane(w,zx+16,zy);return{w,breit:p.box[2]-p.box[0]+2,hoch:p.unten-p.y0+p.kopf+14}},
+  spalten=[{links:zx+16,rechts:N-10,l:[],h:0},{links:10,rechts:zx-14,l:[],h:0}];
+ // Je Werk die niedrigere passende Spalte; in der Spalte stehen die breitesten Werke in der Mitte, nahe der Zentrale (je weiter weg, desto mehr Lieferstationen)
+ for(const m of ALLE.map(mass).sort((a,b)=>b.breit-a.breit)){const sp=spalten.filter(c=>m.breit+40<=c.rechts-c.links&&c.h+m.hoch<=N-28).sort((a,b)=>a.h-b.h)[0];if(!sp)throw new Error('Kein Platz mehr für '+m.w.name);sp.l.push(m);sp.h+=m.hoch}
+ for(const sp of spalten){const d=[];sp.l.forEach((m,i)=>i%2?d.push(m):d.unshift(m));sp.l=d}
+ for(const sp of spalten){let y=Math.max(14,Math.min(N-14-sp.h,zy+3-Math.round(sp.h/2)));const ost=sp===spalten[0],x0=ost?sp.links:100,A=ost?null:sp.rechts+x0-3;
+  for(const m of sp.l){const p0=plane(m.w,x0,y+12,A),p=plane(m.w,x0,y+p0.kopf+3,A);if(p.rb[0]<2||p.rb[2]>N-4)throw new Error(m.w.name+' passt nicht auf die Karte');PL.push(p);y=p.unten+12}}
+ const inBox=(x,y)=>PL.some(p=>x>=p.rb[0]&&x<=p.rb[2]&&y>=p.rb[1]&&y<=p.rb[3]);
  /* 2. Baufelder einebnen */
- const cv=new Set(G.carve||[]);for(const p of PL)for(let y=Math.max(1,p.box[1]);y<=Math.min(N-2,p.box[3]);y++)for(let x=Math.max(1,p.box[0]);x<=Math.min(N-2,p.box[2]);x++){cv.add(y*N+x);AMT[y*N+x]=0}
+ const cv=new Set(G.carve||[]);for(const p of PL)for(let y=Math.max(1,p.rb[1]);y<=Math.min(N-2,p.rb[3]);y++)for(let x=Math.max(1,p.rb[0]);x<=Math.min(N-2,p.rb[2]);x++){cv.add(y*N+x);AMT[y*N+x]=0}
  G.carve=[...cv];genTer(G.carve);patchTotals();
  // Setzt ein Bauwerk ohne den Umweg über das Bauwerkzeug: Bei Tausenden Teilen wäre das Neuaufbauen der Listen nach jedem Stück zu langsam
- const P=(k,x,y,r,opt)=>{if(!canPlace(k,x,y))return null;const ex=at(x,y);if(ex){if(!isBelt(ex))return null;del(ex)}const e=add(k,x,y,r,opt||{});if(e.inv)e.st='wait';gebaut++;return e};
+ // Mit gesetzter Spiegelachse (spg) wird x gespiegelt und Ost/West getauscht. Eine Lieferstation rückt dabei ein Feld weiter, damit ihr Ausgang wieder über dem Zubringer liegt.
+ let spg=null;const spX=(k,x,opt)=>spg===null?x:spg-x-(K[k].s-1)-(k==='versand'&&opt&&opt.f?1:0),spR=r=>spg===null||r%2?r:(r+2)%4;
+ const P=(k,x,y,r,opt)=>{x=spX(k,x,opt);r=spR(r);if(k==='verteiler'&&spg!==null&&opt&&opt.zu)opt={...opt,zu:{r:opt.zu.l,l:opt.zu.r,g:opt.zu.g}};if(!canPlace(k,x,y))return null;const ex=at(x,y);if(ex){if(!isBelt(ex))return null;del(ex)}const e=add(k,x,y,r,opt||{});if(e.inv)e.st='wait';gebaut++;return e};
  // Legt eine Strecke; wo schon ein Band oder Rohr liegt, entsteht eine Brücke. Mit `voll` liegt der Stoff schon auf dem Band, damit das Werk nicht erst lange einschwingen muss
- const bahn=(k,pts,voll)=>{for(let i=0;i+1<pts.length;i++){const[a,b]=pts[i],[c,d]=pts[i+1],dx=Math.sign(c-a),dy=Math.sign(d-b),r=dx>0?0:dy>0?1:dx<0?2:3;let x=a,y=b;while(x!==c||y!==d){if(isBelt(at(x,y)))P('kreuzung',x,y,0);else{const e=P(k,x,y,r);if(e&&voll)e.it=[.875,.625,.375,.125].map(t=>({t,k:voll}))}x+=dx;y+=dy}}};
+ const bahn=(k,pts,voll)=>{for(let i=0;i+1<pts.length;i++){const[a,b]=pts[i],[c,d]=pts[i+1],dx=Math.sign(c-a),dy=Math.sign(d-b),r=dx>0?0:dy>0?1:dx<0?2:3;let x=a,y=b;while(x!==c||y!==d){const rx=spg===null?x:spg-x;if(isBelt(at(rx,y)))P('kreuzung',x,y,0);else{const e=P(k,x,y,r);if(e&&voll)e.it=[.875,.625,.375,.125].map(t=>({t,k:voll}))}x+=dx;y+=dy}}};
  /* 3. Werke bauen */
- for(const p of PL){const{y0,my,bahnen,M}=p,tief=z=>z.seite?my+2:my;
+ for(const p of PL){const{y0,my,bahnen,M}=p,tief=z=>z.seite?my+2:my;spg=p.A;
   for(const m of M){P(bau(m.rez),m.c,my,1,{rez:m.rez,...stufe});P('mast',m.rc+1,my+1,0);P('mast',m.rc+1,my+5,0);if(m.gross){P('greifer',m.c-1,my+1,0);P('greifer',m.c+3,my+1,2)}}
   for(const a of p.ab){P(a.k,a.x,my,1,a.k==='versand'?{tier:2}:{auto:true});P('mast',a.x+(a.k==='versand'?2:5),my+1,0)}
   // Buskopf: Lieferstationen, darüber ihre Solarparks
@@ -63,6 +71,7 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
   // Solarfeld unter dem Werk
   let s=0;for(let r=0;r<p.sr;r++){const y=my+8+r*4;for(let i=0;i<p.proReihe&&s<p.sol;i++,s++)P('solar',p.xm+3*i,y,0);for(let x=p.xm+1;x<p.xe;x+=6)P('mast',x,y+3,0)}
   bahn('strasse',[[p.x0-2,p.unten+3],[p.xe+3,p.unten+3]])}
+ spg=null;
  /* 4. Vorwerke an den Vorkommen: Bohrer oder Pumpe, Verarbeitung und Versandstation direkt hintereinander, eigene Solarparks */
  const weg=l=>{for(const e of l)if(e){del(e);gebaut--}},frei3=(x,y)=>{for(let j=0;j<3;j++)for(let i=0;i<3;i++)if(at(x+i,y+j)||(ORE[(y+j)*N+x+i]&&AMT[(y+j)*N+x+i]))return false;return canPlace('solar',x,y)};
  const strom=(px,py)=>{for(let r=3;r<=12;r++)for(let j=-r;j<=r;j++)for(let i=-r;i<=r;i++){if(Math.max(Math.abs(i),Math.abs(j))!==r)continue;const x=px+i,y=py+j;if(x<2||y<2||x>N-6||y>N-6||inBox(x,y)||!frei3(x,y))continue;
@@ -76,7 +85,7 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
  const vw={eisen:abbau(1,['platte'],32*mal),kupfer:abbau(2,['kupfer'],20*mal),bauxit:abbau(6,[],9*mal),kohle:abbau(4,[],5*mal),schwefel:abbau(8,[],3*mal),stein:abbau(3,[],2*mal),glas:abbau(5,['glas'],mal),kunststoff:abbau(7,['kunststoff'],12*mal),gummi:abbau(7,['gummi'],16*mal),treibstoff:abbau(7,['treibstoff'],3*mal),schmierstoff:abbau(7,['schmierstoff'],mal)};
  const erz=Object.values(vw).reduce((a,b)=>a+b,0);
  /* 5. Komplexe und Lager */
- relist();G.kx=PL.map((p,i)=>({id:i+1,name:p.w.name,x0:p.xm,y0:p.my,x1:p.xe,y1:p.my+2}));G.kxN=G.kx.length;
+ relist();G.kx=PL.map((p,i)=>({id:i+1,name:p.w.name,x0:p.A===null?p.xm:p.A-p.xe,y0:p.my,x1:p.A===null?p.xe:p.A-p.xm,y1:p.my+2}));G.kxN=G.kx.length;
  const grund=new Set(['eisenplatte','kupferplatte','kohle','stein','bauxit','schwefel','glas','kunststoff','gummi','treibstoff','schmierstoff']);
  for(const k in ITEMS)if(k!=='rakete'&&k!=='ausschuss'&&k!=='raketenteil')G.stock[k]=Math.max(G.stock[k]||0,grund.has(k)?(schnell?4e6:20000*mal):(schnell?20000:3000*mal));G.cr=Math.max(G.cr||0,50000);G.arb=Math.max(G.arb||0,20);G.help=true;G.tut=-1;
  const anz=PL.reduce((a,p)=>a+p.M.length,0);relist();power();weltAufbauen(false);C.tx=C.x=PL[0].xm+40;C.tz=C.z=PL[0].my-6;C.tyaw=C.yaw=.5;C.tdist=C.dist=90;
