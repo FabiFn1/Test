@@ -64,7 +64,7 @@ function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3];l
   if(!ok)weg(l);return ok};
  const abbau=(t,stufen,soll)=>{const l=PATCHES.filter(p=>p[0]===t&&!inBox(p[1],p[2])).sort((a,b)=>Math.hypot(a[1]-zc[0],a[2]-zc[1])-Math.hypot(b[1]-zc[0],b[2]-zc[1])).slice(0,14),st=t===7?1:2;let z=0;
   for(const[,px,py,r]of l)for(let y=Math.floor(py-r-2);y<=py+r&&z<soll;y+=st+1)for(let x=Math.floor(px-r-2);x<=px+r&&z<soll;x+=st)if(vorwerk(t,stufen,x,y)){z++;x+=6+3*stufen.length}return z};
- const vw={eisen:abbau(1,['platte'],13),kupfer:abbau(2,['kupfer'],11),bauxit:abbau(6,[],9),kohle:abbau(4,[],5),schwefel:abbau(8,[],3),stein:abbau(3,[],2),glas:abbau(5,['glas'],1),kunststoff:abbau(7,['kunststoff'],12),gummi:abbau(7,['gummi'],16),treibstoff:abbau(7,['treibstoff'],3),schmierstoff:abbau(7,['schmierstoff'],1)};
+ const vw={eisen:abbau(1,['platte'],32),kupfer:abbau(2,['kupfer'],20),bauxit:abbau(6,[],9),kohle:abbau(4,[],5),schwefel:abbau(8,[],3),stein:abbau(3,[],2),glas:abbau(5,['glas'],1),kunststoff:abbau(7,['kunststoff'],12),gummi:abbau(7,['gummi'],16),treibstoff:abbau(7,['treibstoff'],3),schmierstoff:abbau(7,['schmierstoff'],1)};
  const erz=Object.values(vw).reduce((a,b)=>a+b,0);
  /* 5. Komplexe und Lager */
  relist();G.kx=PL.map((p,i)=>({id:i+1,name:p.w.name,x0:p.xm,y0:p.my,x1:p.xe,y1:p.my+2}));G.kxN=G.kx.length;
