@@ -2530,7 +2530,7 @@ function strassenBauen(){const o=GB.ob,l=byKind.strasse||[];let ng=0,np=0,nl=0;o
 EV.an('gebaeude',strassenBauen);
 // Laternen gehen in der Dämmerung an
 EV.an('bild',()=>{const n=Math.min(1,Math.max(0,(TN.n-.25)*2.5));STR.kopfM.emissiveIntensity=n*4;STR.scheinM.opacity=n*.55;STR.schein.visible=n>.02});
-const SCHAU_MAL=4; // so oft wird jedes der vier Werke gebaut
+const SCHAU_MAL=1; // so oft wird jedes der vier Werke gebaut
 /* ====== Schau-Fabrik: ein Endgame-Werk bis zur Rakete, zum Ansehen und Weiterbauen ======
    Vier Werke, jedes mit eigenem Hauptbus: Am Buskopf liefern Versandstationen die Grundstoffe aus der Zentrale an,
    von dort laufen sortenreine Bänder und Rohre nach Osten. Jede Maschine zapft ihre Zutaten mit einem Verteiler ab;

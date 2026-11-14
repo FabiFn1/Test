@@ -1,4 +1,4 @@
-const SCHAU_MAL=4; // so oft wird jedes der vier Werke gebaut
+const SCHAU_MAL=1; // so oft wird jedes der vier Werke gebaut
 /* ====== Schau-Fabrik: ein Endgame-Werk bis zur Rakete, zum Ansehen und Weiterbauen ======
    Vier Werke, jedes mit eigenem Hauptbus: Am Buskopf liefern Versandstationen die Grundstoffe aus der Zentrale an,
    von dort laufen sortenreine Bänder und Rohre nach Osten. Jede Maschine zapft ihre Zutaten mit einem Verteiler ab;
