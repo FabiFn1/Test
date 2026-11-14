@@ -973,13 +973,15 @@ function rebuildB(){shapes();const c={0:0,1:0,'-1':0,u:0,d:0};for(const b of bel
 const FM=MODELS.fundament.map(q=>inst(q,16000));let dirtyF=true;
 function rebuildF(){let n=0;dm.rotation.set(0,0,0);dm.scale.set(1,1,1);for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;if(F[i]>TER[i])for(let l=F[i];l>TER[i]&&n<16000;l--){dm.position.set(x+.5,YL(l),y+.5);dm.updateMatrix();for(const m of FM)m.setMatrixAt(n,dm.matrix);n++}}for(const m of FM){m.count=n;m.instanceMatrix.needsUpdate=true}drawGrid(true);dirtyF=false}
 // Material auf Bändern
-const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3),part:new T.CylinderGeometry(.13,.13,.11,8)};const IM={};const IC=24000;
+const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3),part:new T.CylinderGeometry(.13,.13,.11,8)};const IM={};const IC=60000;
 for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=true;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
 const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
 const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
-function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- const sicht=C.dist>240?-1:C.dist*1.25+30; // weit herausgezoomt sind die Teile auf den Bändern nicht mehr zu erkennenfor(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+let itemBild=0;
+function drawItems(){// Weit herausgezoomt: Teile größer zeichnen, damit die Bänder nicht leer wirken, dafür nur jedes zweite Bild neu setzen
+ const weit=C.dist>200,gr=weit?Math.min(2.8,C.dist/200):1;if(weit&&++itemBild%2)return;for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(gr,gr,gr);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
+ const sicht=C.dist*1.25+30;for(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
