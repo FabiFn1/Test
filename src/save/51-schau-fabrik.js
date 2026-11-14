@@ -51,7 +51,7 @@ function schauFabrik(mal,schnell){mal=mal||1;const tempo=schnell?3.2:1,kraft=sch
  /* 3. Werke bauen */
  for(const p of PL){const{y0,my,bahnen,M}=p,tief=z=>z.seite?my+2:my;
   for(const m of M){P(bau(m.rez),m.c,my,1,{rez:m.rez,...stufe});P('mast',m.rc+1,my+1,0);P('mast',m.rc+1,my+5,0);if(m.gross){P('greifer',m.c-1,my+1,0);P('greifer',m.c+3,my+1,2)}}
-  for(const a of p.ab){P(a.k,a.x,my,1,a.k==='versand'?{tier:2}:null);P('mast',a.x+(a.k==='versand'?2:5),my+1,0)}
+  for(const a of p.ab){P(a.k,a.x,my,1,a.k==='versand'?{tier:2}:{auto:true});P('mast',a.x+(a.k==='versand'?2:5),my+1,0)}
   // Buskopf: Lieferstationen, darüber ihre Solarparks
   for(const q of p.B){const b=bahnen[q.key];for(let j=0;j<b.k;j++)P('versand',b.xi+2*j,y0,1,{f:q.k,tier:2})}
   {let z=0;for(let r=0;r<p.ksr;r++){for(let i=0;i<p.kpro&&z<p.ksol;i++,z++)P('solar',p.x0+3*i,y0-5-4*r,0);for(let x=p.x0+1;x<p.x0+2*p.sum+2;x+=5)P('mast',x,y0-2-4*r,0)}}

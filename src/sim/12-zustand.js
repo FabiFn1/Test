@@ -73,7 +73,9 @@ function step(dt){
   if(!e.net||!sat){e.st='noPower';continue}
   if(e.off||e.kaputt){e.st=e.kaputt?'defekt':'off';continue}
   if(e.k==='wartungsstation'){station(e,dt);continue}
-  if(e.k==='raketensilo'){if(e.launch!==undefined){e.st='ok';e.launch+=dt;if(e.launch>=22){delete e.launch;G.rockets=(G.rockets||0)+1;deliver('rakete');UI.toast('Rakete im All. Starts bisher: '+G.rockets)}}else e.st=(e.inv.raketenteil||0)>=SILO?'ok':'wait';continue}
+  if(e.k==='raketensilo'){if(e.launch!==undefined){e.st='ok';e.launch+=dt;if(e.launch>=22){delete e.launch;G.rockets=(G.rockets||0)+1;deliver('rakete');UI.toast('Rakete im All. Starts bisher: '+G.rockets)}}else{const voll=(e.inv.raketenteil||0)>=SILO;e.st=voll?'ok':'wait';
+   // Automatikstart (per Klick im Silo-Fenster einschaltbar): ist das Silo voll und hat Strom, hebt die Rakete von selbst ab
+   if(voll&&e.auto&&e.net&&e.net.sat>=.5){e.inv.raketenteil=0;e.launch=0}}continue}
   if(e.k==='versand'){versandStep(e,dt);continue}
   if(e.k==='bahnhof'){zugStep(e,dt);continue}
   if(e.k==='drohnenhafen'){if(e.fly){e.st='ok';e.fly.t+=dt/e.fly.dur;if(e.fly.t>=1){const z=E.get(e.link);if(z&&z.out.length<60){z.out.push(...e.fly.l);e.fly=null}else{e.fly.t=1;e.st='blocked'}}}else{const n=total(e),z=E.get(e.link);if(z&&n){e.idle=(e.idle||0)+dt;if(n>=20||e.idle>6){const l=[];for(const i in e.inv)while(e.inv[i]>0&&l.length<20){e.inv[i]--;l.push(i)}e.idle=0;const cd=Math.hypot(z.x-e.x,z.y-e.y);e.fly={t:0,dur:cd/12+3,l}}e.st='ok'}else e.st='wait'}continue}
