@@ -42,6 +42,7 @@
  "sim/45-ersatzteile-nach-schaden.js",
  "ui/46-blaupausen.js",
  "render/47-bildrate-vollbild-rohrleitungen.js",
+ "ui/49-produktionshallen.js",
  "core/48-start.js",
  "core/99-ende.html"
 ]

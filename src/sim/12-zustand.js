@@ -10,7 +10,7 @@ function foot(k,x,y){const s=K[k].s,r=[];for(let j=0;j<s;j++)for(let i=0;i<s;i++
 function add(k,x,y,r,extra){const e={id:nextId++,k,x,y,r,...extra};if(e.z===undefined)e.z=Lv(x,y);if(BK(k)){e.it=e.it||[];e.cv=0}else if(k==='verteiler'||k==='sortierer'){e.buf=e.buf||[];e.nx=e.nx||0}else if(k==='greifer'||k==='langgreifer'){e.t=0}else if(k==='kreuzung'){e.sl=e.sl&&Array.isArray(e.sl[0])?e.sl:[[],[]]}else if(K[k].s>1&&k!=='zentrale'){e.inv=e.inv||{};e.out=e.out||[];e.prog=e.prog||0;e.st='wait';e.sat=0;e.burn=e.burn||0}
  for(const[a,b]of foot(k,x,y))grid[b*N+a]=e.id;E.set(e.id,e);dirtyB=dirtyK=dirtyP=true;if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe')oreInfo(e);return e}
 function del(e){for(const[a,b]of foot(e.k,e.x,e.y))grid[b*N+a]=0;E.delete(e.id);dirtyB=dirtyK=dirtyP=true;UI.removed(e)}
-function relist(){belts=[];machines=[];splits=[];nodes=[];gens=[];byKind={};for(const e of E.values()){const k=e.k;(byKind[k]=byKind[k]||[]).push(e);if(BK(k))belts.push(e);else if(k==='verteiler'||k==='kreuzung'||k==='sortierer'||k==='greifer'||k==='langgreifer')splits.push(e);else if(k==='mast'||k==='grossmast'||k==='zentrale')nodes.push(e);if(e.inv)machines.push(e)}shapes();wire()}
+function relist(){belts=[];machines=[];splits=[];nodes=[];gens=[];byKind={};for(const e of E.values()){const k=e.k;(byKind[k]=byKind[k]||[]).push(e);if(BK(k))belts.push(e);else if(k==='verteiler'||k==='kreuzung'||k==='sortierer'||k==='greifer'||k==='langgreifer')splits.push(e);else if(k==='mast'||k==='grossmast'||k==='zentrale')nodes.push(e);if(e.inv)machines.push(e)}shapes();wire();EV.melde('liste')}
 function at(x,y){return x<0||y<0||x>=N||y>=N?null:E.get(grid[y*N+x])||null}
 function isBelt(e){return e&&(BK(e.k))}
 function outTile(e){const s=K[e.k].s,m=(s-1)>>1,{x,y,r}=e;return r===0?[x+s,y+m,0]:r===1?[x+s-1-m,y+s,1]:r===2?[x-1,y+s-1-m,2]:[x+m,y-1,3]}
@@ -36,7 +36,10 @@ function power(){for(const n of nets){n.gen=0;n.dem=0}for(const n of nodes)if(n.
 /* Transport */
 function ins(b,fromDir,k){if((b.k==='leitung')!==FL.has(k))return false;const it=b.it;if(fromDir===b.r||b.cv!==0){if(it.length&&it[it.length-1].t<GAP)return false;it.push({t:0,k});return true}
  for(const q of it)if(Math.abs(q.t-.5)<GAP)return false;let i=0;while(i<it.length&&it[i].t>.5)i++;it.splice(i,0,{t:.5,k});return true}
-function give(x,y,d,k,h){const e=at(x,y);if(!e)return false;
+/* Übergabe an das Feld x,y. HALZ zählt Übergaben über Hallengrenzen (siehe Produktionshallen). */
+let HALZ=null;
+function give(x,y,d,k,h){const ok=gibAn(x,y,d,k,h);if(ok&&HALZ)HALZ(x,y,d,k);return ok}
+function gibAn(x,y,d,k,h){const e=at(x,y);if(!e)return false;
  if(isBelt(e)){if(e.r===(d+2)%4)return false;if(e.sl&&d!==e.r)return false;if(h!==undefined&&h!==e.z+(e.sl<0&&d===e.r?1:0))return false;return ins(e,d,k)}
  if(h!==undefined&&h!==e.z)return false;
  if(e.k==='verteiler'||e.k==='sortierer'){const l=e.buf;if(l.length>=4||(l.length&&(l[l.length-1].t||0)<GAP))return false;l.push({k,d,t:0,v:GV||1.6});return true}

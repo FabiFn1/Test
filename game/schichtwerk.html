@@ -319,7 +319,7 @@ function foot(k,x,y){const s=K[k].s,r=[];for(let j=0;j<s;j++)for(let i=0;i<s;i++
 function add(k,x,y,r,extra){const e={id:nextId++,k,x,y,r,...extra};if(e.z===undefined)e.z=Lv(x,y);if(BK(k)){e.it=e.it||[];e.cv=0}else if(k==='verteiler'||k==='sortierer'){e.buf=e.buf||[];e.nx=e.nx||0}else if(k==='greifer'||k==='langgreifer'){e.t=0}else if(k==='kreuzung'){e.sl=e.sl&&Array.isArray(e.sl[0])?e.sl:[[],[]]}else if(K[k].s>1&&k!=='zentrale'){e.inv=e.inv||{};e.out=e.out||[];e.prog=e.prog||0;e.st='wait';e.sat=0;e.burn=e.burn||0}
  for(const[a,b]of foot(k,x,y))grid[b*N+a]=e.id;E.set(e.id,e);dirtyB=dirtyK=dirtyP=true;if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe')oreInfo(e);return e}
 function del(e){for(const[a,b]of foot(e.k,e.x,e.y))grid[b*N+a]=0;E.delete(e.id);dirtyB=dirtyK=dirtyP=true;UI.removed(e)}
-function relist(){belts=[];machines=[];splits=[];nodes=[];gens=[];byKind={};for(const e of E.values()){const k=e.k;(byKind[k]=byKind[k]||[]).push(e);if(BK(k))belts.push(e);else if(k==='verteiler'||k==='kreuzung'||k==='sortierer'||k==='greifer'||k==='langgreifer')splits.push(e);else if(k==='mast'||k==='grossmast'||k==='zentrale')nodes.push(e);if(e.inv)machines.push(e)}shapes();wire()}
+function relist(){belts=[];machines=[];splits=[];nodes=[];gens=[];byKind={};for(const e of E.values()){const k=e.k;(byKind[k]=byKind[k]||[]).push(e);if(BK(k))belts.push(e);else if(k==='verteiler'||k==='kreuzung'||k==='sortierer'||k==='greifer'||k==='langgreifer')splits.push(e);else if(k==='mast'||k==='grossmast'||k==='zentrale')nodes.push(e);if(e.inv)machines.push(e)}shapes();wire();EV.melde('liste')}
 function at(x,y){return x<0||y<0||x>=N||y>=N?null:E.get(grid[y*N+x])||null}
 function isBelt(e){return e&&(BK(e.k))}
 function outTile(e){const s=K[e.k].s,m=(s-1)>>1,{x,y,r}=e;return r===0?[x+s,y+m,0]:r===1?[x+s-1-m,y+s,1]:r===2?[x-1,y+s-1-m,2]:[x+m,y-1,3]}
@@ -345,7 +345,10 @@ function power(){for(const n of nets){n.gen=0;n.dem=0}for(const n of nodes)if(n.
 /* Transport */
 function ins(b,fromDir,k){if((b.k==='leitung')!==FL.has(k))return false;const it=b.it;if(fromDir===b.r||b.cv!==0){if(it.length&&it[it.length-1].t<GAP)return false;it.push({t:0,k});return true}
  for(const q of it)if(Math.abs(q.t-.5)<GAP)return false;let i=0;while(i<it.length&&it[i].t>.5)i++;it.splice(i,0,{t:.5,k});return true}
-function give(x,y,d,k,h){const e=at(x,y);if(!e)return false;
+/* Übergabe an das Feld x,y. HALZ zählt Übergaben über Hallengrenzen (siehe Produktionshallen). */
+let HALZ=null;
+function give(x,y,d,k,h){const ok=gibAn(x,y,d,k,h);if(ok&&HALZ)HALZ(x,y,d,k);return ok}
+function gibAn(x,y,d,k,h){const e=at(x,y);if(!e)return false;
  if(isBelt(e)){if(e.r===(d+2)%4)return false;if(e.sl&&d!==e.r)return false;if(h!==undefined&&h!==e.z+(e.sl<0&&d===e.r?1:0))return false;return ins(e,d,k)}
  if(h!==undefined&&h!==e.z)return false;
  if(e.k==='verteiler'||e.k==='sortierer'){const l=e.buf;if(l.length>=4||(l.length&&(l[l.length-1].t||0)<GAP))return false;l.push({k,d,t:0,v:GV||1.6});return true}
@@ -976,7 +979,7 @@ const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
 const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
 function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+ for(const b of belts){if(b.k==='leitung'||b.hh)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
@@ -1007,7 +1010,7 @@ function pick(ev){const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.l
 function tileOf(w,s){return[Math.floor(w[0]-(s-1)/2),Math.floor(w[1]-(s-1)/2)]}
 function afford(k,mult=1){for(const i in K[k].c)if((G.stock[i]||0)<K[k].c[i]*mult)return false;return true}
 function pay(k,sg=-1){for(const i in K[k].c)G.stock[i]=(G.stock[i]||0)+sg*K[k].c[i]}
-function canPlace(k,x,y){const lv=Lv(x,y);if(lv<1)return false;for(const[a,b]of foot(k,x,y)){if(a<0||b<0||a>=N||b>=N)return false;if(Lv(a,b)!==lv)return false;const e=at(a,b);if(e&&!(isBelt(e)&&(BK(k)||k==='verteiler'||k==='kreuzung'||k==='sortierer')))return false}
+function canPlace(k,x,y){const lv=Lv(x,y);if(lv<1)return false;for(const[a,b]of foot(k,x,y)){if(a<0||b<0||a>=N||b>=N)return false;if(HAL.feld[b*N+a])return false;if(Lv(a,b)!==lv)return false;const e=at(a,b);if(e&&!(isBelt(e)&&(BK(k)||k==='verteiler'||k==='kreuzung'||k==='sortierer')))return false}
  if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe'){let n=0;for(const[a,b]of erzFeld(k,x,y)){const o=ORE[b*N+a];if(o&&AMT[b*N+a]>0&&!F[b*N+a]&&(o===7)===(k==='oelpumpe'))n++}if(!n)return false}return true}
 function place(k,x,y,r,quiet){if(!canPlace(k,x,y)){if(!quiet){const ev=foot(k,x,y).every(([a,b])=>Lv(a,b)===Lv(x,y));toast(Lv(x,y)<1?'Hier ist Wasser. Füll es mit einem Fundament auf.':!ev?'Der Boden ist hier nicht eben. Bau zuerst ein Fundament.':k==='oelpumpe'?'Ölpumpen gehören auf eine Ölquelle.':k.includes('bohrer')?'Bohrer brauchen ein Rohstofffeld unter sich oder direkt daneben.':'Dieser Platz ist belegt.')}return false}
  const ex=at(x,y);if(ex&&isBelt(ex)){if(ex.k===k&&ex.r===r)return false;if(ex.k===k){ex.r=r;ex.it.forEach(q=>q.t=Math.min(q.t,1));dirtyB=true;relist();return true}}
@@ -1016,7 +1019,7 @@ function place(k,x,y,r,quiet){if(!canPlace(k,x,y)){if(!quiet){const ev=foot(k,x,
 function fundArea(a,b){const[x0,x1]=[Math.min(a[0],b[0]),Math.max(a[0],b[0])],[y0,y1]=[Math.min(a[1],b[1]),Math.max(a[1],b[1])],l=[];const st=Lv(a[0],a[1]);let ht=Math.min(7,st+fundUp);const scan=()=>{for(let y=y0;y<=y1&&l.length<900;y++)for(let x=x0;x<=x1&&l.length<900;x++){if(x<0||y<0||x>=N||y>=N)continue;const c=Lv(x,y);if(c<ht)l.push([x,y,c,ht,!at(x,y)])}};scan();if(!l.length&&!fundUp&&st<7){ht=st+1;scan()}l.ht=ht;return l}
 function buildFund(a,b){let n=0,lack=false;for(const[x,y,c,ht,free]of fundArea(a,b)){if(!free)continue;const cost=(ht-c)*2;if((G.stock.stein||0)<cost){lack=true;break}G.stock.stein-=cost;F[y*N+x]=ht;n++}if(lack)toast('Nicht genug Stein für das ganze Fundament.');if(n){dirtyF=dirtyB=dirtyP=true}}
 function removeFund(x,y){const i=y*N+x;if(F[i]>TER[i]&&!at(x,y)){G.stock.stein=(G.stock.stein||0)+(F[i]-TER[i])*2;F[i]=0;dirtyF=dirtyB=true;return true}return false}
-function remove(e){if(e.k==='zentrale'){toast('Die Zentrale bleibt stehen.');return}pay(e.k,1);del(e);relist()}
+function remove(e){if(e.k==='zentrale'){toast('Die Zentrale bleibt stehen.');return}if(e.hh){toast('Das steht in einer Produktionshalle. Öffne die Halle zuerst.');return}pay(e.k,1);del(e);relist()}
 function linePath(a,b){const[dx,dy]=[b[0]-a[0],b[1]-a[1]];const t=[];let x=a[0],y=a[1];const hz=Math.abs(dx)>=Math.abs(dy);const sx=Math.sign(dx),sy=Math.sign(dy);t.push([x,y]);if(hz){while(x!==b[0]){x+=sx;t.push([x,y])}while(y!==b[1]){y+=sy;t.push([x,y])}}else{while(y!==b[1]){y+=sy;t.push([x,y])}while(x!==b[0]){x+=sx;t.push([x,y])}}
  const o=[];for(let i=0;i<t.length;i++){const n=t[i+1],pv=t[i-1];let d=rot;if(n)d=n[0]>t[i][0]?0:n[0]<t[i][0]?2:n[1]>t[i][1]?1:3;else if(pv)d=o[i-1][2];o.push([t[i][0],t[i][1],d])}return o}
 canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()});
@@ -1030,6 +1033,7 @@ canvas.addEventListener('pointerdown',ev=>{canvas.focus();canvas.setPointerCaptu
  if(tool==='kx'){drag={kx:[x,y],b:[x,y]};return}
  if(tool==='bp')return;
  if(tool){place(tool,x,y,rot);return}
+ const hi=HAL.feld[Math.floor(w[1])*N+Math.floor(w[0])];if(hi){halleZeigen(hi);return}halleZeigen(0);
  select(at(Math.floor(w[0]),Math.floor(w[1])))});
 canvas.addEventListener('pointerleave',()=>{hoverT=null});canvas.addEventListener('pointermove',ev=>{mouse=[ev.clientX,ev.clientY];{const q=pick(ev);hoverT=q?[Math.floor(q[0]),Math.floor(q[1])]:null}if(orbit){const dx=ev.clientX-orbit.x,dy=ev.clientY-orbit.y;orbit.x=ev.clientX;orbit.y=ev.clientY;C.tyaw-=dx*.005;C.pitch=T.MathUtils.clamp(C.pitch+dy*.004,.45,1.4);return}const w=pick(ev);if(rpan){const dx=ev.clientX-rpan.x,dy=ev.clientY-rpan.y;rpan.x=ev.clientX;rpan.y=ev.clientY;if(Math.hypot(ev.clientX-rpan.sx,ev.clientY-rpan.sy)>5)moved=true;const sc=C.dist*.00125,c=Math.cos(C.yaw),s=Math.sin(C.yaw);C.tx-=(dx*c+dy*s)*sc;C.tz-=(-dx*s+dy*c)*sc;clampC();return}
  if(!w)return;const sz=tool&&tool!=='x'?K[tool].s:1;hover=tileOf(w,sz);
@@ -1143,7 +1147,7 @@ const pc=v=>Math.round(v*100)+' %',ampel=(v,g,y)=>v>=g?'gut':v>=y?'mit':'stoer';
 function lwDraw(){for(const t of['ov','auf','log'])$('lt-'+t).classList.toggle('an',lwTab===t);const b=$('lwbody');
  if(lwTab==='ov'){b.innerHTML=`<div class="reihe"><button id="kxneu">Komplex auf der Karte markieren</button><span class="etikett" id="lwinfo"></span></div><div class="tabw"><table id="kxt"></table></div>`;$('kxneu').onclick=()=>{lwOpen(false);setTool('kx');toast('Zieh ein Rechteck um deinen Komplex.')};lwLive()}
  else if(lwTab==='auf')aufDraw();else logDraw()}
-function zeile(n,id,l){const q=kennz(l);return `<tr><th>${id?`<input data-nm="${id}" value="${n}" aria-label="Name">`:n}<small>${q.n} Maschinen</small></th><td class="${ampel(q.oee,.65,.4)}"><b>${pc(q.oee)}</b></td><td>${pc(q.a)}</td><td>${pc(q.p)}</td><td>${pc(q.q)}</td><td class="${ampel(q.hp,.5,.25)}">${pc(q.hp)}</td><td class="${q.sc>.08?'stoer':q.sc>.03?'mit':'gut'}">${(q.sc*100).toFixed(1)} %</td><td class="${q.df?'stoer':'gut'}">${q.df}</td><td>${Math.round(q.aus)}/min</td><td class="akt">${id?`<button data-bn="${id}">Blaupause</button><button data-t="${id}">${q.off&&q.off===q.n?'Ein':'Aus'}</button><button data-z="${id}">Zeigen</button><button data-d="${id}">×</button>`:''}</td></tr>`}
+function zeile(n,id,l){const q=kennz(l);return `<tr><th>${id?`<input data-nm="${id}" value="${n}" aria-label="Name">`:n}<small>${q.n} Maschinen</small></th><td class="${ampel(q.oee,.65,.4)}"><b>${pc(q.oee)}</b></td><td>${pc(q.a)}</td><td>${pc(q.p)}</td><td>${pc(q.q)}</td><td class="${ampel(q.hp,.5,.25)}">${pc(q.hp)}</td><td class="${q.sc>.08?'stoer':q.sc>.03?'mit':'gut'}">${(q.sc*100).toFixed(1)} %</td><td class="${q.df?'stoer':'gut'}">${q.df}</td><td>${Math.round(q.aus)}/min</td><td class="akt">${id?`<button data-h="${id}">${(G.kx||[]).find(q=>q.id===id)?.halle?'Halle öffnen':'Zur Halle'}</button><button data-bn="${id}">Blaupause</button><button data-t="${id}">${q.off&&q.off===q.n?'Ein':'Aus'}</button><button data-z="${id}">Zeigen</button><button data-d="${id}">×</button>`:''}</td></tr>`}
 function lwLive(){if(lwTab!=='ov')return;const t=$('kxt');if(!t||document.activeElement?.dataset?.nm)return;const kx=G.kx||[];$('lwinfo').textContent=`Ausfälle bisher: ${G.ausf||0} · Ersatzteile: ${G.stock.ersatzteil||0} · Ausschuss verloren: ${G.lost||0}`;t.innerHTML=`<tr><th>Komplex</th><th>OEE</th><th>Verfügbarkeit</th><th>Leistung</th><th>Qualität</th><th>Zustand</th><th>Ausschuss</th><th>Störungen</th><th>Ausstoß</th><th></th></tr>`+zeile('Gesamtwerk',0,kxM(null))+kx.map(x=>zeile(x.name,x.id,kxM(x))).join('')}
 $('lw').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset,kx=G.kx||[],x=kx.find(q=>q.id===+(d.r||d.t||d.z||d.d));if(d.r&&x){toast(reparieren(kxM(x))+' Maschinen repariert.');lwLive()}if(d.t&&x){const l=kxM(x),o=!l.every(e=>e.off);l.forEach(e=>e.off=o);lwLive()}if(d.z&&x){C.tx=(x.x0+x.x1)/2;C.tz=(x.y0+x.y1)/2;lwOpen(false)}if(d.d&&x){G.kx=kx.filter(q=>q!==x);lwLive()}if(d.an){auftragAn(+d.an);aufDraw()}if(d.dl){G.sps.splice(+d.dl,1);logDraw()}if(d.ad!==undefined){G.sps=G.sps||[];G.sps.push({a:{s:'lager',i:'ersatzteil',op:'<',v:10},x:(G.kx||[])[0]?.id||0,t:'aus'});logDraw()}});
 $('lw').addEventListener('change',ev=>{const n=ev.target.dataset;if(n.nm){const x=(G.kx||[]).find(q=>q.id===+n.nm);if(x)x.name=ev.target.value;ev.target.blur();lwLive()}if(n.ru!==undefined){const r=G.sps[+n.ru];let o=r;if(n.c)o=r[n.c]||(r[n.c]={s:'lager',i:'ersatzteil',op:'<',v:10});if(n.f==='b2'){if(ev.target.value==='1')r.b={s:'lager',i:'ersatzteil',op:'<',v:10};else delete r.b}else o[n.f]=ev.target.value;logDraw()}});
@@ -1156,7 +1160,7 @@ for(const[t,n]of[['ov','ov'],['auf','auf'],['log','log']])$('lt-'+t).onclick=()=
 /* ====== Schleife ====== */
 let miniT=0,last=performance.now(),hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
 /* Simulation in festen 30 Schritten je Sekunde, unabhängig von der Bildrate */
-const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:8,schritt:h=>step(h)});
+const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:8,schritt:h=>{step(h);EV.melde('schritt',h)}});
 function frame(now){if(window.__noloop&&!window.__once)return;window.__once=false;const dt=Math.min((now-last)/1000,.1);last=now;panKeys(dt);camUp(dt);
  const chg=dirtyF||dirtyP||dirtyB||dirtyK;if(dirtyF)rebuildF();if(dirtyP)relist();if(dirtyB)rebuildB();if(dirtyK)rebuildK();if(chg)updateDeco();
  if(!paused){SIM.vor(dt*G.speed);
@@ -1164,7 +1168,7 @@ function frame(now){if(window.__noloop&&!window.__once)return;window.__once=fals
   beltOff=(beltOff-dt*G.speed*1.6)%1;beltTex.offset.x=beltOff;
   const t=now/500;for(const k of['bohrer','schnellbohrer','fertiger','montagewerk','praezision','recycler','generator','greifer','langgreifer']){const l=byKind[k]||[];if(!l.length)continue;for(const{m,q}of KM[k]){if(!q.spin)continue;for(let i=0;i<l.length;i++){const e=l[i];if(k==='greifer'||k==='langgreifer')m.setMatrixAt(i,pmat(e,q,(e.h?Math.PI:0)+Math.PI*Math.min(1,e.t/.55)));else if(e.st==='ok')m.setMatrixAt(i,pmat(e,q,t*3+i))}m.instanceMatrix.needsUpdate=true}}}
  drawItems();drawSpecial(dt);drawSmoke(paused?0:dt);ghostUp();hudT+=dt;if(hudT>.25){hudT=0;hud()}miniT+=dt;if(miniT>1){miniT=0;miniDraw()}rateT+=dt;if(rateT>=10){rateT=0;rateH.push({...rate});for(const k in rate)delete rate[k];if(rateH.length>6)rateH.shift();rateShow={};for(const r of rateH)for(const k in r)rateShow[k]=(rateShow[k]||0)+r[k];const f=60/(rateH.length*10);for(const k in rateShow)rateShow[k]=Math.round(rateShow[k]*f)}
- saveT+=dt;if(saveT>20){saveT=0;save()}renderBild();if(!window.__noloop)requestAnimationFrame(frame)}
+ saveT+=dt;if(saveT>20){saveT=0;save()}EV.melde('bild',dt);renderBild();if(!window.__noloop)requestAnimationFrame(frame)}
 addEventListener('beforeunload',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
 /* ====== Touch-Steuerung (Handy und Tablet) ====== */
 const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
@@ -2068,7 +2072,7 @@ const MSYM=(function(){const g=new T.PlaneGeometry(1,1),max=900;g.setAttribute('
   vertexShader:'attribute vec2 aO;varying vec2 vUv;void main(){vUv=(uv+aO)/10.;vec4 mv=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);float s=length(instanceMatrix[0].xyz);mv.xy+=position.xy*s;gl_Position=projectionMatrix*mv;}',
   fragmentShader:'uniform sampler2D map;varying vec2 vUv;void main(){vec4 t=texture2D(map,vUv);if(t.a<.05)discard;gl_FragColor=t;\n#include <colorspace_fragment>\n}'}),max);m.count=0;m.frustumCulled=false;m.renderOrder=5;scene.add(m);return m})();
 function symUpdate(){const m=MSYM,A=m.geometry.attributes.aO,o=GB.ob;let n=0;if(SET.symbole!==false&&C.dist<95&&!SHELL.titel){const r=Math.max(40,C.dist),s=Math.min(1.15,Math.max(.42,C.dist*.017));
-  for(const e of machines){if(n>=900||Math.abs(e.x-C.x)>r||Math.abs(e.y-C.z)>r)continue;const it=e.bau?null:e.rez&&REZ[e.rez]?REZ[e.rez].out[0]:e.ore?ORES[e.ore]:null;if(!it)continue;const g=K[e.k].s,c=ICELL[it];o.position.set(e.x+g/2,YL(e.z)+(MHOEHE[e.k]||2)+.2+s*.5,e.y+g/2);o.rotation.set(0,0,0);o.scale.setScalar(s);o.updateMatrix();m.setMatrixAt(n,o.matrix);A.array[n*2]=c[0];A.array[n*2+1]=9-c[1];n++}}
+  for(const e of machines){if(e.hh||n>=900||Math.abs(e.x-C.x)>r||Math.abs(e.y-C.z)>r)continue;const it=e.bau?null:e.rez&&REZ[e.rez]?REZ[e.rez].out[0]:e.ore?ORES[e.ore]:null;if(!it)continue;const g=K[e.k].s,c=ICELL[it];o.position.set(e.x+g/2,YL(e.z)+(MHOEHE[e.k]||2)+.2+s*.5,e.y+g/2);o.rotation.set(0,0,0);o.scale.setScalar(s);o.updateMatrix();m.setMatrixAt(n,o.matrix);A.array[n*2]=c[0];A.array[n*2+1]=9-c[1];n++}}
  m.count=n;m.instanceMatrix.needsUpdate=true;A.needsUpdate=true}
 /* --- Material auf Bändern: größer und kräftiger --- */
 IM.lump.geometry=new T.DodecahedronGeometry(.17);IM.plate.geometry=new T.BoxGeometry(.34,.09,.34);IM.part.geometry=new T.CylinderGeometry(.165,.165,.15,10);for(const t in IM){IM[t].material.roughness=.4;IM[t].material.envMapIntensity=1.3;IM[t].material.emissive=new T.Color(0x222222)}
@@ -2425,6 +2429,68 @@ function rohreBauen(){const o=GB.ob;let nh=0,nk=0,ns=0;for(const b of belts){if(
  ROHR.halb.count=ROHR.flansch.count=nh;ROHR.knoten.count=nk;ROHR.stuetze.count=ns;for(const k in ROHR)ROHR[k].instanceMatrix.needsUpdate=true}
 {const _b=rebuildB;rebuildB=function(){_b();rohreBauen()}}
 ERKL['Antrieb']=['Flüssigkeiten und Rohre','Mit der Ölpumpe kommen Flüssigkeiten ins Werk: Rohöl, Schmierstoff, Treibstoff und Schwefelsäure.',['Flüssigkeiten laufen nur durch Rohrleitungen, nicht über Bänder. Feste Stoffe passen nicht ins Rohr.','Rohre verlegst du wie Bänder: Werkzeug wählen und ziehen. Sie kosten je Feld 1 Rohr.','Führ das Rohr direkt in die Maschine oder in die Zentrale. Greifarme können aus Rohren nichts entnehmen.','Verteiler funktionieren auch als Abzweig für Rohre.'],'Kunststoff und Gummi sind fest und laufen weiter über Bänder.'];
+/* ====== Produktionshallen: ein Komplex wird zur geschlossenen Halle mit Toren und gemessenem Durchsatz ====== */
+const HAL={feld:new Uint16Array(N*N),io:new Map(),gr:new T.Group(),neu:true,offen:0,
+ tor:new T.MeshStandardMaterial({color:0x0b0e10,roughness:.9}),rahmen:new T.MeshStandardMaterial({color:0xe0a81f,roughness:.55,metalness:.2}),wand:M('Paneel').clone(),dach:M('Blechdach').clone()};HAL.wand.side=HAL.dach.side=T.DoubleSide;
+scene.add(HAL.gr);
+const hallen=()=>(G&&G.kx||[]).filter(x=>x.halle);
+function hallenFeld(){HAL.feld.fill(0);for(const x of hallen())for(let y=x.y0;y<=x.y1;y++)HAL.feld.fill(x.id,y*N+x.x0,y*N+x.x1+1);for(const e of E.values())e.hh=HAL.feld[e.y*N+e.x]||0;HAL.neu=true}
+// Zählt jede Übergabe über eine Hallengrenze (Band, Rohr, Greifarm, Maschinenausgang)
+HALZ=function(x,y,d,k){const a=HAL.feld[y*N+x],b=HAL.feld[(y-DY[d])*N+x-DX[d]];if(a===b)return;if(a){const o=hallenIO(a).ein;o[k]=(o[k]||0)+1}if(b){const o=hallenIO(b).aus;o[k]=(o[k]||0)+1}};
+function hallenIO(id){let o=HAL.io.get(id);if(!o){o={ein:{},aus:{},ein0:null,aus0:null,t:0};HAL.io.set(id,o)}return o}
+// Je Minute: letzte volle Minute, davor Hochrechnung der laufenden
+function hallenRate(id,art){const o=hallenIO(id),r={};if(o[art+'0']){Object.assign(r,o[art+'0']);return r}const f=60/Math.max(5,o.t);for(const k in o[art])r[k]=Math.round(o[art][k]*f);return r}
+EV.an('schritt',h=>{for(const o of HAL.io.values()){o.t+=h;if(o.t>=60){o.t=0;o.ein0=o.ein;o.aus0=o.aus;o.ein={};o.aus={}}}});
+function hallenTore(x){const t=[],drin=(a,b)=>a>=x.x0&&a<=x.x1&&b>=x.y0&&b<=x.y1;for(const b of belts){const nx=b.x+DX[b.r],ny=b.y+DY[b.r],i=drin(b.x,b.y),j=drin(nx,ny);if(i===j)continue;t.push({x:b.x+.5+DX[b.r]*.5,z:b.y+.5+DY[b.r]*.5,r:b.r,y:YL(b.z),rohr:b.k==='leitung',aus:i})}
+ for(const e of machines){if(!e.out||K[e.k].gen||!drin(e.x,e.y))continue;const o=outTile(e);if(!drin(o[0],o[1]))t.push({x:o[0]+.5-DX[o[2]]*.5,z:o[1]+.5-DY[o[2]]*.5,r:o[2],y:YL(e.z),rohr:false,aus:true})}return t}
+function hallePruefen(x){const w=x.x1-x.x0+1,h=x.y1-x.y0+1;if(w<4||h<4)return'Eine Halle braucht mindestens 4 × 4 Felder.';let n=0;
+ for(const e of E.values()){const s=K[e.k].s;if(e.x+s<=x.x0||e.x>x.x1||e.y+s<=x.y0||e.y>x.y1)continue;if(e.x<x.x0||e.y<x.y0||e.x+s-1>x.x1||e.y+s-1>x.y1)return K[e.k].n+' ragt über den Rand des Komplexes.';if(e.k==='zentrale')return'Die Zentrale kann nicht in einer Halle stehen.';if(e.bau)return'Im Komplex wird noch gebaut.';if(e.inv)n++}
+ if(!n)return'Im Komplex steht keine Maschine.';for(const q of hallen())if(q!==x&&q.x0<=x.x1&&q.x1>=x.x0&&q.y0<=x.y1&&q.y1>=x.y0)return'Der Komplex überschneidet sich mit '+q.name+'.';return''}
+const halleKosten=x=>({eisenplatte:2*(x.x1-x.x0+x.y1-x.y0+2)*2,stein:(x.x1-x.x0+1)*(x.y1-x.y0+1)});
+function halleBauen(x){const f=hallePruefen(x);if(f){toast(f);return false}const c=halleKosten(x);if(!G.frei){for(const k in c)if((G.stock[k]||0)<c[k]){toast(`Für die Halle fehlen ${c[k]-(G.stock[k]||0)} ${ITEMS[k][0]}.`);return false}for(const k in c)G.stock[k]-=c[k]}
+ x.halle=true;HAL.io.delete(x.id);hallenFeld();select(null);toast(x.name+' ist jetzt eine Produktionshalle. Die Anlagen laufen darin weiter, ein Klick auf die Halle zeigt den Durchsatz.');return true}
+function halleOeffnen(x){x.halle=false;HAL.io.delete(x.id);hallenFeld();halleZeigen(0);toast(x.name+' ist wieder offen.')}
+/* --- Hülle --- */
+function hallenSchild(name){const c=document.createElement('canvas');c.width=512;c.height=96;const g=c.getContext('2d');g.fillStyle='#1d2a30';g.fillRect(0,0,512,96);g.fillStyle='#f0b429';g.fillRect(0,0,512,8);g.fillStyle='#e8ecea';g.font='600 54px "Barlow Condensed",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(name.toUpperCase().slice(0,22),256,54,480);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;return t}
+function hallenGeo(fl){const p=[],u=[],ix=[];for(const q of fl){const b=p.length/3;for(let i=0;i<4;i++){p.push(q[i*5],q[i*5+1],q[i*5+2]);u.push(q[i*5+3],q[i*5+4])}ix.push(b,b+1,b+2,b,b+2,b+3)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(u,2));g.setIndex(ix);g.computeVertexNormals();return g}
+function halleModell(x){const gr=new T.Group(),X0=x.x0,X1=x.x1+1,Z0=x.y0,Z1=x.y1+1,w=X1-X0,d=Z1-Z0;let l0=9,l1=0,mh=3;
+ for(let y=x.y0;y<=x.y1;y++)for(let i=x.x0;i<=x.x1;i++){const l=Lv(i,y);if(l<l0)l0=l;if(l>l1)l1=l;const e=at(i,y);if(e)mh=Math.max(mh,(MHOEHE[e.k]||2)+.7)}
+ const y0=YL(l0)-.05,y1=YL(l1)+Math.min(6.5,mh),laengs=w>=d,halb=(laengs?d:w)/2,first=Math.min(1.6,halb*.22),ue=.25,s=.5;
+ // Wände: vier Seiten, an den Giebelseiten bis zum First hochgezogen
+ const wand=[[X0,y0,Z1,0,0, X1,y0,Z1,w*s,0, X1,y1,Z1,w*s,(y1-y0)*s, X0,y1,Z1,0,(y1-y0)*s],[X1,y0,Z0,0,0, X0,y0,Z0,w*s,0, X0,y1,Z0,w*s,(y1-y0)*s, X1,y1,Z0,0,(y1-y0)*s],
+  [X1,y0,Z1,0,0, X1,y0,Z0,d*s,0, X1,y1,Z0,d*s,(y1-y0)*s, X1,y1,Z1,0,(y1-y0)*s],[X0,y0,Z0,0,0, X0,y0,Z1,d*s,0, X0,y1,Z1,d*s,(y1-y0)*s, X0,y1,Z0,0,(y1-y0)*s]];
+ const yf=y1+first,gs=first*s;
+ if(laengs){const zm=(Z0+Z1)/2;wand.push([X1,y1,Z1,0,0, X1,y1,Z0,d*s,0, X1,yf,zm,d*s/2,gs, X1,yf,zm,d*s/2,gs],[X0,y1,Z0,0,0, X0,y1,Z1,d*s,0, X0,yf,zm,d*s/2,gs, X0,yf,zm,d*s/2,gs])}
+ else{const xm=(X0+X1)/2;wand.push([X0,y1,Z1,0,0, X1,y1,Z1,w*s,0, xm,yf,Z1,w*s/2,gs, xm,yf,Z1,w*s/2,gs],[X1,y1,Z0,0,0, X0,y1,Z0,w*s,0, xm,yf,Z0,w*s/2,gs, xm,yf,Z0,w*s/2,gs])}
+ const mw=new T.Mesh(hallenGeo(wand),HAL.wand);mw.castShadow=mw.receiveShadow=true;gr.add(mw);
+ // Dach: zwei geneigte Flächen mit Überstand
+ const sl=Math.hypot(halb,first),ys=y1-first*ue/halb;let dach;
+ if(laengs){const zm=(Z0+Z1)/2,a=X0-ue,b=X1+ue,L=(b-a)*s;dach=[[a,ys,Z1+ue,0,0, b,ys,Z1+ue,L,0, b,yf,zm,L,sl*s, a,yf,zm,0,sl*s],[b,ys,Z0-ue,0,0, a,ys,Z0-ue,L,0, a,yf,zm,L,sl*s, b,yf,zm,0,sl*s]]}
+ else{const xm=(X0+X1)/2,a=Z0-ue,b=Z1+ue,L=(b-a)*s;dach=[[X1+ue,ys,b,0,0, X1+ue,ys,a,L,0, xm,yf,a,L,sl*s, xm,yf,b,0,sl*s],[X0-ue,ys,a,0,0, X0-ue,ys,b,L,0, xm,yf,b,L,sl*s, xm,yf,a,0,sl*s]]}
+ const md=new T.Mesh(hallenGeo(dach),HAL.dach);md.castShadow=md.receiveShadow=true;gr.add(md);
+ // Sockel, Lichtband am First, Dachlüfter
+ const box=(bx,by,bz,px,py,pz,mat)=>{const m=new T.Mesh(new T.BoxGeometry(bx,by,bz),mat);m.position.set(px,py,pz);m.castShadow=m.receiveShadow=true;gr.add(m);return m};
+ box(w+.12,.45,d+.12,(X0+X1)/2,y0+.22,(Z0+Z1)/2,M('Beton'));
+ const lang=laengs?w:d;box(laengs?lang*.8:.7,.12,laengs?.7:lang*.8,(X0+X1)/2,yf+.02,(Z0+Z1)/2,M('Beton_Hell'));
+ for(let i=0,n=Math.max(1,Math.floor(lang/7));i<n;i++){const q=(i+.5)/n*lang,px=laengs?X0+q:(X0+X1)/2+halb*.5,pz=laengs?(Z0+Z1)/2+halb*.5:Z0+q;box(.7,.5,.7,px,y1+first*.5+.2,pz,M('Blech_Dunkel'))}
+ // Tore an jedem Band und Rohr, das die Wand kreuzt
+ for(const t of hallenTore(x)){const q=t.r%2===0,b=t.rohr?.5:.96,h=t.rohr?.5:1.05,yy=t.y+(t.rohr?.42:h/2);box(q?.34:b,h,q?b:.34,t.x,yy,t.z,HAL.tor);box(q?.4:b+.2,.1,q?b+.2:.4,t.x,yy+h/2+.05,t.z,HAL.rahmen);for(const v of[-1,1])box(q?.4:.1,h,q?.1:.4,t.x+(q?0:v*(b/2+.05)),yy,t.z+(q?v*(b/2+.05):0),HAL.rahmen)}
+ // Namensschild an der längeren Außenwand
+ const sm=new T.Mesh(new T.PlaneGeometry(Math.min(5,lang*.6),Math.min(5,lang*.6)*.1875),new T.MeshStandardMaterial({map:hallenSchild(x.name),roughness:.6}));
+ if(laengs)sm.position.set((X0+X1)/2,y1-.75,Z1+.03);else{sm.position.set(X1+.03,y1-.75,(Z0+Z1)/2);sm.rotation.y=Math.PI/2}gr.add(sm);return gr}
+function hallenModelle(){HAL.neu=false;for(const g of HAL.gr.children.slice()){HAL.gr.remove(g);g.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material.map&&o.material.map.isCanvasTexture){o.material.map.dispose();o.material.dispose()}}})}for(const x of hallen())HAL.gr.add(halleModell(x))}
+EV.an('liste',hallenFeld);EV.an('bild',()=>{if(HAL.neu)hallenModelle()});
+/* --- Fenster --- */
+document.head.insertAdjacentHTML('beforeend','<style>#halle{position:fixed;right:14px;bottom:110px;width:300px;padding:11px 13px;display:grid;gap:7px;z-index:6}#halle h3{margin:0;font-size:22px}#halle .chips{display:flex;flex-wrap:wrap;gap:4px 10px;font:13px var(--mono)}@media (max-width:700px){#halle{right:8px;bottom:76px;width:240px}}</style>');
+document.body.insertAdjacentHTML('beforeend','<div id="halle" class="tafel" hidden></div>');
+function halleZeigen(id){const x=hallen().find(q=>q.id===id),el=$('halle');HAL.offen=x?id:0;el.hidden=!x;if(!x)return;select(null);const q=kennz(kxM(x)),chips=r=>{const l=Object.entries(r).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]);return l.length?l.map(([k,n])=>`<span title="${ITEMS[k][0]}">${ic(k,18)} ${n}</span>`).join(''):'<span class="matt">noch nichts gemessen</span>'};
+ el.innerHTML=`<h3>${x.name}</h3><div class="matt">Produktionshalle · ${x.x1-x.x0+1} × ${x.y1-x.y0+1} Felder · ${q.n} Maschinen</div>
+ <div class="etikett">Eingang je Minute</div><div class="chips">${chips(hallenRate(id,'ein'))}</div><div class="etikett">Ausgang je Minute</div><div class="chips">${chips(hallenRate(id,'aus'))}</div>
+ <div class="matt">OEE ${pc(q.oee)} · Zustand ${pc(q.hp)} · Störungen ${q.df}${q.off?` · ${q.off} aus`:''}</div>
+ <div class="reihe"><button id="h-auf">Halle öffnen</button><button id="h-schalt">${q.off&&q.off===q.n?'Einschalten':'Ausschalten'}</button><button id="h-zu">Schließen</button></div>`;
+ $('h-auf').onclick=()=>halleOeffnen(x);$('h-zu').onclick=()=>halleZeigen(0);$('h-schalt').onclick=()=>{const l=kxM(x),o=!l.every(e=>e.off);l.forEach(e=>e.off=o);halleZeigen(id)}}
+setInterval(()=>{if(HAL.offen&&!$('halle').matches(':hover'))halleZeigen(HAL.offen)},1000);
+$('lw').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;if(d.h){const x=(G.kx||[]).find(q=>q.id===+d.h);if(!x)return;if(x.halle)halleOeffnen(x);else if(halleBauen(x)){C.tx=(x.x0+x.x1)/2;C.tz=(x.y0+x.y1)/2;lwOpen(false);return}lwLive()}else if(d.d)hallenFeld()});
 /* ====== Start ====== */
 // Desktop-Fassung: Erfolge an Steam weitergeben
 if(SW.desktop&&SW.desktop.erfolg)EV.an('erfolg',id=>SW.desktop.erfolg(id));

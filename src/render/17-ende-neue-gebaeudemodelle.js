@@ -24,7 +24,7 @@ const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
 const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
 function drawItems(){for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(1,1,1);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- for(const b of belts){if(b.k==='leitung')continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+ for(const b of belts){if(b.k==='leitung'||b.hh)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
  for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
