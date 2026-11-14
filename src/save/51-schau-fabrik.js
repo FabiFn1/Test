@@ -1,12 +1,12 @@
 /* ====== Schau-Fabrik: ein laufendes Werk bis zur Rakete, zum Ansehen und Weiterbauen ======
    Hauptbus: Aus der Zentrale laufen sortenreine Bänder und Rohre mit den Grundstoffen nach Osten.
-   Jede Maschine zapft ihre Zutaten mit einem Verteiler ab; das Abzweigband kreuzt die übrigen Bänder über Brücken.
+   Jede Maschine zapft ihre Zutaten mit einem Verteiler ab (Vorrang für den Abzweig, der Rest läuft weiter); das Abzweigband kreuzt die übrigen Bänder über Brücken.
    Zwischenprodukte bekommen ein eigenes Band vom Hersteller bis zum letzten Abnehmer. Volle Bänder stauen sich,
    dadurch läuft jede Maschine nur so schnell, wie ihr Erzeugnis gebraucht wird. Grundstoffe kommen per Drohne von den Vorkommen. */
 function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3];let gebaut=0;
  const NORD=['eisenplatte','kupferplatte','kohle','stein','bauxit','schwefel'],OST=['eisenplatte#2','glas','kunststoff','gummi','treibstoff','schmierstoff'],SUED=['eisenplatte#3','kohle#2'],stoff=k=>k.split('#')[0],
   REIHE=['stahl','stahl','blech','aluminium','aluminium','verbundplatte','verbundplatte','rahmen','stange','schraube','rotor','lager','turbine','zement','betonteil','hitzeschild','triebwerk',
-   'draht','schaltkreis','kabel','logikmodul','saeure','prozessor','computer','sensor','raketensteuerung','batterie','akkupack','sprengstoff','raketenteil'];
+   'draht','schaltkreis','kabel','kabel','logikmodul','logikmodul','saeure','prozessor','computer','sensor','raketensteuerung','batterie','akkupack','sprengstoff','raketenteil'];
  for(const e of[...E.values()])if(e.k!=='zentrale')del(e);
  /* 1. Plan: Maschinenplätze, Bänder je Stoff, Zeilen im Bus */
  const bahnen={},M=[];let cx=zx+12;
@@ -33,7 +33,7 @@ function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3];l
  NORD.forEach((k,i)=>P('greifer',zx+i,zy-1,3,{f:stoff(k)}));OST.forEach((k,i)=>P('greifer',zx+6,zy+i,0,{f:stoff(k)}));SUED.forEach((k,i)=>P('greifer',zx+5-i,zy+6,1,{f:stoff(k)}));
  /* 4. Bus: erst alle Bänder bis zum letzten Abnehmer, dann Abzweige und Zuführungen der Hersteller */
  for(const k in bahnen){const b=bahnen[k],l=b.zapf[b.zapf.length-1];if(!l)continue;const i=NORD.indexOf(k),j=SUED.indexOf(k),anf=i>=0?[[zx+i,zy-2],[zx+i,b.y]]:j>=0?[[zx+5-j,zy+7],[zx+5-j,b.y]]:b.start===null?[[zx+7,b.y]]:[[b.start,b.y]];bahn(art(k),[...anf,[l.x,b.y],[l.x,tief(l)]])}
- for(const k in bahnen){const b=bahnen[k];for(const z of b.zapf.slice(0,-1)){bahn(art(k),[[z.x,b.y+1],[z.x,tief(z)]]);P('verteiler',z.x,b.y,0,{zu:{l:true}})}
+ for(const k in bahnen){const b=bahnen[k];for(const z of b.zapf.slice(0,-1)){bahn(art(k),[[z.x,b.y+1],[z.x,tief(z)]]);P('verteiler',z.x,b.y,0,{zu:{l:true},prio:'r'})}
   for(const m of b.her||[])bahn(art(k),[[m.c+1,my+3],[m.c+3,my+3],[m.c+3,b.y]])}
  /* 5. Solarfeld und Straße */
  for(let b=0;b<2;b++){const ym=my+13+8*b;for(let i=0;i<16;i++){P('solar',zx+12+3*i,ym-3,0);P('solar',zx+12+3*i,ym+1,0)}for(let j=0;j<9;j++)P('mast',zx+12+6*j,ym,0)}
@@ -50,7 +50,7 @@ function schauFabrik(){const Z=byKind.zentrale[0],zx=Z.x,zy=Z.y,zc=[zx+3,zy+3];l
   for(const[,px,py,r]of l)for(let y=Math.floor(py-r-2);y<=py+r&&n<soll;y+=st+1)for(let x=Math.floor(px-r-2);x<=px+r&&n<soll;x+=st)if(vorwerk(t,stufen,x,y)){n++;x+=6+3*stufen.length}return n};
  const erz=abbau(1,['platte'],14)+abbau(2,['kupfer'],5)+abbau(4,[],7)+abbau(3,[],4)+abbau(5,['glas'],3)+abbau(6,[],4)+abbau(8,[],4)+abbau(7,['kunststoff'],3)+abbau(7,['gummi'],3)+abbau(7,['treibstoff'],3)+abbau(7,['schmierstoff'],2);
  /* 7. Komplexe und Lager */
- relist();const feld=(n,a,b)=>({id:0,name:n,x0:M[a].c,y0:my,x1:M[b].c+2,y1:my+2});G.kx=[feld('Leichtbau',0,7),feld('Triebwerksbau',8,16),feld('Elektronik',17,25),feld('Endmontage',26,29)];G.kx.forEach((x,i)=>x.id=i+1);G.kxN=G.kx.length;
+ relist();const feld=(n,a,b)=>({id:0,name:n,x0:M[a].c,y0:my,x1:M[b].c+2,y1:my+2});G.kx=[feld('Leichtbau',0,7),feld('Triebwerksbau',8,16),feld('Elektronik',17,27),feld('Endmontage',28,31)];G.kx.forEach((x,i)=>x.id=i+1);G.kxN=G.kx.length;
  for(const k in ITEMS)if(k!=='rakete'&&k!=='ausschuss'&&k!=='raketenteil')G.stock[k]=Math.max(G.stock[k]||0,1500);G.cr=Math.max(G.cr||0,50000);G.arb=Math.max(G.arb||0,12);G.help=true;G.tut=-1;
  relist();power();weltAufbauen(false);C.tx=C.x=zx+45;C.tz=C.z=zy+12;C.tyaw=C.yaw=.5;C.tdist=C.dist=85;
  toast(`Schau-Fabrik steht: Hauptbus mit ${NORD.length+OST.length+SUED.length} Bändern und Rohren, ${M.length} Maschinen, ${erz} Vorwerke an den Vorkommen, Raketensilo. Bau einfach weiter.`);return{gebaut,erz,my}}
