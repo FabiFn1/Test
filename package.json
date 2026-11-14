@@ -1,7 +1,7 @@
 {
   "name": "schichtwerk",
   "productName": "Schichtwerk",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Schichtwerk – Fabrik-Aufbauspiel",
   "main": "main.js",
   "author": "FabiFn1",
