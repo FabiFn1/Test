@@ -20,7 +20,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 </style>`);
 const IN={id:0,rez:false,f:false};
 const STTXT={ok:'läuft',wait:'wartet auf Material',blocked:'Ausgang blockiert',noPower:'kein Strom',defekt:'defekt',off:'per Logik aus'};
-select=function(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis'].includes(e.k)){el.hidden=true;sel=null;return}
+select=function(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis','strasse'].includes(e.k)){el.hidden=true;sel=null;return}
  if(IN.id!==e.id){IN.id=e.id;IN.rez=false;IN.f=false}const k=K[e.k],rezM=RB.has(base(e.k)),f2=v=>v>=100?Math.round(v):v>=10?v.toFixed(1):v.toFixed(2),grf=/greifer/.test(e.k),zen=grf&&anZentrale(e);
  let h=`<div class="kopf"><img src="${e.rez&&REZ[e.rez]?ICONS[REZ[e.rez].out[0]]:icons[e.k]||icons.menu}" alt=""><div><h2>${k.n}</h2><span class="pille" id="ipille"></span></div><button class="x" id="inspzu" aria-label="Schließen">×</button></div>`;
  if(rezM){const r=e.rez&&REZ[e.rez],sp=r?TS(e)*(k.sp||1)*60/r.t:0;h+=`<section><div class="etikett">Rezept</div>`;

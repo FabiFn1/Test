@@ -36,10 +36,11 @@ scene.traverse(o=>{if(o.isInstancedMesh&&o.geometry===UM.nadelG)o.material=UM.na
 /* --- Ausgetretener Boden rund ums Werk --- */
 UM.weg=new Uint8Array(N*N);UM.wegTex=new T.DataTexture(new Uint8Array(N*N*4),N,N);UM.wegTex.magFilter=UM.wegTex.minFilter=T.LinearFilter;UM.wegV=-1;
 function wegBauen(){const w=new Uint8Array(N*N),set=(x,y,v)=>{if(x>=0&&y>=0&&x<N&&y<N&&w[y*N+x]<v)w[y*N+x]=v};
- for(const e of E.values()){const s=K[e.k].s;if(s===1){set(e.x,e.y,BK(e.k)?170:230);if(e.k==='gleis')continue}else for(let j=-1;j<=s;j++)for(let i=-1;i<=s;i++)set(e.x+i,e.y+j,i<0||j<0||i>=s||j>=s?190:255)}
+ for(const e of E.values()){const s=K[e.k].s;if(s===1){set(e.x,e.y,BK(e.k)?170:230);if(e.k==='gleis')continue}else for(let j=-2;j<=s+1;j++)for(let i=-2;i<=s+1;i++)set(e.x+i,e.y+j,i<0||j<0||i>=s||j>=s?215:255)}
  const d=UM.wegTex.image.data;for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){const i=y*N+x,v=(w[i]*4+w[i-1]+w[i+1]+w[i-N]+w[i+N])/8;UM.weg[i]=v;d[i*4]=v;d[i*4+3]=255}UM.wegTex.needsUpdate=true;REAL.grasAt=null}
 {const o3=groundMat.onBeforeCompile;groundMat.onBeforeCompile=sh=>{o3(sh);sh.uniforms.tWeg={value:UM.wegTex};sh.uniforms.uNass=UM.nass=UM.nass||{value:0};sh.fragmentShader=sh.fragmentShader.replace('uniform float uReal;','uniform float uReal;uniform sampler2D tWeg;uniform float uNass;').replace('if(uReal>.5){',`if(uReal>.5){float wg=texture2D(tWeg,vWP.xz/1024.).r;
-  vec3 erde=vec3(.3,.25,.19)*(.78+.45*vn2(vWP.xz*2.3));vec3 kies=vec3(.27,.26,.24)*(.7+.6*vn2(vWP.xz*11.));diffuseColor.rgb=mix(diffuseColor.rgb,mix(erde,kies,smoothstep(.5,.85,wg)),smoothstep(.12,.55,wg)*.92);diffuseColor.rgb*=1.-.28*uNass;`)};groundMat.customProgramCacheKey=()=>'boden-weg';groundMat.needsUpdate=true}
+  vec3 erde=vec3(.3,.25,.19)*(.78+.45*vn2(vWP.xz*2.3));vec3 kies=vec3(.27,.26,.24)*(.7+.6*vn2(vWP.xz*11.));vec3 beton=vec3(.5,.5,.48)*(.82+.3*vn2(vWP.xz*1.7))*(.93+.12*vn2(vWP.xz*23.));float fuge=max(smoothstep(.93,.985,abs(fract(vWP.x*.5)-.5)*2.),smoothstep(.93,.985,abs(fract(vWP.z*.5)-.5)*2.));beton*=1.-.42*fuge;
+  vec3 hof=mix(mix(erde,kies,smoothstep(.45,.7,wg)),beton,smoothstep(.72,.8,wg));diffuseColor.rgb=mix(diffuseColor.rgb,hof,smoothstep(.12,.55,wg)*.94);diffuseColor.rgb*=1.-.28*uNass;`)};groundMat.customProgramCacheKey=()=>'boden-weg';groundMat.needsUpdate=true}
 /* --- Wetter --- */
 const WET={bew:0,regen:0,nebel:0,blitz:0,nb:0,typen:{klar:[0,0,0],wolkig:[.6,0,0],regen:[.95,1,.15],gewitter:[1,1,.2],nebel:[.5,0,1]},name:{klar:'Klar',wolkig:'Bewölkt',regen:'Regen',gewitter:'Gewitter',nebel:'Nebel'}};
 UM.himmel.material.uniforms.bew={value:0};UM.himmel.material.uniforms.blitz={value:0};

@@ -14,7 +14,7 @@ const GLEIS={max:8000,teile:MODELS.gleis.map(q=>{const g=q.g.clone();const p=g.a
 function gleisBauen(){const o=GB.ob;let n=0;const l=byKind.gleis||[];for(const e of l){const y=YL(e.z);let k=0;const seg=d=>{if(n>=GLEIS.max)return;o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.set(1,1,1);o.updateMatrix();for(const m of GLEIS.teile)m.setMatrixAt(n,o.matrix);n++;k++};
   for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof'))seg(d)}if(!k){seg(0);seg(2)}else if(k===1){for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof')){seg((d+2)%4);break}}}}
  for(const m of GLEIS.teile){m.count=n;m.instanceMatrix.needsUpdate=true}}
-{const _k=rebuildK;rebuildK=function(){_k();gleisBauen()}}
+{const _k=rebuildK;rebuildK=function(){_k();gleisBauen();EV.melde('gebaeude')}}
 // Darstellung: Züge
 ZUGM.lokI=ZUGM.lok.map(q=>inst(q,120));ZUGM.wagI=ZUGM.wagen.map(q=>inst(q,240));
 function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(0,Math.min(p.length-1,t));const i=Math.min(p.length-2,Math.floor(t)),u=t-i;if(p.length<2)return[p[0][0],p[0][1],0];const a=p[i],b=p[i+1];return[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,Math.atan2(b[1]-a[1],b[0]-a[0])]};
@@ -25,4 +25,4 @@ function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(
 {const _r=renderBild;renderBild=function(){zugZeichnen();_r()}}
 LAMP.bahnhof=NBA.bahnhof.lampe;
 ERF.push(['zug','Fahrplan','Lass deinen ersten Güterzug fahren.',()=>(G.zuege||0)>=1]);
-{const _io=ioUpdate;ioUpdate=function(){_io();if(drag&&drag.g){const l=linePath(drag.g,drag.b).slice(0,400);beltGhost.count=l.length;l.forEach((t,i)=>{dm.position.set(t[0]+.5,.16+YL(Lv(t[0],t[1])),t[1]+.5);dm.rotation.set(0,0,0);dm.scale.set(1,.5,1.2);dm.updateMatrix();beltGhost.setMatrixAt(i,dm.matrix);beltGhost.setColorAt(i,canPlace('gleis',t[0],t[1])?GBELT:GROT)});beltGhost.instanceMatrix.needsUpdate=true;if(beltGhost.instanceColor)beltGhost.instanceColor.needsUpdate=true;IO.feld.visible=false}}}
+{const _io=ioUpdate;ioUpdate=function(){_io();if(drag&&drag.g){const l=linePath(drag.g,drag.b).slice(0,400);beltGhost.count=l.length;l.forEach((t,i)=>{dm.position.set(t[0]+.5,.16+YL(Lv(t[0],t[1])),t[1]+.5);dm.rotation.set(0,0,0);dm.scale.set(1,.5,1.2);dm.updateMatrix();beltGhost.setMatrixAt(i,dm.matrix);beltGhost.setColorAt(i,canPlace(drag.gk,t[0],t[1])?GBELT:GROT)});beltGhost.instanceMatrix.needsUpdate=true;if(beltGhost.instanceColor)beltGhost.instanceColor.needsUpdate=true;IO.feld.visible=false}}}

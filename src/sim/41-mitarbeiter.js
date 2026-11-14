@@ -14,7 +14,7 @@ function arbStep(dt){if(G.arb===undefined)G.arb=3;const W=ARB.w,pleite=(G.cr||0)
  ARB.tA+=dt;if(ARB.tA>.5){ARB.tA=0;arbZuteilen()}ARB.tK+=dt;let waechst=false;
  for(const w of W){const e=w.job?E.get(w.job):null;
   if(w.job&&w.typ!=='trag'&&(!e||(w.typ==='bau'&&!e.bau)||(w.typ==='rep'&&!arbBedarf(e)))){if(e&&w.typ==='rep')delete e.job;w.job=0;w.path=null}
-  if(w.path){const j=w.path[w.pi],tx=j%N+.5,ty=((j/N)|0)+.5,dx=tx-w.x,dy=ty-w.y,d=Math.hypot(dx,dy),v=2.6*tempo*dt;if(d<=v){w.x=tx;w.y=ty;if(++w.pi>=w.path.length)w.path=null}else{w.x+=dx/d*v;w.y+=dy/d*v;w.r=Math.atan2(-dy,dx)}continue}
+  if(w.path){const j=w.path[w.pi],tx=j%N+.5,ty=((j/N)|0)+.5,dx=tx-w.x,dy=ty-w.y,d=Math.hypot(dx,dy),v=2.6*tempo*dt*(istStr(Math.floor(w.x),Math.floor(w.y))?1.8:1);if(d<=v){w.x=tx;w.y=ty;if(++w.pi>=w.path.length)w.path=null}else{w.x+=dx/d*v;w.y+=dy/d*v;w.r=Math.atan2(-dy,dx)}continue}
   if(!w.job||w.typ==='trag')continue;
   if(w.typ==='bau'){e.bau-=dt*tempo;waechst=true;if(e.bau<=0){delete e.bau;delete e.bau0;delete e.unr;e.st='wait';dirtyK=dirtyP=true;sfx('bau');w.job=0}}
   else{w.t+=dt*tempo;if(w.t>=3){repMit(e);e.repW=false;delete e.job;w.job=0}}}

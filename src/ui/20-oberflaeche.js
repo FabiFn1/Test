@@ -1,7 +1,7 @@
 /* ====== Oberfläche ====== */
 const toastEl=$('toast');let toastT=0;function toast(s){toastEl.textContent=s;toastEl.hidden=false;toastEl.dataset.m='1';clearTimeout(toastT);toastT=setTimeout(()=>{toastEl.hidden=true;toastEl.dataset.m=''},3200)}
 function costTxt(k){return Object.entries(K[k].c).map(([i,n])=>n+' '+ITEMS[i][0]).join(', ')}
-function avail(){const u=new Set(['band','mast','bohrer','ofen','generator','fundament']);for(let i=0;i<G.ms&&i<MS.length;i++)MS[i].un.forEach(k=>u.add(k));return TOOLS.filter(k=>u.has(k))}
+function avail(){const u=new Set(['band','mast','bohrer','ofen','generator','fundament','strasse']);for(let i=0;i<G.ms&&i<MS.length;i++)MS[i].un.forEach(k=>u.add(k));return TOOLS.filter(k=>u.has(k))}
 const icons={};
 function syncSlots(){const a=avail();if(!G.slots){G.slots=Array(10).fill(null);a.slice(0,10).forEach((k,i)=>G.slots[i]=k);G.seen=a.slice()}G.seen=G.seen||[];G.slots=G.slots.map(k=>k&&TOOLS.includes(k)?k:null);for(const k of a)if(!G.seen.includes(k)){G.seen.push(k);if(!G.slots.includes(k)){const i=G.slots.indexOf(null);if(i>=0)G.slots[i]=k}}}
 function assign(k,i){const j=G.slots.indexOf(k);if(j>=0)G.slots[j]=G.slots[i];G.slots[i]=k;toolsDraw();if(!$('menu').hidden)menuDraw()}
@@ -36,7 +36,7 @@ function hud(){const m=MS[G.ms];if(m)for(const k in m.need){const n=Math.min(G.d
  const hq=nodes.find(n=>n.k==='zentrale'),n=hq&&hq.net;if(n){$('cr').textContent=Math.floor(G.cr||0).toLocaleString('de-DE')+' Cr';if(!$('lw').hidden)lwLive();$('stromtxt').textContent=n.dem.toFixed(0)+' / '+n.gen.toFixed(0)+' MW';const u=n.gen?n.dem/n.gen:1;const b=$('strombar');b.style.width=Math.min(100,u*100)+'%';b.style.background=u>1?'var(--stoer)':u>.85?'var(--signal)':'var(--gut)'}
  if(!$('menu').hidden&&mTab==='baum')baumDraw();for(let i=0;i<machines.length;i++)lamps.setColorAt(i,lc[machines[i].st]||lc.wait);if(lamps.instanceColor)lamps.instanceColor.needsUpdate=true;inspLive()}
 const anZentrale=e=>{const R=e.k==='langgreifer'?2:1,s=at(e.x-DX[e.r]*R,e.y-DY[e.r]*R);return !!s&&s.k==='zentrale'};
-function select(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis'].includes(e.k)){el.hidden=true;sel=null;return}
+function select(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis','strasse'].includes(e.k)){el.hidden=true;sel=null;return}
  const k=K[e.k];let h=`<div class="etikett">Maschine</div><h2>${k.n}</h2>`;if(RB.has(base(e.k))){h+=`<div class="rez" style="max-height:38vh;overflow:auto">`+Object.entries(REZ).filter(([,r])=>r.b===base(e.k)).map(([id,r])=>`<button data-r="${id}" class="${e.rez===id?'an':''}">${ITEMS[r.out[0]][0]}${r.out[1]>1?' ×'+r.out[1]:''} · ${Object.entries(r.in).map(([i,n])=>n+' '+ITEMS[i][0]).join(' + ')}</button>`).join('')+`</div>`}
  if(wears(e)){const n=(e.tier||0)+1;h+=`<div class="reihe"><button id="rep">Reparieren (1 Ersatzteil)</button>${n<3?`<button id="tup" title="${Object.entries(TIERCOST[n]).map(([i,c])=>c+' '+ITEMS[i][0]).join(', ')}, ${TIERCR[n]} Cr">Auf Tier ${n+1}</button>`:''}</div>`}
  if(k.p&&e.k!=='raketensilo'&&e.k!=='drohnenhafen'&&e.k!=='bahnhof'&&e.k!=='wartungsstation')h+=`<div class="rez"><div class="etikett">Übertakten, Strom steigt stark</div><div class="reihe">${[1,1.5,2].map(o=>`<button data-oc="${o}" class="${(e.oc||1)===o?'an':''}">${o*100} %</button>`).join('')}</div></div>`;

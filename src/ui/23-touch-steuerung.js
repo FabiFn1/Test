@@ -4,7 +4,7 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
  const sp=canvas.setPointerCapture.bind(canvas);canvas.setPointerCapture=id=>{try{sp(id)}catch(e){}};
  const tp=new Map();let mode=null,first=null,gest=null,lp=null,pipette=false;
  const fwd=(type,x,y,id)=>{const e=new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id,pointerType:'mouse',isPrimary:true,clientX:x,clientY:y,button:type==='pointermove'?-1:0,buttons:type==='pointerup'?0:1});e.__fwd=true;canvas.dispatchEvent(e)};
- const dragTool=()=>tool==='x'||tool==='fundament'||tool==='kx'||tool==='fx'||tool==='gleis'||(tool&&BK(tool));
+ const dragTool=()=>tool==='x'||tool==='fundament'||tool==='kx'||tool==='fx'||tool==='gleis'||tool==='strasse'||(tool&&BK(tool));
  const panBy=(dx,dy)=>{const sc=C.dist*.00125*(devicePixelRatio>1.5?1.3:1),c=Math.cos(C.yaw),s=Math.sin(C.yaw);C.tx-=(dx*c+dy*s)*sc;C.tz-=(-dx*s+dy*c)*sc;clampC()};
  const two=()=>{const[a,b]=[...tp.values()];return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)||1,w:Math.atan2(b.y-a.y,b.x-a.x)}};
  const stopLP=()=>{if(lp){clearTimeout(lp);lp=null}};

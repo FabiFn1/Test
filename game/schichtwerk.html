@@ -1028,7 +1028,7 @@ canvas.addEventListener('pointerdown',ev=>{canvas.focus();canvas.setPointerCaptu
  const s=tool&&tool!=='x'?K[tool].s:1,[x,y]=tileOf(w,s);
  if(tool==='x'||tool==='fx'){drag={x:true,fx:tool==='fx'};const q=[Math.floor(w[0]),Math.floor(w[1])],e=at(...q);if(tool==='fx')removeFund(...q);else if(e)remove(e);return}
  if(tool==='fundament'){drag={f:[x,y],b:[x,y]};return}
- if(tool==='gleis'){drag={g:[x,y],b:[x,y]};return}
+ if(tool==='gleis'||tool==='strasse'){drag={g:[x,y],b:[x,y],gk:tool};return}
  if(BK(tool)){drag={a:[x,y],b:[x,y]};return}
  if(tool==='kx'){drag={kx:[x,y],b:[x,y]};return}
  if(tool==='bp')return;
@@ -1039,7 +1039,7 @@ canvas.addEventListener('pointerleave',()=>{hoverT=null});canvas.addEventListene
  if(!w)return;const sz=tool&&tool!=='x'?K[tool].s:1;hover=tileOf(w,sz);
  if(drag&&drag.x){const q=[Math.floor(w[0]),Math.floor(w[1])],e=at(...q);if(drag.fx)removeFund(...q);else if(e)remove(e)}else if(drag)drag.b=hover.slice();});
 canvas.addEventListener('pointerup',ev=>{if(orbit){orbit=null;return}if(rpan){const c=!moved&&ev.button===2;rpan=null;if(c)setTool(null);return}
- if(drag&&drag.g){for(const[x,y]of linePath(drag.g,drag.b)){if(!place('gleis',x,y,0,true)&&!afford('gleis'))break}}if(drag&&drag.f)buildFund(drag.f,drag.b);if(drag&&drag.kx){G.kx=G.kx||[];G.kxN=(G.kxN||0)+1;const a=drag.kx,c=drag.b;G.kx.push({id:G.kxN,name:'Komplex '+G.kxN,x0:Math.min(a[0],c[0]),y0:Math.min(a[1],c[1]),x1:Math.max(a[0],c[0]),y1:Math.max(a[1],c[1])});setTool(null);lwOpen(true);drag=null;return}if(drag&&drag.a){const l=linePath(drag.a,drag.b);let n=0;for(let i=0;i<l.length;i++){const[x,y,d]=l[i];if(crossHere(x,y,d,i===0,i===l.length-1)){if(place('kreuzung',x,y,d,true))n++;continue}if(place(tool,x,y,d,true))n++;else if(!afford(tool))break}if(!n&&l.length===1&&!at(l[0][0],l[0][1]))toast('Hier kann kein Band liegen.')}drag=null});
+ if(drag&&drag.g){for(const[x,y]of linePath(drag.g,drag.b)){if(!place(drag.gk,x,y,0,true)&&!afford(drag.gk))break}}if(drag&&drag.f)buildFund(drag.f,drag.b);if(drag&&drag.kx){G.kx=G.kx||[];G.kxN=(G.kxN||0)+1;const a=drag.kx,c=drag.b;G.kx.push({id:G.kxN,name:'Komplex '+G.kxN,x0:Math.min(a[0],c[0]),y0:Math.min(a[1],c[1]),x1:Math.max(a[0],c[0]),y1:Math.max(a[1],c[1])});setTool(null);lwOpen(true);drag=null;return}if(drag&&drag.a){const l=linePath(drag.a,drag.b);let n=0;for(let i=0;i<l.length;i++){const[x,y,d]=l[i];if(crossHere(x,y,d,i===0,i===l.length-1)){if(place('kreuzung',x,y,d,true))n++;continue}if(place(tool,x,y,d,true))n++;else if(!afford(tool))break}if(!n&&l.length===1&&!at(l[0][0],l[0][1]))toast('Hier kann kein Band liegen.')}drag=null});
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();C.tdist=T.MathUtils.clamp(C.tdist*Math.pow(1.0015,ev.deltaY),14,260)},{passive:false});
 function clampC(){C.tx=T.MathUtils.clamp(C.tx,0,N);C.tz=T.MathUtils.clamp(C.tz,0,N)}
 addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT')return;const k=ev.key.toLowerCase();if(k==='l'){lwOpen($('lw').hidden);return}if(k==='escape'&&!$('lw').hidden){lwOpen(false);return}if(k==='tab'){ev.preventDefault();menuOpen($('menu').hidden);return}if(k==='escape'&&!$('menu').hidden){menuOpen(false);return}keys[k]=true;
@@ -1072,7 +1072,7 @@ function ghostUp(){drawGrid();beltGhost.count=0;fundGhost.count=0;ghost.visible=
 /* ====== Oberfläche ====== */
 const toastEl=$('toast');let toastT=0;function toast(s){toastEl.textContent=s;toastEl.hidden=false;toastEl.dataset.m='1';clearTimeout(toastT);toastT=setTimeout(()=>{toastEl.hidden=true;toastEl.dataset.m=''},3200)}
 function costTxt(k){return Object.entries(K[k].c).map(([i,n])=>n+' '+ITEMS[i][0]).join(', ')}
-function avail(){const u=new Set(['band','mast','bohrer','ofen','generator','fundament']);for(let i=0;i<G.ms&&i<MS.length;i++)MS[i].un.forEach(k=>u.add(k));return TOOLS.filter(k=>u.has(k))}
+function avail(){const u=new Set(['band','mast','bohrer','ofen','generator','fundament','strasse']);for(let i=0;i<G.ms&&i<MS.length;i++)MS[i].un.forEach(k=>u.add(k));return TOOLS.filter(k=>u.has(k))}
 const icons={};
 function syncSlots(){const a=avail();if(!G.slots){G.slots=Array(10).fill(null);a.slice(0,10).forEach((k,i)=>G.slots[i]=k);G.seen=a.slice()}G.seen=G.seen||[];G.slots=G.slots.map(k=>k&&TOOLS.includes(k)?k:null);for(const k of a)if(!G.seen.includes(k)){G.seen.push(k);if(!G.slots.includes(k)){const i=G.slots.indexOf(null);if(i>=0)G.slots[i]=k}}}
 function assign(k,i){const j=G.slots.indexOf(k);if(j>=0)G.slots[j]=G.slots[i];G.slots[i]=k;toolsDraw();if(!$('menu').hidden)menuDraw()}
@@ -1107,7 +1107,7 @@ function hud(){const m=MS[G.ms];if(m)for(const k in m.need){const n=Math.min(G.d
  const hq=nodes.find(n=>n.k==='zentrale'),n=hq&&hq.net;if(n){$('cr').textContent=Math.floor(G.cr||0).toLocaleString('de-DE')+' Cr';if(!$('lw').hidden)lwLive();$('stromtxt').textContent=n.dem.toFixed(0)+' / '+n.gen.toFixed(0)+' MW';const u=n.gen?n.dem/n.gen:1;const b=$('strombar');b.style.width=Math.min(100,u*100)+'%';b.style.background=u>1?'var(--stoer)':u>.85?'var(--signal)':'var(--gut)'}
  if(!$('menu').hidden&&mTab==='baum')baumDraw();for(let i=0;i<machines.length;i++)lamps.setColorAt(i,lc[machines[i].st]||lc.wait);if(lamps.instanceColor)lamps.instanceColor.needsUpdate=true;inspLive()}
 const anZentrale=e=>{const R=e.k==='langgreifer'?2:1,s=at(e.x-DX[e.r]*R,e.y-DY[e.r]*R);return !!s&&s.k==='zentrale'};
-function select(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis'].includes(e.k)){el.hidden=true;sel=null;return}
+function select(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis','strasse'].includes(e.k)){el.hidden=true;sel=null;return}
  const k=K[e.k];let h=`<div class="etikett">Maschine</div><h2>${k.n}</h2>`;if(RB.has(base(e.k))){h+=`<div class="rez" style="max-height:38vh;overflow:auto">`+Object.entries(REZ).filter(([,r])=>r.b===base(e.k)).map(([id,r])=>`<button data-r="${id}" class="${e.rez===id?'an':''}">${ITEMS[r.out[0]][0]}${r.out[1]>1?' ×'+r.out[1]:''} · ${Object.entries(r.in).map(([i,n])=>n+' '+ITEMS[i][0]).join(' + ')}</button>`).join('')+`</div>`}
  if(wears(e)){const n=(e.tier||0)+1;h+=`<div class="reihe"><button id="rep">Reparieren (1 Ersatzteil)</button>${n<3?`<button id="tup" title="${Object.entries(TIERCOST[n]).map(([i,c])=>c+' '+ITEMS[i][0]).join(', ')}, ${TIERCR[n]} Cr">Auf Tier ${n+1}</button>`:''}</div>`}
  if(k.p&&e.k!=='raketensilo'&&e.k!=='drohnenhafen'&&e.k!=='bahnhof'&&e.k!=='wartungsstation')h+=`<div class="rez"><div class="etikett">Übertakten, Strom steigt stark</div><div class="reihe">${[1,1.5,2].map(o=>`<button data-oc="${o}" class="${(e.oc||1)===o?'an':''}">${o*100} %</button>`).join('')}</div></div>`;
@@ -1176,7 +1176,7 @@ const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
  const sp=canvas.setPointerCapture.bind(canvas);canvas.setPointerCapture=id=>{try{sp(id)}catch(e){}};
  const tp=new Map();let mode=null,first=null,gest=null,lp=null,pipette=false;
  const fwd=(type,x,y,id)=>{const e=new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id,pointerType:'mouse',isPrimary:true,clientX:x,clientY:y,button:type==='pointermove'?-1:0,buttons:type==='pointerup'?0:1});e.__fwd=true;canvas.dispatchEvent(e)};
- const dragTool=()=>tool==='x'||tool==='fundament'||tool==='kx'||tool==='fx'||tool==='gleis'||(tool&&BK(tool));
+ const dragTool=()=>tool==='x'||tool==='fundament'||tool==='kx'||tool==='fx'||tool==='gleis'||tool==='strasse'||(tool&&BK(tool));
  const panBy=(dx,dy)=>{const sc=C.dist*.00125*(devicePixelRatio>1.5?1.3:1),c=Math.cos(C.yaw),s=Math.sin(C.yaw);C.tx-=(dx*c+dy*s)*sc;C.tz-=(-dx*s+dy*c)*sc;clampC()};
  const two=()=>{const[a,b]=[...tp.values()];return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.hypot(a.x-b.x,a.y-b.y)||1,w:Math.atan2(b.y-a.y,b.x-a.x)}};
  const stopLP=()=>{if(lp){clearTimeout(lp);lp=null}};
@@ -1903,7 +1903,7 @@ const GLEIS={max:8000,teile:MODELS.gleis.map(q=>{const g=q.g.clone();const p=g.a
 function gleisBauen(){const o=GB.ob;let n=0;const l=byKind.gleis||[];for(const e of l){const y=YL(e.z);let k=0;const seg=d=>{if(n>=GLEIS.max)return;o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.set(1,1,1);o.updateMatrix();for(const m of GLEIS.teile)m.setMatrixAt(n,o.matrix);n++;k++};
   for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof'))seg(d)}if(!k){seg(0);seg(2)}else if(k===1){for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof')){seg((d+2)%4);break}}}}
  for(const m of GLEIS.teile){m.count=n;m.instanceMatrix.needsUpdate=true}}
-{const _k=rebuildK;rebuildK=function(){_k();gleisBauen()}}
+{const _k=rebuildK;rebuildK=function(){_k();gleisBauen();EV.melde('gebaeude')}}
 // Darstellung: Züge
 ZUGM.lokI=ZUGM.lok.map(q=>inst(q,120));ZUGM.wagI=ZUGM.wagen.map(q=>inst(q,240));
 function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(0,Math.min(p.length-1,t));const i=Math.min(p.length-2,Math.floor(t)),u=t-i;if(p.length<2)return[p[0][0],p[0][1],0];const a=p[i],b=p[i+1];return[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,Math.atan2(b[1]-a[1],b[0]-a[0])]};
@@ -1914,7 +1914,7 @@ function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(
 {const _r=renderBild;renderBild=function(){zugZeichnen();_r()}}
 LAMP.bahnhof=NBA.bahnhof.lampe;
 ERF.push(['zug','Fahrplan','Lass deinen ersten Güterzug fahren.',()=>(G.zuege||0)>=1]);
-{const _io=ioUpdate;ioUpdate=function(){_io();if(drag&&drag.g){const l=linePath(drag.g,drag.b).slice(0,400);beltGhost.count=l.length;l.forEach((t,i)=>{dm.position.set(t[0]+.5,.16+YL(Lv(t[0],t[1])),t[1]+.5);dm.rotation.set(0,0,0);dm.scale.set(1,.5,1.2);dm.updateMatrix();beltGhost.setMatrixAt(i,dm.matrix);beltGhost.setColorAt(i,canPlace('gleis',t[0],t[1])?GBELT:GROT)});beltGhost.instanceMatrix.needsUpdate=true;if(beltGhost.instanceColor)beltGhost.instanceColor.needsUpdate=true;IO.feld.visible=false}}}
+{const _io=ioUpdate;ioUpdate=function(){_io();if(drag&&drag.g){const l=linePath(drag.g,drag.b).slice(0,400);beltGhost.count=l.length;l.forEach((t,i)=>{dm.position.set(t[0]+.5,.16+YL(Lv(t[0],t[1])),t[1]+.5);dm.rotation.set(0,0,0);dm.scale.set(1,.5,1.2);dm.updateMatrix();beltGhost.setMatrixAt(i,dm.matrix);beltGhost.setColorAt(i,canPlace(drag.gk,t[0],t[1])?GBELT:GROT)});beltGhost.instanceMatrix.needsUpdate=true;if(beltGhost.instanceColor)beltGhost.instanceColor.needsUpdate=true;IO.feld.visible=false}}}
 /* ====== Natur: Laub und Nadeln, Gestein, ausgetretener Boden, Wetter ====== */
 /* --- Blatt- und Nadeltexturen --- */
 (function(){const R=rnd(2024),mk=(draw)=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');draw(g);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t};
@@ -1953,10 +1953,11 @@ scene.traverse(o=>{if(o.isInstancedMesh&&o.geometry===UM.nadelG)o.material=UM.na
 /* --- Ausgetretener Boden rund ums Werk --- */
 UM.weg=new Uint8Array(N*N);UM.wegTex=new T.DataTexture(new Uint8Array(N*N*4),N,N);UM.wegTex.magFilter=UM.wegTex.minFilter=T.LinearFilter;UM.wegV=-1;
 function wegBauen(){const w=new Uint8Array(N*N),set=(x,y,v)=>{if(x>=0&&y>=0&&x<N&&y<N&&w[y*N+x]<v)w[y*N+x]=v};
- for(const e of E.values()){const s=K[e.k].s;if(s===1){set(e.x,e.y,BK(e.k)?170:230);if(e.k==='gleis')continue}else for(let j=-1;j<=s;j++)for(let i=-1;i<=s;i++)set(e.x+i,e.y+j,i<0||j<0||i>=s||j>=s?190:255)}
+ for(const e of E.values()){const s=K[e.k].s;if(s===1){set(e.x,e.y,BK(e.k)?170:230);if(e.k==='gleis')continue}else for(let j=-2;j<=s+1;j++)for(let i=-2;i<=s+1;i++)set(e.x+i,e.y+j,i<0||j<0||i>=s||j>=s?215:255)}
  const d=UM.wegTex.image.data;for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){const i=y*N+x,v=(w[i]*4+w[i-1]+w[i+1]+w[i-N]+w[i+N])/8;UM.weg[i]=v;d[i*4]=v;d[i*4+3]=255}UM.wegTex.needsUpdate=true;REAL.grasAt=null}
 {const o3=groundMat.onBeforeCompile;groundMat.onBeforeCompile=sh=>{o3(sh);sh.uniforms.tWeg={value:UM.wegTex};sh.uniforms.uNass=UM.nass=UM.nass||{value:0};sh.fragmentShader=sh.fragmentShader.replace('uniform float uReal;','uniform float uReal;uniform sampler2D tWeg;uniform float uNass;').replace('if(uReal>.5){',`if(uReal>.5){float wg=texture2D(tWeg,vWP.xz/1024.).r;
-  vec3 erde=vec3(.3,.25,.19)*(.78+.45*vn2(vWP.xz*2.3));vec3 kies=vec3(.27,.26,.24)*(.7+.6*vn2(vWP.xz*11.));diffuseColor.rgb=mix(diffuseColor.rgb,mix(erde,kies,smoothstep(.5,.85,wg)),smoothstep(.12,.55,wg)*.92);diffuseColor.rgb*=1.-.28*uNass;`)};groundMat.customProgramCacheKey=()=>'boden-weg';groundMat.needsUpdate=true}
+  vec3 erde=vec3(.3,.25,.19)*(.78+.45*vn2(vWP.xz*2.3));vec3 kies=vec3(.27,.26,.24)*(.7+.6*vn2(vWP.xz*11.));vec3 beton=vec3(.5,.5,.48)*(.82+.3*vn2(vWP.xz*1.7))*(.93+.12*vn2(vWP.xz*23.));float fuge=max(smoothstep(.93,.985,abs(fract(vWP.x*.5)-.5)*2.),smoothstep(.93,.985,abs(fract(vWP.z*.5)-.5)*2.));beton*=1.-.42*fuge;
+  vec3 hof=mix(mix(erde,kies,smoothstep(.45,.7,wg)),beton,smoothstep(.72,.8,wg));diffuseColor.rgb=mix(diffuseColor.rgb,hof,smoothstep(.12,.55,wg)*.94);diffuseColor.rgb*=1.-.28*uNass;`)};groundMat.customProgramCacheKey=()=>'boden-weg';groundMat.needsUpdate=true}
 /* --- Wetter --- */
 const WET={bew:0,regen:0,nebel:0,blitz:0,nb:0,typen:{klar:[0,0,0],wolkig:[.6,0,0],regen:[.95,1,.15],gewitter:[1,1,.2],nebel:[.5,0,1]},name:{klar:'Klar',wolkig:'Bewölkt',regen:'Regen',gewitter:'Gewitter',nebel:'Nebel'}};
 UM.himmel.material.uniforms.bew={value:0};UM.himmel.material.uniforms.blitz={value:0};
@@ -2087,7 +2088,7 @@ function wegMit(l){let n=0;for(const e of l){if(e.k==='zentrale'||!E.has(e.id))c
 canvas.addEventListener('pointerdown',ev=>{if(ev.button===0&&ev.ctrlKey){const w=pick(ev);if(!w)return;ev.stopImmediatePropagation();ev.preventDefault();abr={a:[Math.floor(w[0]),Math.floor(w[1])],b:[Math.floor(w[0]),Math.floor(w[1])]}}},true);
 canvas.addEventListener('pointermove',ev=>{if(abr){ev.stopImmediatePropagation();const w=pick(ev);if(w)abr.b=[Math.floor(w[0]),Math.floor(w[1])]}},true);
 canvas.addEventListener('pointerup',ev=>{if(abr){ev.stopImmediatePropagation();const x0=Math.min(abr.a[0],abr.b[0]),x1=Math.max(abr.a[0],abr.b[0]),y0=Math.min(abr.a[1],abr.b[1]),y1=Math.max(abr.a[1],abr.b[1]),s=new Set();for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const e=at(x,y);if(e)s.add(e)}abr=null;const n=wegMit([...s]);if(n)toast(n+' Bauwerke abgerissen, Kosten zurück.')}},true);
-canvas.addEventListener('pointerdown',ev=>{baut=ev.button===0&&!ev.ctrlKey&&!!tool&&!!K[tool]&&!BK(tool)&&!['x','fx','kx','bp','fundament','gleis'].includes(tool)});
+canvas.addEventListener('pointerdown',ev=>{baut=ev.button===0&&!ev.ctrlKey&&!!tool&&!!K[tool]&&!BK(tool)&&!['x','fx','kx','bp','fundament','gleis','strasse'].includes(tool)});
 canvas.addEventListener('pointermove',ev=>{if(baut&&(ev.buttons&1)&&tool&&canPlace(tool,hover[0],hover[1]))place(tool,hover[0],hover[1],rot,true)});
 addEventListener('pointerup',()=>{baut=false});
 addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||SHELL.titel||SHELL.pause||!$('menu').hidden||!$('lw').hidden)return;const k=ev.key.toLowerCase(),ziel=()=>(hoverT&&at(hoverT[0],hoverT[1]))||sel;
@@ -2097,7 +2098,7 @@ addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||SHELL.titel||SHE
   if(klemm.rez&&RB.has(base(e.k))&&e.rez!==klemm.rez){e.rez=klemm.rez;e.prog=0;e.inv={}}if(klemm.oc&&K[e.k].p)e.oc=klemm.oc;if(/greifer|sortierer/.test(e.k))e.f=klemm.f;if(e.k==='verteiler'){e.zu=klemm.zu?{...klemm.zu}:undefined;e.prio=klemm.prio}toast('Eingefügt in '+K[e.k].n+'.');if(sel===e)select(e)}},true);
 {const _g=ghostUp;ghostUp=function(){_g();symUpdate();const P=IO.pfeile,o=GB.ob,pf=(x,y,d,col,s)=>{const n=P.count;if(n>=800||x<0||y<0||x>=N||y>=N)return;o.position.set(x+.5,YL(Lv(x,y))+.09,y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.setScalar(s);o.updateMatrix();P.setMatrixAt(n,o.matrix);P.setColorAt(n,col);P.count=n+1};
  // Vorschau: Ein- und Ausgänge des Bauwerks, das gerade platziert wird
- if(tool&&K[tool]&&!drag&&!['x','fx','kx','bp','fundament','gleis','mast','grossmast','solar'].includes(tool)&&!BK(tool)){const s=K[tool].s,f={k:tool,x:hover[0],y:hover[1],r:rot},m=(s-1)>>1,gen=K[tool].gen,kl=/greifer/.test(tool),R=tool==='langgreifer'?2:1;
+ if(tool&&K[tool]&&!drag&&!['x','fx','kx','bp','fundament','gleis','strasse','mast','grossmast','solar'].includes(tool)&&!BK(tool)){const s=K[tool].s,f={k:tool,x:hover[0],y:hover[1],r:rot},m=(s-1)>>1,gen=K[tool].gen,kl=/greifer/.test(tool),R=tool==='langgreifer'?2:1;
   if(kl){pf(f.x+DX[rot]*R,f.y+DY[rot]*R,rot,IO.aus,1.2);pf(f.x-DX[rot]*R,f.y-DY[rot]*R,rot,IO.ein,1.2)}
   else if(tool==='verteiler'||tool==='sortierer'||tool==='kreuzung'){}
   else{const ka=tool==='raketensilo'||tool==='versand'||tool==='traeger';if(!gen&&!ka){const q=outTile(f);pf(q[0],q[1],q[2],IO.aus,1.3)}if(RB.has(base(tool))||gen&&K[tool].burn||/lagerkiste|drohnenhafen|bahnhof|raketensilo|versand|traeger/.test(tool))for(let d=0;d<4;d++){if(d===rot&&!gen&&!ka)continue;const q=d===0?[f.x+s,f.y+m]:d===1?[f.x+s-1-m,f.y+s]:d===2?[f.x-1,f.y+s-1-m]:[f.x+m,f.y-1];pf(q[0],q[1],(d+2)%4,IO.ein,1)}}
@@ -2140,7 +2141,7 @@ document.head.insertAdjacentHTML('beforeend',`<style>
 </style>`);
 const IN={id:0,rez:false,f:false};
 const STTXT={ok:'läuft',wait:'wartet auf Material',blocked:'Ausgang blockiert',noPower:'kein Strom',defekt:'defekt',off:'per Logik aus'};
-select=function(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis'].includes(e.k)){el.hidden=true;sel=null;return}
+select=function(e){sel=e;const el=$('insp');if(!e||isBelt(e)||['mast','grossmast','kreuzung','gleis','strasse'].includes(e.k)){el.hidden=true;sel=null;return}
  if(IN.id!==e.id){IN.id=e.id;IN.rez=false;IN.f=false}const k=K[e.k],rezM=RB.has(base(e.k)),f2=v=>v>=100?Math.round(v):v>=10?v.toFixed(1):v.toFixed(2),grf=/greifer/.test(e.k),zen=grf&&anZentrale(e);
  let h=`<div class="kopf"><img src="${e.rez&&REZ[e.rez]?ICONS[REZ[e.rez].out[0]]:icons[e.k]||icons.menu}" alt=""><div><h2>${k.n}</h2><span class="pille" id="ipille"></span></div><button class="x" id="inspzu" aria-label="Schließen">×</button></div>`;
  if(rezM){const r=e.rez&&REZ[e.rez],sp=r?TS(e)*(k.sp||1)*60/r.t:0;h+=`<section><div class="etikett">Rezept</div>`;
@@ -2232,7 +2233,7 @@ function arbStep(dt){if(G.arb===undefined)G.arb=3;const W=ARB.w,pleite=(G.cr||0)
  ARB.tA+=dt;if(ARB.tA>.5){ARB.tA=0;arbZuteilen()}ARB.tK+=dt;let waechst=false;
  for(const w of W){const e=w.job?E.get(w.job):null;
   if(w.job&&w.typ!=='trag'&&(!e||(w.typ==='bau'&&!e.bau)||(w.typ==='rep'&&!arbBedarf(e)))){if(e&&w.typ==='rep')delete e.job;w.job=0;w.path=null}
-  if(w.path){const j=w.path[w.pi],tx=j%N+.5,ty=((j/N)|0)+.5,dx=tx-w.x,dy=ty-w.y,d=Math.hypot(dx,dy),v=2.6*tempo*dt;if(d<=v){w.x=tx;w.y=ty;if(++w.pi>=w.path.length)w.path=null}else{w.x+=dx/d*v;w.y+=dy/d*v;w.r=Math.atan2(-dy,dx)}continue}
+  if(w.path){const j=w.path[w.pi],tx=j%N+.5,ty=((j/N)|0)+.5,dx=tx-w.x,dy=ty-w.y,d=Math.hypot(dx,dy),v=2.6*tempo*dt*(istStr(Math.floor(w.x),Math.floor(w.y))?1.8:1);if(d<=v){w.x=tx;w.y=ty;if(++w.pi>=w.path.length)w.path=null}else{w.x+=dx/d*v;w.y+=dy/d*v;w.r=Math.atan2(-dy,dx)}continue}
   if(!w.job||w.typ==='trag')continue;
   if(w.typ==='bau'){e.bau-=dt*tempo;waechst=true;if(e.bau<=0){delete e.bau;delete e.bau0;delete e.unr;e.st='wait';dirtyK=dirtyP=true;sfx('bau');w.job=0}}
   else{w.t+=dt*tempo;if(w.t>=3){repMit(e);e.repW=false;delete e.job;w.job=0}}}
@@ -2471,7 +2472,7 @@ function halleModell(x){const gr=new T.Group(),X0=x.x0,X1=x.x1+1,Z0=x.y0,Z1=x.y1
  // Sockel, Lichtband am First, Dachlüfter
  const box=(bx,by,bz,px,py,pz,mat)=>{const m=new T.Mesh(new T.BoxGeometry(bx,by,bz),mat);m.position.set(px,py,pz);m.castShadow=m.receiveShadow=true;gr.add(m);return m};
  box(w+.12,.45,d+.12,(X0+X1)/2,y0+.22,(Z0+Z1)/2,M('Beton'));
- const lang=laengs?w:d;box(laengs?lang*.8:.7,.12,laengs?.7:lang*.8,(X0+X1)/2,yf+.02,(Z0+Z1)/2,M('Beton_Hell'));
+ const lang=laengs?w:d;box(laengs?lang*.8:.4,.1,laengs?.4:lang*.8,(X0+X1)/2,yf+.02,(Z0+Z1)/2,M('Beton_Hell'));
  for(let i=0,n=Math.max(1,Math.floor(lang/7));i<n;i++){const q=(i+.5)/n*lang,px=laengs?X0+q:(X0+X1)/2+halb*.5,pz=laengs?(Z0+Z1)/2+halb*.5:Z0+q;box(.7,.5,.7,px,y1+first*.5+.2,pz,M('Blech_Dunkel'))}
  // Tore an jedem Band und Rohr, das die Wand kreuzt
  for(const t of hallenTore(x)){const q=t.r%2===0,b=t.rohr?.5:.96,h=t.rohr?.5:1.05,yy=t.y+(t.rohr?.42:h/2);box(q?.34:b,h,q?b:.34,t.x,yy,t.z,HAL.tor);box(q?.4:b+.2,.1,q?b+.2:.4,t.x,yy+h/2+.05,t.z,HAL.rahmen);for(const v of[-1,1])box(q?.4:.1,h,q?.1:.4,t.x+(q?0:v*(b/2+.05)),yy,t.z+(q?v*(b/2+.05):0),HAL.rahmen)}
@@ -2491,6 +2492,36 @@ function halleZeigen(id){const x=hallen().find(q=>q.id===id),el=$('halle');HAL.o
  $('h-auf').onclick=()=>halleOeffnen(x);$('h-zu').onclick=()=>halleZeigen(0);$('h-schalt').onclick=()=>{const l=kxM(x),o=!l.every(e=>e.off);l.forEach(e=>e.off=o);halleZeigen(id)}}
 setInterval(()=>{if(HAL.offen&&!$('halle').matches(':hover'))halleZeigen(HAL.offen)},1000);
 $('lw').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;if(d.h){const x=(G.kx||[]).find(q=>q.id===+d.h);if(!x)return;if(x.halle)halleOeffnen(x);else if(halleBauen(x)){C.tx=(x.x0+x.x1)/2;C.tz=(x.y0+x.y1)/2;lwOpen(false);return}lwLive()}else if(d.d)hallenFeld()});
+/* ====== Werksgelände: Straßen, auf denen Arbeiter schneller laufen, und Laternen ====== */
+K.strasse={n:'Straße',s:1,c:{stein:2},info:'Asphaltierter Weg. Mitarbeiter und Träger laufen darauf fast doppelt so schnell. Zieh eine Strecke wie beim Band. Laternen stellen sich von selbst auf.'};
+TOOLS.splice(TOOLS.indexOf('fundament')+1,0,'strasse');NOWEAR.add('strasse');
+mats.Asphalt=new T.MeshStandardMaterial({color:0x34373a,roughness:.94,metalness:0});
+MODELS.strasse=[{g:new T.BoxGeometry(1,.05,1).translate(0,.025,0),m:'Asphalt',piv:null}];MHOEHE.strasse=.3;
+const STR=(function(){const R=rnd(815),bild=linie=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle='#3a3d40';g.fillRect(0,0,256,256);
+  for(let i=0;i<5000;i++){const v=40+R()*50|0;g.fillStyle=`rgba(${v},${v},${v+2},.5)`;g.fillRect(R()*256,R()*256,1+R()*2,1+R()*2)}
+  for(let i=0;i<6;i++){g.strokeStyle='rgba(20,20,22,.5)';g.lineWidth=1;g.beginPath();let x=R()*256,y=R()*256;g.moveTo(x,y);for(let j=0;j<5;j++){x+=R()*50-25;y+=R()*50-25;g.lineTo(x,y)}g.stroke()}
+  if(linie){g.fillStyle='rgba(225,225,215,.85)';g.fillRect(0,10,256,6);g.fillRect(0,240,256,6);g.fillStyle='rgba(230,200,90,.9)';g.fillRect(48,124,160,8)}
+  const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;return t},
+ netz=(geo,mat,n,schatten)=>{const m=new T.InstancedMesh(geo,mat,n);m.count=0;m.frustumCulled=false;m.receiveShadow=true;m.castShadow=!!schatten;scene.add(m);return m},
+ fl=new T.PlaneGeometry(1,1).rotateX(-Math.PI/2),mat=t=>new T.MeshStandardMaterial({map:t,roughness:.93,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),
+ stahl=new T.MeshStandardMaterial({color:0x59626a,roughness:.5,metalness:.7}),kopf=new T.MeshStandardMaterial({color:0xfff1c8,emissive:0xffd890,emissiveIntensity:0,roughness:.4}),
+ sc=document.createElement('canvas');sc.width=sc.height=128;const sg=sc.getContext('2d'),gr=sg.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,214,140,.9)');gr.addColorStop(.5,'rgba(255,200,120,.3)');gr.addColorStop(1,'rgba(255,190,110,0)');sg.fillStyle=gr;sg.fillRect(0,0,128,128);
+ const schein=new T.MeshBasicMaterial({map:new T.CanvasTexture(sc),transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4});
+ return{max:20000,lmax:3000,gerade:netz(fl,mat(bild(true)),20000),platz:netz(fl,mat(bild(false)),20000),
+  mast:netz(new T.CylinderGeometry(.035,.05,2.7,8).translate(0,1.35,0),stahl,3000,true),arm:netz(new T.BoxGeometry(.55,.05,.07).translate(.24,2.7,0),stahl,3000,true),
+  kopf:netz(new T.BoxGeometry(.26,.06,.14).translate(.42,2.65,0),kopf,3000),schein:netz(new T.PlaneGeometry(5,5).rotateX(-Math.PI/2),schein,3000),kopfM:kopf,scheinM:schein}})();
+const istStr=(x,y)=>{const q=at(x,y);return !!q&&q.k==='strasse'};
+function strassenBauen(){const o=GB.ob,l=byKind.strasse||[];let ng=0,np=0,nl=0;o.scale.set(1,1,1);
+ for(const e of l){const y=YL(e.z)+.052,a=istStr(e.x+1,e.y),b=istStr(e.x-1,e.y),c=istStr(e.x,e.y+1),d=istStr(e.x,e.y-1),ow=a||b,ns=c||d,ger=ow!==ns||(!ow&&!ns);
+  o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,ns&&!ow?Math.PI/2:0,0);o.updateMatrix();
+  if(ger){if(ng<STR.max)STR.gerade.setMatrixAt(ng++,o.matrix)}else if(np<STR.max)STR.platz.setMatrixAt(np++,o.matrix);
+  // Laterne an geraden Stücken, alle paar Felder, abwechselnd links und rechts
+  if(ger&&nl<STR.lmax&&(e.x*7+e.y*13)%6===0){const s=(e.x+e.y)%2?1:-1,q=ns&&!ow;o.position.set(e.x+.5+(q?s*.44:0),YL(e.z),e.y+.5+(q?0:s*.44));o.rotation.set(0,q?(s>0?Math.PI:0):(s>0?Math.PI/2:-Math.PI/2),0);o.updateMatrix();STR.mast.setMatrixAt(nl,o.matrix);STR.arm.setMatrixAt(nl,o.matrix);STR.kopf.setMatrixAt(nl,o.matrix);
+   o.position.set(e.x+.5,y+.02,e.y+.5);o.rotation.set(0,0,0);o.updateMatrix();STR.schein.setMatrixAt(nl,o.matrix);nl++}}
+ STR.gerade.count=ng;STR.platz.count=np;for(const m of[STR.mast,STR.arm,STR.kopf,STR.schein])m.count=nl;for(const m of[STR.gerade,STR.platz,STR.mast,STR.arm,STR.kopf,STR.schein])m.instanceMatrix.needsUpdate=true}
+EV.an('gebaeude',strassenBauen);
+// Laternen gehen in der Dämmerung an
+EV.an('bild',()=>{const n=Math.min(1,Math.max(0,(TN.n-.25)*2.5));STR.kopfM.emissiveIntensity=n*4;STR.scheinM.opacity=n*.55;STR.schein.visible=n>.02});
 /* ====== Start ====== */
 // Desktop-Fassung: Erfolge an Steam weitergeben
 if(SW.desktop&&SW.desktop.erfolg)EV.an('erfolg',id=>SW.desktop.erfolg(id));

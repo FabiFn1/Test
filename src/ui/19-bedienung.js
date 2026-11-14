@@ -23,7 +23,7 @@ canvas.addEventListener('pointerdown',ev=>{canvas.focus();canvas.setPointerCaptu
  const s=tool&&tool!=='x'?K[tool].s:1,[x,y]=tileOf(w,s);
  if(tool==='x'||tool==='fx'){drag={x:true,fx:tool==='fx'};const q=[Math.floor(w[0]),Math.floor(w[1])],e=at(...q);if(tool==='fx')removeFund(...q);else if(e)remove(e);return}
  if(tool==='fundament'){drag={f:[x,y],b:[x,y]};return}
- if(tool==='gleis'){drag={g:[x,y],b:[x,y]};return}
+ if(tool==='gleis'||tool==='strasse'){drag={g:[x,y],b:[x,y],gk:tool};return}
  if(BK(tool)){drag={a:[x,y],b:[x,y]};return}
  if(tool==='kx'){drag={kx:[x,y],b:[x,y]};return}
  if(tool==='bp')return;
@@ -34,7 +34,7 @@ canvas.addEventListener('pointerleave',()=>{hoverT=null});canvas.addEventListene
  if(!w)return;const sz=tool&&tool!=='x'?K[tool].s:1;hover=tileOf(w,sz);
  if(drag&&drag.x){const q=[Math.floor(w[0]),Math.floor(w[1])],e=at(...q);if(drag.fx)removeFund(...q);else if(e)remove(e)}else if(drag)drag.b=hover.slice();});
 canvas.addEventListener('pointerup',ev=>{if(orbit){orbit=null;return}if(rpan){const c=!moved&&ev.button===2;rpan=null;if(c)setTool(null);return}
- if(drag&&drag.g){for(const[x,y]of linePath(drag.g,drag.b)){if(!place('gleis',x,y,0,true)&&!afford('gleis'))break}}if(drag&&drag.f)buildFund(drag.f,drag.b);if(drag&&drag.kx){G.kx=G.kx||[];G.kxN=(G.kxN||0)+1;const a=drag.kx,c=drag.b;G.kx.push({id:G.kxN,name:'Komplex '+G.kxN,x0:Math.min(a[0],c[0]),y0:Math.min(a[1],c[1]),x1:Math.max(a[0],c[0]),y1:Math.max(a[1],c[1])});setTool(null);lwOpen(true);drag=null;return}if(drag&&drag.a){const l=linePath(drag.a,drag.b);let n=0;for(let i=0;i<l.length;i++){const[x,y,d]=l[i];if(crossHere(x,y,d,i===0,i===l.length-1)){if(place('kreuzung',x,y,d,true))n++;continue}if(place(tool,x,y,d,true))n++;else if(!afford(tool))break}if(!n&&l.length===1&&!at(l[0][0],l[0][1]))toast('Hier kann kein Band liegen.')}drag=null});
+ if(drag&&drag.g){for(const[x,y]of linePath(drag.g,drag.b)){if(!place(drag.gk,x,y,0,true)&&!afford(drag.gk))break}}if(drag&&drag.f)buildFund(drag.f,drag.b);if(drag&&drag.kx){G.kx=G.kx||[];G.kxN=(G.kxN||0)+1;const a=drag.kx,c=drag.b;G.kx.push({id:G.kxN,name:'Komplex '+G.kxN,x0:Math.min(a[0],c[0]),y0:Math.min(a[1],c[1]),x1:Math.max(a[0],c[0]),y1:Math.max(a[1],c[1])});setTool(null);lwOpen(true);drag=null;return}if(drag&&drag.a){const l=linePath(drag.a,drag.b);let n=0;for(let i=0;i<l.length;i++){const[x,y,d]=l[i];if(crossHere(x,y,d,i===0,i===l.length-1)){if(place('kreuzung',x,y,d,true))n++;continue}if(place(tool,x,y,d,true))n++;else if(!afford(tool))break}if(!n&&l.length===1&&!at(l[0][0],l[0][1]))toast('Hier kann kein Band liegen.')}drag=null});
 canvas.addEventListener('wheel',ev=>{ev.preventDefault();C.tdist=T.MathUtils.clamp(C.tdist*Math.pow(1.0015,ev.deltaY),14,260)},{passive:false});
 function clampC(){C.tx=T.MathUtils.clamp(C.tx,0,N);C.tz=T.MathUtils.clamp(C.tz,0,N)}
 addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT')return;const k=ev.key.toLowerCase();if(k==='l'){lwOpen($('lw').hidden);return}if(k==='escape'&&!$('lw').hidden){lwOpen(false);return}if(k==='tab'){ev.preventDefault();menuOpen($('menu').hidden);return}if(k==='escape'&&!$('menu').hidden){menuOpen(false);return}keys[k]=true;

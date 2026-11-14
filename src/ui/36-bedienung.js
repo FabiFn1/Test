@@ -75,7 +75,7 @@ function wegMit(l){let n=0;for(const e of l){if(e.k==='zentrale'||!E.has(e.id))c
 canvas.addEventListener('pointerdown',ev=>{if(ev.button===0&&ev.ctrlKey){const w=pick(ev);if(!w)return;ev.stopImmediatePropagation();ev.preventDefault();abr={a:[Math.floor(w[0]),Math.floor(w[1])],b:[Math.floor(w[0]),Math.floor(w[1])]}}},true);
 canvas.addEventListener('pointermove',ev=>{if(abr){ev.stopImmediatePropagation();const w=pick(ev);if(w)abr.b=[Math.floor(w[0]),Math.floor(w[1])]}},true);
 canvas.addEventListener('pointerup',ev=>{if(abr){ev.stopImmediatePropagation();const x0=Math.min(abr.a[0],abr.b[0]),x1=Math.max(abr.a[0],abr.b[0]),y0=Math.min(abr.a[1],abr.b[1]),y1=Math.max(abr.a[1],abr.b[1]),s=new Set();for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const e=at(x,y);if(e)s.add(e)}abr=null;const n=wegMit([...s]);if(n)toast(n+' Bauwerke abgerissen, Kosten zurück.')}},true);
-canvas.addEventListener('pointerdown',ev=>{baut=ev.button===0&&!ev.ctrlKey&&!!tool&&!!K[tool]&&!BK(tool)&&!['x','fx','kx','bp','fundament','gleis'].includes(tool)});
+canvas.addEventListener('pointerdown',ev=>{baut=ev.button===0&&!ev.ctrlKey&&!!tool&&!!K[tool]&&!BK(tool)&&!['x','fx','kx','bp','fundament','gleis','strasse'].includes(tool)});
 canvas.addEventListener('pointermove',ev=>{if(baut&&(ev.buttons&1)&&tool&&canPlace(tool,hover[0],hover[1]))place(tool,hover[0],hover[1],rot,true)});
 addEventListener('pointerup',()=>{baut=false});
 addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||SHELL.titel||SHELL.pause||!$('menu').hidden||!$('lw').hidden)return;const k=ev.key.toLowerCase(),ziel=()=>(hoverT&&at(hoverT[0],hoverT[1]))||sel;
@@ -85,7 +85,7 @@ addEventListener('keydown',ev=>{if(ev.target.tagName==='INPUT'||SHELL.titel||SHE
   if(klemm.rez&&RB.has(base(e.k))&&e.rez!==klemm.rez){e.rez=klemm.rez;e.prog=0;e.inv={}}if(klemm.oc&&K[e.k].p)e.oc=klemm.oc;if(/greifer|sortierer/.test(e.k))e.f=klemm.f;if(e.k==='verteiler'){e.zu=klemm.zu?{...klemm.zu}:undefined;e.prio=klemm.prio}toast('Eingefügt in '+K[e.k].n+'.');if(sel===e)select(e)}},true);
 {const _g=ghostUp;ghostUp=function(){_g();symUpdate();const P=IO.pfeile,o=GB.ob,pf=(x,y,d,col,s)=>{const n=P.count;if(n>=800||x<0||y<0||x>=N||y>=N)return;o.position.set(x+.5,YL(Lv(x,y))+.09,y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.setScalar(s);o.updateMatrix();P.setMatrixAt(n,o.matrix);P.setColorAt(n,col);P.count=n+1};
  // Vorschau: Ein- und Ausgänge des Bauwerks, das gerade platziert wird
- if(tool&&K[tool]&&!drag&&!['x','fx','kx','bp','fundament','gleis','mast','grossmast','solar'].includes(tool)&&!BK(tool)){const s=K[tool].s,f={k:tool,x:hover[0],y:hover[1],r:rot},m=(s-1)>>1,gen=K[tool].gen,kl=/greifer/.test(tool),R=tool==='langgreifer'?2:1;
+ if(tool&&K[tool]&&!drag&&!['x','fx','kx','bp','fundament','gleis','strasse','mast','grossmast','solar'].includes(tool)&&!BK(tool)){const s=K[tool].s,f={k:tool,x:hover[0],y:hover[1],r:rot},m=(s-1)>>1,gen=K[tool].gen,kl=/greifer/.test(tool),R=tool==='langgreifer'?2:1;
   if(kl){pf(f.x+DX[rot]*R,f.y+DY[rot]*R,rot,IO.aus,1.2);pf(f.x-DX[rot]*R,f.y-DY[rot]*R,rot,IO.ein,1.2)}
   else if(tool==='verteiler'||tool==='sortierer'||tool==='kreuzung'){}
   else{const ka=tool==='raketensilo'||tool==='versand'||tool==='traeger';if(!gen&&!ka){const q=outTile(f);pf(q[0],q[1],q[2],IO.aus,1.3)}if(RB.has(base(tool))||gen&&K[tool].burn||/lagerkiste|drohnenhafen|bahnhof|raketensilo|versand|traeger/.test(tool))for(let d=0;d<4;d++){if(d===rot&&!gen&&!ka)continue;const q=d===0?[f.x+s,f.y+m]:d===1?[f.x+s-1-m,f.y+s]:d===2?[f.x-1,f.y+s-1-m]:[f.x+m,f.y-1];pf(q[0],q[1],(d+2)%4,IO.ein,1)}}
