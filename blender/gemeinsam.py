@@ -17,7 +17,7 @@ import os
 import bpy
 import numpy as np
 
-AUS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "build", "modelle")
+AUS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ausgabe")
 
 
 def leeren():

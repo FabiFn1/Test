@@ -3,3 +3,4 @@ dist/
 app/vendor/
 app/index.html
 build/
+blender/ausgabe/*.png

@@ -1,9 +1,9 @@
-// Bettet die in Blender gebauten Modelle (build/modelle/*.json und *_farbe.jpg, *_orm.jpg) als src/assets/16-blender-modelle.js ein.
+// Bettet die in Blender gebauten Modelle (blender/ausgabe/*.json und *_farbe.jpg, *_orm.jpg) als src/assets/16-blender-modelle.js ein.
 // Aufruf nach den Blender-Skripten (blender/*.py): node scripts/modelle-einbetten.js
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
-const ein = path.join(root, 'build', 'modelle');
+const ein = path.join(root, 'blender', 'ausgabe');
 const daten = {};
 for (const f of fs.readdirSync(ein).filter((f) => f.endsWith('.json')).sort()) {
   const m = JSON.parse(fs.readFileSync(path.join(ein, f), 'utf8'));
