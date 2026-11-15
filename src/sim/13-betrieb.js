@@ -10,7 +10,7 @@ function stats(e){return e.s||(e.s={r:0,w:0,d:0,g:0,b:0})}
 const tierFrei=n=>n===1?fx('Mechanik'):n===2?fx('Forschung IV'):true;
 function fertig(e,r){const st=stats(e),T_=TIER[e.tier||0],q=fx('Stahl')?(SCR[e.k]??SCR[K[e.k].as]??0)*T_.sc*(1+2*(1-(e.hp??1))):0;for(let i=0;i<r.out[1];i++){if(Math.random()<q){st.b++;e.rej=(e.rej||0)+1;if(e.rej>30){e.rej=30;G.lost=(G.lost||0)+1}}else{st.g++;e.out.push(r.out[0])}}}
 function repair(m){m.hp=1;m.kaputt=false;m.lm=.7+Math.random()*.6;delete m.job}
-function reparieren(list){let n=0;for(const m of list){if(!wears(m)||(m.hp??1)>.9)continue;if((G.stock.ersatzteil||0)<1){UI.toast('Keine Ersatzteile im Lager.');break}G.stock.ersatzteil--;repair(m);n++}return n}
+function reparieren(list){let n=0;for(const m of list){if(!wears(m)||(m.hp??1)>.9)continue;if(!hat(G.stock.ersatzteil||0,1)){UI.toast('Keine Ersatzteile im Lager.');break}G.stock.ersatzteil--;repair(m);n++}return n}
 function station(e,dt){e.st='ok';const t=e.tier||0,cap=[2,4,8][t],r=[18,28,40][t];e.jobs=e.jobs||[];for(let i=e.jobs.length-1;i>=0;i--){const j=e.jobs[i];j.t+=dt/j.dur;if(j.t>=1){const m=E.get(j.id);if(m&&(G.stock.ersatzteil||0)>0){repMit(m);delete m.job}else if(m)delete m.job;e.jobs.splice(i,1)}}
  e.scan=(e.scan||0)-dt;if(e.scan>0||e.jobs.length>=cap)return;e.scan=2;if((G.stock.ersatzteil||0)<1)return;const cx=e.x+1.5,cy=e.y+1.5;for(const m of machines){if(e.jobs.length>=cap)break;if(!wears(m)||m.job||!(m.kaputt||(m.hp??1)<.35))continue;const d=Math.hypot(m.x-cx,m.y-cy);if(d>r)continue;m.job=e.id;e.jobs.push({id:m.id,t:0,dur:d/10+6})}}
 function rearT(e){return outTile({...e,r:(e.r+2)%4})}
@@ -33,9 +33,14 @@ function auftragTakt(){if(!fx('Erste Teile'))return;G.auf=G.auf||[];G.ang=G.ang|
 const REZIN=k=>['eisenerz','kupfererz','kohle','stein','quarz','bauxit','rohoel','schwefel','uranerz'].includes(k);
 function auftragAn(id){G.auf=G.auf||[];if(G.auf.length>=3){UI.toast('Höchstens 3 Aufträge gleichzeitig.');return}const i=G.ang.findIndex(a=>a.id===id);if(i<0)return;const a=G.ang.splice(i,1)[0];a.bis=G.t+a.dauer;G.auf.push(a)}
 function auftragLiefern(k){return false}
+// Ausliefern und Abbrechen per Knopf in der Leitwarte. Rückgabe: Meldung für die Oberfläche
+function raketeStarten(e){if(!e||e.k!=='raketensilo'||e.launch!==undefined)return;e.inv.raketenteil=0;e.launch=0}
+function komplexSchalten(id,aus){const x=(G.kx||[]).find(q=>q.id===id);if(x)kxM(x).forEach(e=>e.off=aus)}
+function auftragAusliefern(id){const a=(G.auf||[]).find(q=>q.id===id);if(!a)return'';if(!hat(G.stock[a.k]||0,a.n))return'Im Lager fehlen noch '+Math.ceil(a.n-(G.stock[a.k]||0)).toLocaleString('de-DE')+' '+ITEMS[a.k][0]+'.';G.stock[a.k]-=a.n;G.cr=(G.cr||0)+a.lohn;G.auf.splice(G.auf.indexOf(a),1);return`Auftrag erfüllt: ${a.kunde}, +${a.lohn.toLocaleString('de-DE')} Cr`}
+function auftragAbbrechen(id){const a=(G.auf||[]).find(q=>q.id===id);if(!a)return'';const s=Math.ceil(a.lohn*.1);G.cr=(G.cr||0)-s;G.auf.splice(G.auf.indexOf(a),1);return`Auftrag abgebrochen: ${a.kunde}. Strafe ${s.toLocaleString('de-DE')} Cr.`}
 /* SPS: Wenn Bedingung, dann Komplex aus/ein */
 function sensor(c){if(c.s==='lager')return G.stock[c.i]||0;const x=(G.kx||[]).find(q=>q.id===+c.x),l=kxM(x);if(c.s==='last'){const n=nodes.find(q=>q.k==='zentrale')?.net;return n&&n.gen?n.dem/n.gen*100:0}if(c.s==='stoer')return l.filter(e=>e.kaputt).length;if(c.s==='zustand')return kennz(l).hp*100;if(c.s==='oee')return kennz(l).oee*100;return 0}
 const cmp=(a,o,b)=>o==='<'?a<b:o==='>'?a>b:a===b;
 function spsRun(){if(!(G.sps||[]).length||!fx('Kraftwerk'))return;const wun=new Map();for(const r of G.sps){if(r.an===false){r.q=false;continue}let v=cmp(sensor(r.a),r.a.op,+r.a.v);if(r.b)v=v&&cmp(sensor(r.b),r.b.op,+r.b.v);r.q=v;if(!wun.has(+r.x))wun.set(+r.x,false);const aus=r.t==='aus'?v:!v;if(aus)wun.set(+r.x,true)}for(const[x,o]of wun){const q=(G.kx||[]).find(z=>z.id===x);if(q)for(const e of kxM(q))e.off=o}}
-function tierUp(e){const n=(e.tier||0)+1;if(n>2)return false;if(!tierFrei(n)){UI.toast('Noch nicht freigeschaltet.');return false}const c=TIERCOST[n];for(const i in c)if((G.stock[i]||0)<c[i]){UI.toast('Material fehlt: '+c[i]+' '+ITEMS[i][0]);return false}if((G.cr||0)<TIERCR[n]){UI.toast('Dafür fehlen Credits.');return false}for(const i in c)G.stock[i]-=c[i];G.cr-=TIERCR[n];e.tier=n;dirtyK=true;return true}
+function tierUp(e){const n=(e.tier||0)+1;if(n>2)return false;if(!tierFrei(n)){UI.toast('Noch nicht freigeschaltet.');return false}const c=TIERCOST[n];for(const i in c)if(!hat(G.stock[i]||0,c[i])){UI.toast('Material fehlt: '+c[i]+' '+ITEMS[i][0]);return false}if(!hat(G.cr||0,TIERCR[n])){UI.toast('Dafür fehlen Credits.');return false}for(const i in c)G.stock[i]-=c[i];G.cr-=TIERCR[n];e.tier=n;dirtyK=true;return true}
 

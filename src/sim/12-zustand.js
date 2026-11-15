@@ -1,4 +1,8 @@
 /* ====== Zustand ====== */
+let AMTW=null; // im Simulations-Thread: Felder, deren Erzmenge sich geändert hat
+// Im Simulations-Thread während einer Bedienung, die der Hauptstrang schon geprüft hat: Lager- und Kassenprüfungen überspringen,
+// damit der Thread dasselbe Ergebnis hat, auch wenn sein Lagerstand einen Moment abweicht
+let VERTRAUT=false;const hat=(v,n)=>VERTRAUT||v>=n;
 const UI={toast(){},msDraw(){},toolsDraw(){},ende(){},wires(){},removed(){}};const rate={};
 
 let G,nextId=1;const E=new Map();let grid=new Int32Array(N*N);let belts=[],machines=[],splits=[],nodes=[],gens=[];
@@ -46,7 +50,7 @@ function gibAn(x,y,d,k,h){const e=at(x,y);if(!e)return false;
  if(e.k==='kreuzung'){const l=e.sl[d%2];if(l.length&&l[l.length-1].t<GAP)return false;l.push({k,d,t:0,v:GV||0});e.sch=0;return true}
  if(e.k==='zentrale'){deliver(k);return true}
  if(e.inv)return accept(e,k);return false}
-function mine(e){const k=ORES[e.ore];if(e.k==='oelpumpe'){e.out.push(k);return}const f=erzFeld(e.k,e.x,e.y);for(let q=0;q<f.length;q++){e.mi=((e.mi||0)+1)%f.length;const i=f[e.mi][1]*N+f[e.mi][0];if(ORE[i]===e.ore&&AMT[i]>0&&!F[i]){AMT[i]--;PT[PID[i]]--;e.out.push(k);stats(e).g++;if(!AMT[i]){oreInfo(e);dirtyK=true}return}}oreInfo(e)}
+function mine(e){const k=ORES[e.ore];if(e.k==='oelpumpe'){e.out.push(k);return}const f=erzFeld(e.k,e.x,e.y);for(let q=0;q<f.length;q++){e.mi=((e.mi||0)+1)%f.length;const i=f[e.mi][1]*N+f[e.mi][0];if(ORE[i]===e.ore&&AMT[i]>0&&!F[i]){AMT[i]--;if(AMTW)AMTW.add(i);PT[PID[i]]--;e.out.push(k);stats(e).g++;if(!AMT[i]){oreInfo(e);dirtyK=true}return}}oreInfo(e)}
 function total(e){let n=0;for(const i in e.inv)n+=e.inv[i];return n}
 const RB=new Set(Object.values(REZ).map(r=>r.b));const base=q=>K[q].as||q;
 function accept(e,k){if(e.bau)return false;if(e.k==='lagerkiste'){if(total(e)>=200)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='traeger'){if(total(e)>=40)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='versand'){if(e.f||total(e)>=60)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='bahnhof'){if(!e.link||total(e)>=200)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='drohnenhafen'){if(!e.link||total(e)>=40)return false;e.inv[k]=(e.inv[k]||0)+1;return true}if(e.k==='raketensilo'){if(k!=='raketenteil'||(e.inv.raketenteil||0)>=SILO||e.launch!==undefined)return false;e.inv.raketenteil=(e.inv.raketenteil||0)+1;return true}if(K[e.k].burn){const fu=K[e.k].fuel||'kohle';if(k!==fu||(e.inv[fu]||0)>=4)return false;e.inv[fu]=(e.inv[fu]||0)+1;return true}

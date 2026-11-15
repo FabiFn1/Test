@@ -12,4 +12,4 @@ const SET={};
 const ERF=[],ERKL={};
 let paused=false;
 // Bedienung, die in Bau-Funktionen nachgefragt wird
-const toastEl={dataset:{}};let pickRez=null;
+const toastEl={dataset:{}};let pickRez=null,fundUp=0;

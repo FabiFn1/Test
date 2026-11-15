@@ -26,7 +26,7 @@ function bauen() {
   const kern = fs.readFileSync(path.join(root, 'build', 'kern.js'), 'utf8');
   let code = kern + '\n' + fs.readFileSync(path.join(root, 'src', 'sim', '00-simvorspann.js'), 'utf8') + '\n';
   for (const t of teile) {
-    if (!t.endsWith('.js')) continue;
+    if (!t.endsWith('.js')) continue; // Platzhalter wie @kern, @simcode und HTML-Teile
     const text = fs.readFileSync(path.join(root, 'src', t), 'utf8');
     if (t.startsWith('sim/')) {
       code += `/* --- ${t} --- */\n` + bloecke(text, '//@anzeige', '//@/anzeige').filter((z) => !z.drin).map((z) => z.zeile).join('\n') + '\n';

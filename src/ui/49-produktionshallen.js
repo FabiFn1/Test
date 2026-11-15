@@ -21,9 +21,13 @@ function hallePruefen(x){const w=x.x1-x.x0+1,h=x.y1-x.y0+1;if(w<4||h<4)return'Ei
  if(!n)return'Im Komplex steht keine Maschine.';for(const q of hallen())if(q!==x&&q.x0<=x.x1&&q.x1>=x.x0&&q.y0<=x.y1&&q.y1>=x.y0)return'Der Komplex überschneidet sich mit '+q.name+'.';return''}
 const halleKosten=x=>({eisenplatte:2*(x.x1-x.x0+x.y1-x.y0+2)*2,stein:(x.x1-x.x0+1)*(x.y1-x.y0+1)});
 //@/sim
-function halleBauen(x){const f=hallePruefen(x);if(f){toast(f);return false}const c=halleKosten(x);if(!G.frei){for(const k in c)if((G.stock[k]||0)<c[k]){toast(`Für die Halle fehlen ${c[k]-(G.stock[k]||0)} ${ITEMS[k][0]}.`);return false}for(const k in c)G.stock[k]-=c[k]}
- x.halle=true;HAL.io.delete(x.id);hallenFeld();select(null);toast(x.name+' ist jetzt eine Produktionshalle. Die Anlagen laufen darin weiter, ein Klick auf die Halle zeigt den Durchsatz.');return true}
-function halleOeffnen(x){x.halle=false;HAL.io.delete(x.id);hallenFeld();halleZeigen(0);toast(x.name+' ist wieder offen.')}
+//@sim
+// Umbau zur Halle bzw. zurück. Rückgabe: Fehlermeldung oder ''
+function halleUmbau(x){const f=hallePruefen(x);if(f)return f;const c=halleKosten(x);if(!G.frei){for(const k in c)if(!hat(G.stock[k]||0,c[k]))return`Für die Halle fehlen ${c[k]-(G.stock[k]||0)} ${ITEMS[k][0]}.`;for(const k in c)G.stock[k]-=c[k]}x.halle=true;HAL.io.delete(x.id);hallenFeld();return''}
+function halleAuf(x){x.halle=false;HAL.io.delete(x.id);hallenFeld()}
+//@/sim
+function halleBauen(x){const f=halleUmbau(x);if(f){toast(f);return false}select(null);toast(x.name+' ist jetzt eine Produktionshalle. Die Anlagen laufen darin weiter, ein Klick auf die Halle zeigt den Durchsatz.');return true}
+function halleOeffnen(x){halleAuf(x);halleZeigen(0);toast(x.name+' ist wieder offen.')}
 /* --- Hülle --- */
 function hallenSchild(name){const c=document.createElement('canvas');c.width=512;c.height=96;const g=c.getContext('2d');g.fillStyle='#1d2a30';g.fillRect(0,0,512,96);g.fillStyle='#f0b429';g.fillRect(0,0,512,8);g.fillStyle='#e8ecea';g.font='600 54px "Barlow Condensed",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(name.toUpperCase().slice(0,22),256,54,480);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;return t}
 function hallenGeo(fl){const p=[],u=[],ix=[];for(const q of fl){const b=p.length/3;for(let i=0;i<4;i++){p.push(q[i*5],q[i*5+1],q[i*5+2]);u.push(q[i*5+3],q[i*5+4])}ix.push(b,b+1,b+2,b,b+2,b+3)}const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setAttribute('uv',new T.Float32BufferAttribute(u,2));g.setIndex(ix);g.computeVertexNormals();return g}
@@ -65,6 +69,6 @@ function halleZeigen(id){const x=hallen().find(q=>q.id===id),el=$('halle');HAL.o
  <div class="etikett">Eingang je Minute</div><div class="chips">${chips(hallenRate(id,'ein'))}</div><div class="etikett">Ausgang je Minute</div><div class="chips">${chips(hallenRate(id,'aus'))}</div>
  <div class="matt">OEE ${pc(q.oee)} · Zustand ${pc(q.hp)} · Störungen ${q.df}${q.off?` · ${q.off} aus`:''}</div>
  <div class="reihe"><button id="h-auf">Halle öffnen</button><button id="h-schalt">${q.off&&q.off===q.n?'Einschalten':'Ausschalten'}</button><button id="h-zu">Schließen</button></div>`;
- $('h-auf').onclick=()=>halleOeffnen(x);$('h-zu').onclick=()=>halleZeigen(0);$('h-schalt').onclick=()=>{const l=kxM(x),o=!l.every(e=>e.off);l.forEach(e=>e.off=o);halleZeigen(id)}}
+ $('h-auf').onclick=()=>halleOeffnen(x);$('h-zu').onclick=()=>halleZeigen(0);$('h-schalt').onclick=()=>{komplexSchalten(x.id,!kxM(x).every(e=>e.off));halleZeigen(id)}}
 setInterval(()=>{if(HAL.offen&&!$('halle').matches(':hover'))halleZeigen(HAL.offen)},1000);
 $('lw').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;if(d.h){const x=(G.kx||[]).find(q=>q.id===+d.h);if(!x)return;if(x.halle)halleOeffnen(x);else if(halleBauen(x)){C.tx=(x.x0+x.x1)/2;C.tz=(x.y0+x.y1)/2;lwOpen(false);return}lwLive()}else if(d.d)hallenFeld()});

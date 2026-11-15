@@ -4,7 +4,7 @@ const ray=new T.Raycaster(),ndc=new T.Vector2(),plane=new T.Plane(new T.Vector3(
 function pick(ev){const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);const o=ray.ray.origin,d=ray.ray.direction;if(d.y>=-1e-3)return null;const top=YL(8);let s=Math.max(0,(o.y-top)/-d.y);for(let i=0;i<1600;i++){const x=o.x+d.x*s,y=o.y+d.y*s,z=o.z+d.z*s;if(y<=YL(Lv(Math.floor(x),Math.floor(z)))||y<-2)return[x,z];s+=.12}return null}
 function tileOf(w,s){return[Math.floor(w[0]-(s-1)/2),Math.floor(w[1]-(s-1)/2)]}
 //@sim
-function afford(k,mult=1){for(const i in K[k].c)if((G.stock[i]||0)<K[k].c[i]*mult)return false;return true}
+function afford(k,mult=1){for(const i in K[k].c)if(!hat(G.stock[i]||0,K[k].c[i]*mult))return false;return true}
 function pay(k,sg=-1){for(const i in K[k].c)G.stock[i]=(G.stock[i]||0)+sg*K[k].c[i]}
 function canPlace(k,x,y){const lv=Lv(x,y);if(lv<1)return false;for(const[a,b]of foot(k,x,y)){if(a<0||b<0||a>=N||b>=N)return false;if(HAL.feld[b*N+a])return false;if(Lv(a,b)!==lv)return false;const e=at(a,b);if(e&&!(isBelt(e)&&(BK(k)||k==='verteiler'||k==='kreuzung'||k==='sortierer')))return false}
  if(k==='bohrer'||k==='schnellbohrer'||k==='oelpumpe'){let n=0;for(const[a,b]of erzFeld(k,x,y)){const o=ORE[b*N+a];if(o&&AMT[b*N+a]>0&&!F[b*N+a]&&(o===7)===(k==='oelpumpe'))n++}if(!n)return false}return true}
@@ -13,7 +13,7 @@ function place(k,x,y,r,quiet){if(!canPlace(k,x,y)){if(!quiet){const ev=foot(k,x,
  if(!afford(k)){if(!quiet||!toastEl.dataset.m)toast('Nicht genug Material: '+costTxt(k));return false}
  pay(k);let it=[];const br=ex?ex.r:0;if(ex){it=(ex.k==='leitung')===(k==='leitung')?ex.it:[];pay(ex.k,1);del(ex)}const e=add(k,x,y,k==='kreuzung'&&ex?(br+1)%4:r,isBelt({k})?{it}:{});if(!G.frei&&K[k].s>=2){e.bau=e.bau0=K[k].s*K[k].s*.9;e.st='wait'}if(pickRez&&pickRez[0]===k)e.rez=pickRez[1];relist();return true}
 function fundArea(a,b){const[x0,x1]=[Math.min(a[0],b[0]),Math.max(a[0],b[0])],[y0,y1]=[Math.min(a[1],b[1]),Math.max(a[1],b[1])],l=[];const st=Lv(a[0],a[1]);let ht=Math.min(7,st+fundUp);const scan=()=>{for(let y=y0;y<=y1&&l.length<900;y++)for(let x=x0;x<=x1&&l.length<900;x++){if(x<0||y<0||x>=N||y>=N)continue;const c=Lv(x,y);if(c<ht)l.push([x,y,c,ht,!at(x,y)])}};scan();if(!l.length&&!fundUp&&st<7){ht=st+1;scan()}l.ht=ht;return l}
-function buildFund(a,b){let n=0,lack=false;for(const[x,y,c,ht,free]of fundArea(a,b)){if(!free)continue;const cost=(ht-c)*2;if((G.stock.stein||0)<cost){lack=true;break}G.stock.stein-=cost;F[y*N+x]=ht;n++}if(lack)toast('Nicht genug Stein für das ganze Fundament.');if(n){dirtyF=dirtyB=dirtyP=true}}
+function buildFund(a,b){let n=0,lack=false;for(const[x,y,c,ht,free]of fundArea(a,b)){if(!free)continue;const cost=(ht-c)*2;if(!hat(G.stock.stein||0,cost)){lack=true;break}G.stock.stein-=cost;F[y*N+x]=ht;n++}if(lack)toast('Nicht genug Stein für das ganze Fundament.');if(n){dirtyF=dirtyB=dirtyP=true}}
 function removeFund(x,y){const i=y*N+x;if(F[i]>TER[i]&&!at(x,y)){G.stock.stein=(G.stock.stein||0)+(F[i]-TER[i])*2;F[i]=0;dirtyF=dirtyB=true;return true}return false}
 function remove(e){if(e.k==='zentrale'){toast('Die Zentrale bleibt stehen.');return}if(e.hh){toast('Das steht in einer Produktionshalle. Öffne die Halle zuerst.');return}pay(e.k,1);del(e);relist()}
 //@/sim

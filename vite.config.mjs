@@ -17,8 +17,8 @@ function spieldatei() {
       for (const t of teile) this.addWatchFile(resolve(root, 'src', t));
     },
     closeBundle() {
-      require('./scripts/build-game.js').bauen();
       require('./scripts/build-sim.js').bauen();
+      require('./scripts/build-game.js').bauen();
     },
   };
 }

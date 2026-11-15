@@ -19,7 +19,7 @@ function gleisBauen(){const o=GB.ob;let n=0;const l=byKind.gleis||[];for(const e
 // Darstellung: Züge
 ZUGM.lokI=ZUGM.lok.map(q=>inst(q,120));ZUGM.wagI=ZUGM.wagen.map(q=>inst(q,240));
 function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(0,Math.min(p.length-1,t));const i=Math.min(p.length-2,Math.floor(t)),u=t-i;if(p.length<2)return[p[0][0],p[0][1],0];const a=p[i],b=p[i+1];return[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,Math.atan2(b[1]-a[1],b[0]-a[0])]};
- for(const e of byKind.bahnhof||[]){const zg=e.zug,p=e._pf;if(!zg||!p||nl>=120)continue;const y=YL(e.z)+.1,rw=zg.s==='zurueck';
+ for(const e of byKind.bahnhof||[]){const zg=e.zug,p=zg?zugWeg(e):null;if(!zg||!p||nl>=120)continue;const y=YL(e.z)+.1,rw=zg.s==='zurueck';
   for(let k=0;k<3;k++){const t=zg.t+(rw?1:-1)*k*.98;if(t<-.4||t>p.length-.6)continue;const q=pos(p,t);o.position.set(q[0],y,q[1]);o.rotation.set(0,-q[2]+(rw?Math.PI:0),0);o.scale.set(1,1,1);o.updateMatrix();
    if(k===0){for(const m of ZUGM.lokI)m.setMatrixAt(nl,o.matrix);nl++;if(!paused&&Math.random()<.5)emit('dampf',q[0],y+.8,q[1],0,.6,0,1.6,.15,.7)}else{for(const m of ZUGM.wagI)m.setMatrixAt(nw,o.matrix);nw++}}}
  for(const m of ZUGM.lokI){m.count=nl;m.instanceMatrix.needsUpdate=true}for(const m of ZUGM.wagI){m.count=nw;m.instanceMatrix.needsUpdate=true}}

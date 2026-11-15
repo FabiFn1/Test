@@ -46,6 +46,9 @@
  "render/50-werksgelaende.js",
  "save/51-schau-fabrik.js",
  "sim/52-takt.js",
+ "sim/53-thread.js",
+ "core/49-thread-haupt.js",
  "core/48-start.js",
- "core/99-ende.html"
+ "core/99-ende.html",
+ "@simcode"
 ]

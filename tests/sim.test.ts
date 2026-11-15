@@ -14,7 +14,8 @@ beforeAll(() => {
   vm.runInContext(readFileSync(resolve(__dirname, '../build/sim.js'), 'utf8'), ctx, { filename: 'sim.js' });
 });
 
-describe('Simulation ohne Grafik', () => {
+// Weltaufbau (Erzfelder, Gelände) dauert in Node einige Sekunden
+describe('Simulation ohne Grafik', { timeout: 30000 }, () => {
   it('legt ein neues Spiel an und liefert Eisenplatten in die Zentrale', () => {
     const r = run<{ n: number; vor: number; nach: number; schritte: number }>(
       `fresh();const vor=G.total.eisenplatte||0;for(let i=0;i<60*60;i++)simTakt(1/60);return {n:E.size,vor,nach:G.total.eisenplatte||0,schritte:SIM.schritte}`,
