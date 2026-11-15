@@ -11,6 +11,8 @@
  "assets/14-modelle.js",
  "render/15-szene.js",
  "render/16-neue-gebaeudemodelle.js",
+ "assets/16-blender-modelle.js",
+ "render/16c-blender-modelle.js",
  "render/17-ende-neue-gebaeudemodelle.js",
  "render/18-kamera.js",
  "ui/19-bedienung.js",
