@@ -11,7 +11,7 @@ function threadErlaubt(){return SET.thread!==false&&typeof Worker!=='undefined'&
 function threadStart(){THR.versucht=true;if(!threadErlaubt())return;
  try{const code=document.getElementById('simcode').textContent;THR.w=new Worker(URL.createObjectURL(new Blob([code],{type:'text/javascript'})));}
  catch(e){console.warn('Simulations-Thread nicht verfügbar, rechne im Hauptstrang',e);THR.w=null;return}
- THR.w.onmessage=threadNachricht;THR.w.onerror=e=>{console.error('Simulations-Thread abgestürzt',e.message);threadStop(true)};
+ THR.w.onmessage=e=>{THR.lief=true;threadNachricht(e)};THR.w.onerror=e=>{console.error('Simulations-Thread abgestürzt',e.message);threadStop(THR.lief)};
  THR.an=true;THR.bereitT=performance.now();threadVoll();threadAbgleich()}
 // Bei einem Fehler im Thread: Simulation läuft im Hauptstrang weiter, mit dem letzten Stand des Threads
 function threadStop(fehler){if(!THR.w)return;THR.w.terminate();THR.w=null;THR.an=false;if(fehler)toast('Die Simulation läuft wieder im Hauptstrang.')}
