@@ -68,6 +68,7 @@ function uferBerechnen(){const d=new Float32Array(N*N).fill(99),q=[];for(let i=0
 uferBerechnen();{const _bt2=buildTerrain;buildTerrain=function(){_bt2();uferBerechnen()}}
 function wasserSpiegel(t){const u=REAL.wM.uniforms;u.uT.value=t;u.sunD.value.copy(sun.position).sub(sun.target.position).normalize();u.sunC.value.copy(sun.color).multiplyScalar(sun.intensity*.5);
  const an=SET.qual!=='niedrig'&&SET.spiegel!==false&&REAL.wMesh;u.rOn.value=an?1:0;if(!an)return;
+ if(REAL.rRT&&REAL.bild%2===1){u.tR.value=REAL.rRT.texture;return}
  const v=ren.getDrawingBufferSize(new T.Vector2()),sc=SET.qual==='hoch'?.6:.42,rw=Math.max(64,Math.round(v.x*sc)),rh=Math.max(64,Math.round(v.y*sc));
  if(!REAL.rRT||REAL.rRT.width!==rw||REAL.rRT.height!==rh){if(REAL.rRT)REAL.rRT.dispose();REAL.rRT=new T.WebGLRenderTarget(rw,rh,{type:T.HalfFloatType,samples:SET.qual==='hoch'?2:0})}
  const h=REAL.wH,mc=REAL.mirrorCam;cam.updateMatrixWorld();mc.position.copy(cam.position);mc.position.y=2*h-cam.position.y;const dir=cam.getWorldDirection(new T.Vector3());dir.y*=-1;mc.up.set(0,1,0);mc.lookAt(mc.position.clone().add(dir));
@@ -127,7 +128,9 @@ function realRT(){const v=ren.getDrawingBufferSize(new T.Vector2()),ms=SET.qual=
  if(REAL.rt){REAL.rt.depthTexture.dispose();REAL.rt.dispose();REAL.aoRT.dispose()}const dt=new T.DepthTexture(v.x,v.y);dt.type=T.UnsignedIntType;
  REAL.rt=new T.WebGLRenderTarget(v.x,v.y,{type:T.HalfFloatType,depthTexture:dt,samples:ms});const ax=Math.ceil(v.x/2),ay=Math.ceil(v.y/2);REAL.aoRT=new T.WebGLRenderTarget(ax,ay,{type:T.UnsignedByteType});
  REAL.aoM.uniforms.res.value.set(ax,ay);REAL.coM.uniforms.ares.value.set(ax,ay)}
-function renderBild(){const t=(performance.now()-REAL.t0)/1000;gebaeudeUpdate();for(const m of INST)m.visible=m.count>0;
+function renderBild(){const t=(performance.now()-REAL.t0)/1000;gebaeudeUpdate();
+ // Schatten und Wasserspiegelung nur jedes zweite Bild neu zeichnen (Schattenkarte und ihre Projektion bleiben dazwischen zueinander passend)
+ REAL.bild=(REAL.bild||0)+1;ren.shadowMap.autoUpdate=false;if(REAL.bild%2===0)ren.shadowMap.needsUpdate=true;for(const m of INST)m.visible=m.count>0;
  const grasAn=SET.gras&&SET.qual!=='niedrig'&&C.dist<105;REAL.gras.visible=grasAn;if(grasAn){if(REAL.grasU)REAL.grasU.value=t;const a=REAL.grasAt;if(!a||Math.abs(a[0]-C.tx)>5||Math.abs(a[1]-C.tz)>5)grasBauen()}
  wasserSpiegel(t);
  if(SET.qual==='niedrig'){ren.setRenderTarget(null);ren.render(scene,cam);return}
