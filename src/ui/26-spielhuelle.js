@@ -60,7 +60,9 @@ let lastSave=0,saveWarn=0;
  lastSave=performance.now();if(!ok){if(performance.now()-saveWarn>60000){saveWarn=performance.now();toast('Speichern fehlgeschlagen: Der Browser-Speicher ist voll.')}}else if(force!==undefined||SHELL.zeig){const g=$('gesp');g.classList.add('an');setTimeout(()=>g.classList.remove('an'),1400)}return ok}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)save(true)});
 // Wartungsaufträge nach dem Laden den neuen Maschinen-IDs zuordnen
-{const _load=load;load=function(){let alt=null;try{alt=JSON.parse(SPEICHER.getItem(SK))}catch(e){}const ok=_load();if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
+//@sim
+{const _a=standAnwenden;standAnwenden=function(alt){const ok=_a(alt);if(ok&&alt){const idm={};let i=0;const es=[...E.values()];for(const o of alt.es){if(es[i])idm[o.oid]=es[i].id;i++}for(const e of es)if(e.jobs)e.jobs=e.jobs.filter(j=>idm[j.id]).map(j=>({...j,id:idm[j.id]}))}return ok}}
+//@/sim
 function spielzeit(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} h ${m} min`:`${m} min`}
 
 /* --- Grafik --- */

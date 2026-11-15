@@ -9,6 +9,7 @@ function zugStep(e,dt){const z=E.get(e.link),p=z?zugWeg(e):null,zg=e.zug;
  e.st='ok';if(!p){if(zg.s==='hin'){for(const i of zg.l)e.inv[i]=(e.inv[i]||0)+1}e.zug=null;return}const L=p.length-1;
  if(zg.s==='hin'){zg.t=Math.min(L,zg.t+dt*5);if(zg.t>=L){if(z.out.length<80){z.out.push(...zg.l);zg.l=[];zg.s='zurueck'}else e.st='blocked'}}
  else{zg.t-=dt*5;if(zg.t<=0)e.zug=null}}
+//@anzeige
 // Darstellung: Gleise
 const GLEIS={max:8000,teile:MODELS.gleis.map(q=>{const g=q.g.clone();const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setX(i,p.getX(i)*.5+.25);const m=instMerk(new T.InstancedMesh(g,M(q.m),8000),true);m.count=0;m.frustumCulled=false;m.receiveShadow=true;scene.add(m);return m})};
 function gleisBauen(){const o=GB.ob;let n=0;const l=byKind.gleis||[];for(const e of l){const y=YL(e.z);let k=0;const seg=d=>{if(n>=GLEIS.max)return;o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.set(1,1,1);o.updateMatrix();for(const m of GLEIS.teile)m.setMatrixAt(n,o.matrix);n++;k++};
@@ -24,5 +25,8 @@ function zugZeichnen(){const o=GB.ob;let nl=0,nw=0;const pos=(p,t)=>{t=Math.max(
  for(const m of ZUGM.lokI){m.count=nl;m.instanceMatrix.needsUpdate=true}for(const m of ZUGM.wagI){m.count=nw;m.instanceMatrix.needsUpdate=true}}
 {const _r=renderBild;renderBild=function(){zugZeichnen();_r()}}
 LAMP.bahnhof=NBA.bahnhof.lampe;
+//@/anzeige
 ERF.push(['zug','Fahrplan','Lass deinen ersten Güterzug fahren.',()=>(G.zuege||0)>=1]);
+//@anzeige
 {const _io=ioUpdate;ioUpdate=function(){_io();if(drag&&drag.g){const l=linePath(drag.g,drag.b).slice(0,400);beltGhost.count=l.length;l.forEach((t,i)=>{dm.position.set(t[0]+.5,.16+YL(Lv(t[0],t[1])),t[1]+.5);dm.rotation.set(0,0,0);dm.scale.set(1,.5,1.2);dm.updateMatrix();beltGhost.setMatrixAt(i,dm.matrix);beltGhost.setColorAt(i,canPlace(drag.gk,t[0],t[1])?GBELT:GROT)});beltGhost.instanceMatrix.needsUpdate=true;if(beltGhost.instanceColor)beltGhost.instanceColor.needsUpdate=true;IO.feld.visible=false}}}
+//@/anzeige

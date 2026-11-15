@@ -27,7 +27,8 @@ function arbZuteilen(){const W=ARB.w,frei=W.filter(w=>!w.job);if(!frei.length)re
   delete e.unr;w.job=e.id;w.typ=typ;w.path=p.length>1?p:null;w.pi=0;w.t=0;if(typ==='rep')e.job='arb';if(typ==='rep'||K[e.k].s<3||W.filter(q=>q.job===e.id).length>=(K[e.k].s>=5?3:2))jobs.splice(bi,1)}}
 {const _s=step;step=function(dt){_s(dt);arbStep(dt)}}
 {const _f=fresh;fresh=function(){_f();ARB.w.length=0}}
-{const _l=load;load=function(){const ok=_l();ARB.w.length=0;return ok}}
+{const _l=standAnwenden;standAnwenden=function(st){const ok=_l(st);ARB.w.length=0;return ok}}
+//@anzeige
 {const _z=lebenZeichnen;lebenZeichnen=function(){_z();const L=UM.leute,o=GB.ob;let n=L.count;if(!SHELL.titel)for(const w of ARB.w){if(n>=90)break;const tx=Math.floor(w.x),ty=Math.floor(w.y),arbeitet=w.job&&!w.path;o.position.set(w.x,YL(Lv(tx,ty))+(w.path?Math.abs(Math.sin(GB.t*9+n))*.03:0),w.y);o.rotation.set(arbeitet?Math.sin(GB.t*8+n)*.25:0,w.r||0,0);o.scale.setScalar(1.25);o.updateMatrix();L.setMatrixAt(n,o.matrix);L.setColorAt(n,UM.kittel[w.typ==='rep'&&w.job?3:w.last?2:1]);n++}
  L.count=n;L.instanceMatrix.needsUpdate=true;if(L.instanceColor)L.instanceColor.needsUpdate=true}}
 // Symbole: Baustelle und nicht erreichbar
@@ -54,3 +55,4 @@ function persDraw(){const W=ARB.w,bau=W.filter(w=>w.job&&w.typ==='bau').length,r
 $('lw').addEventListener('click',ev=>{const b=ev.target.closest('button[data-pe]');if(!b)return;if(+b.dataset.pe>0){if(G.arb>=ARB.max){toast('Mehr als '+ARB.max+' Mitarbeiter gehen nicht.');return}if((G.cr||0)<ARB.preis){toast('Für die Einstellung fehlen Credits.');return}G.cr-=ARB.preis;G.arb++}else if(G.arb>0)G.arb--;persDraw()});
 setInterval(()=>{if(!G||SHELL.titel)return;const frei=ARB.w.filter(w=>!w.job).length;$('persn').textContent=frei+' frei / '+(G.arb??3);$('pers').classList.toggle('rot',(G.cr||0)<0);if(!$('lw').hidden&&lwTab==='pers'&&!$('lwbody').matches(':hover'))persDraw()},1000);
 ERKL['Mitarbeiter']=['Mitarbeiter','Dein Werk hat eine Belegschaft. Du startest mit 3 Mitarbeitern und 500 Credits.',['Neue Gebäude sind zuerst eine Baustelle. Ein Mitarbeiter läuft von der Zentrale hin und baut sie auf. Bänder, Greifarme, Verteiler, Masten und Gleise stehen sofort.','Mitarbeiter brauchen einen Weg über Land. Liegt Wasser dazwischen, zeigt die Baustelle „nicht erreichbar“. Bau dann mit dem Fundament einen Übergang.','Jeder Mitarbeiter kostet 3 Credits Lohn pro Minute. Geld bekommst du für jedes gelieferte Teil und als Prämie für jeden Meilenstein.','Mehr Leute stellst du in der Leitwarte unter Personal ein, oder mit einem Klick auf „Personal“ rechts oben.','Ab Meilenstein 2 gibt es die Sammelstelle: Mitarbeiter tragen von dort Material zu Fuß in die Zentrale.'],'Geht das Geld aus, arbeiten alle nur noch mit 40 % Tempo. Später reparieren Mitarbeiter auch defekte Maschinen.'];
+//@/anzeige

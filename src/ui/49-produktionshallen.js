@@ -1,7 +1,10 @@
 /* ====== Produktionshallen: ein Komplex wird zur geschlossenen Halle mit Toren und gemessenem Durchsatz ====== */
-const HAL={feld:new Uint16Array(N*N),io:new Map(),gr:new T.Group(),neu:true,offen:0,
- tor:new T.MeshStandardMaterial({color:0x0b0e10,roughness:.9}),rahmen:new T.MeshStandardMaterial({color:0xe0a81f,roughness:.55,metalness:.2}),wand:M('Paneel').clone(),dach:M('Blechdach').clone()};HAL.wand.side=HAL.dach.side=T.DoubleSide;
+//@sim
+const HAL={feld:new Uint16Array(N*N),io:new Map(),neu:true,offen:0};
+//@/sim
+Object.assign(HAL,{gr:new T.Group(),tor:new T.MeshStandardMaterial({color:0x0b0e10,roughness:.9}),rahmen:new T.MeshStandardMaterial({color:0xe0a81f,roughness:.55,metalness:.2}),wand:M('Paneel').clone(),dach:M('Blechdach').clone()});HAL.wand.side=HAL.dach.side=T.DoubleSide;
 scene.add(HAL.gr);
+//@sim
 const hallen=()=>(G&&G.kx||[]).filter(x=>x.halle);
 function hallenFeld(){HAL.feld.fill(0);for(const x of hallen())for(let y=x.y0;y<=x.y1;y++)HAL.feld.fill(x.id,y*N+x.x0,y*N+x.x1+1);for(const e of E.values())e.hh=HAL.feld[e.y*N+e.x]||0;HAL.neu=true}
 // Zählt jede Übergabe über eine Hallengrenze (Band, Rohr, Greifarm, Maschinenausgang)
@@ -17,6 +20,7 @@ function hallePruefen(x){const w=x.x1-x.x0+1,h=x.y1-x.y0+1;if(w<4||h<4)return'Ei
  for(const e of E.values()){const s=K[e.k].s;if(e.x+s<=x.x0||e.x>x.x1||e.y+s<=x.y0||e.y>x.y1)continue;if(e.x<x.x0||e.y<x.y0||e.x+s-1>x.x1||e.y+s-1>x.y1)return K[e.k].n+' ragt über den Rand des Komplexes.';if(e.k==='zentrale')return'Die Zentrale kann nicht in einer Halle stehen.';if(e.bau)return'Im Komplex wird noch gebaut.';if(e.inv)n++}
  if(!n)return'Im Komplex steht keine Maschine.';for(const q of hallen())if(q!==x&&q.x0<=x.x1&&q.x1>=x.x0&&q.y0<=x.y1&&q.y1>=x.y0)return'Der Komplex überschneidet sich mit '+q.name+'.';return''}
 const halleKosten=x=>({eisenplatte:2*(x.x1-x.x0+x.y1-x.y0+2)*2,stein:(x.x1-x.x0+1)*(x.y1-x.y0+1)});
+//@/sim
 function halleBauen(x){const f=hallePruefen(x);if(f){toast(f);return false}const c=halleKosten(x);if(!G.frei){for(const k in c)if((G.stock[k]||0)<c[k]){toast(`Für die Halle fehlen ${c[k]-(G.stock[k]||0)} ${ITEMS[k][0]}.`);return false}for(const k in c)G.stock[k]-=c[k]}
  x.halle=true;HAL.io.delete(x.id);hallenFeld();select(null);toast(x.name+' ist jetzt eine Produktionshalle. Die Anlagen laufen darin weiter, ein Klick auf die Halle zeigt den Durchsatz.');return true}
 function halleOeffnen(x){x.halle=false;HAL.io.delete(x.id);hallenFeld();halleZeigen(0);toast(x.name+' ist wieder offen.')}
@@ -49,7 +53,10 @@ function halleModell(x){const gr=new T.Group(),X0=x.x0,X1=x.x1+1,Z0=x.y0,Z1=x.y1
  const sm=new T.Mesh(new T.PlaneGeometry(Math.min(5,lang*.6),Math.min(5,lang*.6)*.1875),new T.MeshStandardMaterial({map:hallenSchild(x.name),roughness:.6}));
  if(laengs)sm.position.set((X0+X1)/2,y1-.75,Z1+.03);else{sm.position.set(X1+.03,y1-.75,(Z0+Z1)/2);sm.rotation.y=Math.PI/2}gr.add(sm);return gr}
 function hallenModelle(){HAL.neu=false;for(const g of HAL.gr.children.slice()){HAL.gr.remove(g);g.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material.map&&o.material.map.isCanvasTexture){o.material.map.dispose();o.material.dispose()}}})}for(const x of hallen())HAL.gr.add(halleModell(x))}
-EV.an('liste',hallenFeld);EV.an('bild',()=>{if(HAL.neu)hallenModelle()});
+//@sim
+EV.an('liste',hallenFeld);
+//@/sim
+EV.an('bild',()=>{if(HAL.neu)hallenModelle()});
 /* --- Fenster --- */
 document.head.insertAdjacentHTML('beforeend','<style>#halle{position:fixed;right:14px;bottom:110px;width:300px;padding:11px 13px;display:grid;gap:7px;z-index:6}#halle h3{margin:0;font-size:22px}#halle .chips{display:flex;flex-wrap:wrap;gap:4px 10px;font:13px var(--mono)}@media (max-width:700px){#halle{right:8px;bottom:76px;width:240px}}</style>');
 document.body.insertAdjacentHTML('beforeend','<div id="halle" class="tafel" hidden></div>');

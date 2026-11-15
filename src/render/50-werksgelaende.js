@@ -1,6 +1,8 @@
 /* ====== Werksgelände: Straßen, auf denen Arbeiter schneller laufen, und Laternen ====== */
+//@sim
 K.strasse={n:'Straße',s:1,c:{stein:2},info:'Asphaltierter Weg. Mitarbeiter und Träger laufen darauf fast doppelt so schnell. Zieh eine Strecke wie beim Band. Laternen stellen sich von selbst auf.'};
 TOOLS.splice(TOOLS.indexOf('fundament')+1,0,'strasse');NOWEAR.add('strasse');
+//@/sim
 mats.Asphalt=new T.MeshStandardMaterial({color:0x34373a,roughness:.94,metalness:0});
 MODELS.strasse=[{g:new T.BoxGeometry(1,.05,1).translate(0,.025,0),m:'Asphalt',piv:null}];MHOEHE.strasse=.3;
 const STR=(function(){const R=rnd(815),bild=linie=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle='#3a3d40';g.fillRect(0,0,256,256);
@@ -16,7 +18,9 @@ const STR=(function(){const R=rnd(815),bild=linie=>{const c=document.createEleme
  return{max:20000,lmax:3000,gerade:netz(fl,mat(bild(true)),20000),platz:netz(fl,mat(bild(false)),20000),
   mast:netz(new T.CylinderGeometry(.035,.05,2.7,8).translate(0,1.35,0),stahl,3000,true),arm:netz(new T.BoxGeometry(.55,.05,.07).translate(.24,2.7,0),stahl,3000,true),
   kopf:netz(new T.BoxGeometry(.26,.06,.14).translate(.42,2.65,0),kopf,3000),schein:netz(new T.PlaneGeometry(5,5).rotateX(-Math.PI/2),schein,3000),kopfM:kopf,scheinM:schein}})();
+//@sim
 const istStr=(x,y)=>{const q=at(x,y);return !!q&&q.k==='strasse'};
+//@/sim
 function strassenBauen(){const o=GB.ob,l=byKind.strasse||[];let ng=0,np=0,nl=0;o.scale.set(1,1,1);
  for(const e of l){const y=YL(e.z)+.052,a=istStr(e.x+1,e.y),b=istStr(e.x-1,e.y),c=istStr(e.x,e.y+1),d=istStr(e.x,e.y-1),ow=a||b,ns=c||d,ger=ow!==ns||(!ow&&!ns);
   o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,ns&&!ow?Math.PI/2:0,0);o.updateMatrix();

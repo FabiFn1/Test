@@ -44,6 +44,8 @@ Vite baut den Kern (`src/kern`, TypeScript) und setzt danach die Spieldatei aus 
 
 Befehle: `npm run build` (Spieldatei), `npm run dev` (baut bei jeder Änderung neu), `npm test`, `npm run typecheck`, `npm start` (Desktop-Fassung), `npm run dist` (Windows-Paket).
 
+**Simulation ohne Grafik:** `build/sim.js` enthält nur die Simulation und läuft ohne Fenster (Grundlage für den Simulations-Thread). Es entsteht aus denselben Modulen: Dateien in `src/sim/` ganz, außer Blöcken zwischen `//@anzeige` und `//@/anzeige`; aus allen anderen Dateien nur Blöcke zwischen `//@sim` und `//@/sim`. Davor steht `src/sim/00-simvorspann.js`. Wer Simulationslogik außerhalb von `src/sim/` schreibt, muss sie markieren; `tests/sim.test.ts` prüft, dass das Paket lädt und rechnet.
+
 Neue Module hängen sich über den Ereignis-Bus ein, statt Funktionen zu überschreiben: `EV.an('schritt', h => …)` (jeder Simulationsschritt), `'bild'` (jedes Bild), `'liste'` (Bauwerke geändert), `'gebaeude'` (Gebäudemodelle neu aufgebaut), `'erfolg'`.
 
 ## Steam

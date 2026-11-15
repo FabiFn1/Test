@@ -3,6 +3,7 @@ let hoverT=null,pickRez=null,fundUp=0,tool=null,rot=0,sel=null,hover=[0,0],drag=
 const ray=new T.Raycaster(),ndc=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3();
 function pick(ev){const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);const o=ray.ray.origin,d=ray.ray.direction;if(d.y>=-1e-3)return null;const top=YL(8);let s=Math.max(0,(o.y-top)/-d.y);for(let i=0;i<1600;i++){const x=o.x+d.x*s,y=o.y+d.y*s,z=o.z+d.z*s;if(y<=YL(Lv(Math.floor(x),Math.floor(z)))||y<-2)return[x,z];s+=.12}return null}
 function tileOf(w,s){return[Math.floor(w[0]-(s-1)/2),Math.floor(w[1]-(s-1)/2)]}
+//@sim
 function afford(k,mult=1){for(const i in K[k].c)if((G.stock[i]||0)<K[k].c[i]*mult)return false;return true}
 function pay(k,sg=-1){for(const i in K[k].c)G.stock[i]=(G.stock[i]||0)+sg*K[k].c[i]}
 function canPlace(k,x,y){const lv=Lv(x,y);if(lv<1)return false;for(const[a,b]of foot(k,x,y)){if(a<0||b<0||a>=N||b>=N)return false;if(HAL.feld[b*N+a])return false;if(Lv(a,b)!==lv)return false;const e=at(a,b);if(e&&!(isBelt(e)&&(BK(k)||k==='verteiler'||k==='kreuzung'||k==='sortierer')))return false}
@@ -15,6 +16,7 @@ function fundArea(a,b){const[x0,x1]=[Math.min(a[0],b[0]),Math.max(a[0],b[0])],[y
 function buildFund(a,b){let n=0,lack=false;for(const[x,y,c,ht,free]of fundArea(a,b)){if(!free)continue;const cost=(ht-c)*2;if((G.stock.stein||0)<cost){lack=true;break}G.stock.stein-=cost;F[y*N+x]=ht;n++}if(lack)toast('Nicht genug Stein für das ganze Fundament.');if(n){dirtyF=dirtyB=dirtyP=true}}
 function removeFund(x,y){const i=y*N+x;if(F[i]>TER[i]&&!at(x,y)){G.stock.stein=(G.stock.stein||0)+(F[i]-TER[i])*2;F[i]=0;dirtyF=dirtyB=true;return true}return false}
 function remove(e){if(e.k==='zentrale'){toast('Die Zentrale bleibt stehen.');return}if(e.hh){toast('Das steht in einer Produktionshalle. Öffne die Halle zuerst.');return}pay(e.k,1);del(e);relist()}
+//@/sim
 function linePath(a,b){const[dx,dy]=[b[0]-a[0],b[1]-a[1]];const t=[];let x=a[0],y=a[1];const hz=Math.abs(dx)>=Math.abs(dy);const sx=Math.sign(dx),sy=Math.sign(dy);t.push([x,y]);if(hz){while(x!==b[0]){x+=sx;t.push([x,y])}while(y!==b[1]){y+=sy;t.push([x,y])}}else{while(y!==b[1]){y+=sy;t.push([x,y])}while(x!==b[0]){x+=sx;t.push([x,y])}}
  const o=[];for(let i=0;i<t.length;i++){const n=t[i+1],pv=t[i-1];let d=rot;if(n)d=n[0]>t[i][0]?0:n[0]<t[i][0]?2:n[1]>t[i][1]?1:3;else if(pv)d=o[i-1][2];o.push([t[i][0],t[i][1],d])}return o}
 canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('mousedown',e=>{if(e.button===1)e.preventDefault()});

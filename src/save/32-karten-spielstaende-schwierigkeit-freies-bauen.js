@@ -1,4 +1,5 @@
 /* ====== Karten, Spielstände, Schwierigkeit, freies Bauen ====== */
+//@sim
 MS.forEach(m=>{m.need0={...m.need}});
 function schwSetzen(){const f={leicht:.5,schwer:1.5}[G&&G.schw]||1;for(const m of MS)for(const k in m.need0)m.need[k]=Math.max(1,Math.round(m.need0[k]*f))}
 function weltNeu(){weltErz(G.seed||0,{leicht:2,schwer:.85}[G.schw]||1);AMT0.set(AMT);patchTotals();miniB=null;schwSetzen()}
@@ -6,6 +7,7 @@ function weltNeu(){weltErz(G.seed||0,{leicht:2,schwer:.85}[G.schw]||1);AMT0.set(
 {const _p=pay;pay=function(k,sg){if(!G.frei)_p(k,sg)}}
 {const _v=avail;avail=function(){return G.frei?TOOLS.slice():_v()}}
 {const _b=buildFund;buildFund=function(a,b){if(G.frei)G.stock.stein=Math.max(G.stock.stein||0,100000);_b(a,b)}}
+//@/sim
 const SLOTS=3,slotNr=()=>+SK.split('-')[1]||1,MK=n=>'schichtwerk-meta-'+n;
 function slotInfo(n){try{const m=JSON.parse(SPEICHER.getItem(MK(n)));if(m)return m;const s=SPEICHER.getItem('schichtwerk-'+n);if(!s)return null;return SW.platzInfo(JSON.parse(s).G)}catch(e){return null}}
 function slotText(m){if(!m)return'leer';const d=m.d?new Date(m.d).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'';return`Meilenstein ${Math.min(m.ms+1,MS.length)} · ${spielzeit(m.t)} · ${m.frei?'Freies Bauen':{leicht:'Leicht',schwer:'Schwer'}[m.schw]||'Normal'}${d?' · '+d:''}`}

@@ -18,6 +18,7 @@ function spieldatei() {
     },
     closeBundle() {
       require('./scripts/build-game.js').bauen();
+      require('./scripts/build-sim.js').bauen();
     },
   };
 }
