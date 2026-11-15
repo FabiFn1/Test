@@ -10,7 +10,7 @@ function zugStep(e,dt){const z=E.get(e.link),p=z?zugWeg(e):null,zg=e.zug;
  if(zg.s==='hin'){zg.t=Math.min(L,zg.t+dt*5);if(zg.t>=L){if(z.out.length<80){z.out.push(...zg.l);zg.l=[];zg.s='zurueck'}else e.st='blocked'}}
  else{zg.t-=dt*5;if(zg.t<=0)e.zug=null}}
 // Darstellung: Gleise
-const GLEIS={max:8000,teile:MODELS.gleis.map(q=>{const g=q.g.clone();const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setX(i,p.getX(i)*.5+.25);const m=new T.InstancedMesh(g,M(q.m),8000);m.count=0;m.frustumCulled=false;m.receiveShadow=true;scene.add(m);return m})};
+const GLEIS={max:8000,teile:MODELS.gleis.map(q=>{const g=q.g.clone();const p=g.attributes.position;for(let i=0;i<p.count;i++)p.setX(i,p.getX(i)*.5+.25);const m=instMerk(new T.InstancedMesh(g,M(q.m),8000),true);m.count=0;m.frustumCulled=false;m.receiveShadow=true;scene.add(m);return m})};
 function gleisBauen(){const o=GB.ob;let n=0;const l=byKind.gleis||[];for(const e of l){const y=YL(e.z);let k=0;const seg=d=>{if(n>=GLEIS.max)return;o.position.set(e.x+.5,y,e.y+.5);o.rotation.set(0,-d*Math.PI/2,0);o.scale.set(1,1,1);o.updateMatrix();for(const m of GLEIS.teile)m.setMatrixAt(n,o.matrix);n++;k++};
   for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof'))seg(d)}if(!k){seg(0);seg(2)}else if(k===1){for(let d=0;d<4;d++){const q=at(e.x+DX[d],e.y+DY[d]);if(q&&(q.k==='gleis'||q.k==='bahnhof')){seg((d+2)%4);break}}}}
  for(const m of GLEIS.teile){m.count=n;m.instanceMatrix.needsUpdate=true}}

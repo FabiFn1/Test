@@ -79,6 +79,19 @@ describe('InstanzPuffer', () => {
   });
 });
 
+describe('InstanzPuffer direkt', () => {
+  it('schreibt Position, Größe und Farbe in die Puffer', () => {
+    const netz = { count: 0, setMatrixAt() {}, instanceMatrix: { needsUpdate: false, array: new Float32Array(32) }, instanceColor: { needsUpdate: false, array: new Float32Array(6) } };
+    const p = new InstanzPuffer(netz, 2);
+    p.beginne();
+    p.setzeDirekt(1, 2, 3, 2, { r: 0.5, g: 0.25, b: 1 });
+    expect(Array.from(netz.instanceMatrix.array.slice(0, 16))).toEqual([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 1, 2, 3, 1]);
+    expect(Array.from(netz.instanceColor.array.slice(0, 3))).toEqual([0.5, 0.25, 1]);
+    expect(p.setzeDirekt(0, 0, 0, 1)).toBe(true);
+    expect(p.setzeDirekt(0, 0, 0, 1)).toBe(false);
+  });
+});
+
 describe('Spielstand', () => {
   it('legt einen neuen Stand mit Optionen an, ohne das Startlager zu verändern', () => {
     const start = { eisenplatte: 30 };

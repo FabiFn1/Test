@@ -8,7 +8,7 @@ const STR=(function(){const R=rnd(815),bild=linie=>{const c=document.createEleme
   for(let i=0;i<6;i++){g.strokeStyle='rgba(20,20,22,.5)';g.lineWidth=1;g.beginPath();let x=R()*256,y=R()*256;g.moveTo(x,y);for(let j=0;j<5;j++){x+=R()*50-25;y+=R()*50-25;g.lineTo(x,y)}g.stroke()}
   if(linie){g.fillStyle='rgba(225,225,215,.85)';g.fillRect(0,10,256,6);g.fillRect(0,240,256,6);g.fillStyle='rgba(230,200,90,.9)';g.fillRect(48,124,160,8)}
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=8;return t},
- netz=(geo,mat,n,schatten)=>{const m=new T.InstancedMesh(geo,mat,n);m.count=0;m.frustumCulled=false;m.receiveShadow=true;m.castShadow=!!schatten;scene.add(m);return m},
+ netz=(geo,mat,n,schatten)=>{const m=instMerk(new T.InstancedMesh(geo,mat,n),true);m.count=0;m.frustumCulled=false;m.receiveShadow=true;m.castShadow=!!schatten;scene.add(m);return m},
  fl=new T.PlaneGeometry(1,1).rotateX(-Math.PI/2),mat=t=>new T.MeshStandardMaterial({map:t,roughness:.93,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}),
  stahl=new T.MeshStandardMaterial({color:0x59626a,roughness:.5,metalness:.7}),kopf=new T.MeshStandardMaterial({color:0xfff1c8,emissive:0xffd890,emissiveIntensity:0,roughness:.4}),
  sc=document.createElement('canvas');sc.width=sc.height=128;const sg=sc.getContext('2d'),gr=sg.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,214,140,.9)');gr.addColorStop(.5,'rgba(255,200,120,.3)');gr.addColorStop(1,'rgba(255,190,110,0)');sg.fillStyle=gr;sg.fillRect(0,0,128,128);

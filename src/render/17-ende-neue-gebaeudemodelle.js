@@ -1,7 +1,9 @@
 /* ====== Ende Neue Gebäudemodelle ====== */
 const CAP=16000,KCAP={solar:9000,versand:4000,elektroofen:2000,schnellbohrer:2000,ofen:2000,greifer:2000,langgreifer:1500,montagewerk:1200,praezision:1200,fertiger:1200,bohrer:1500,raffinerie:900,oelpumpe:900},BC=90000;const dm=new T.Object3D(),mtx=new T.Matrix4(),pm=new T.Matrix4();const KM={};
-function inst(q,n,shadow=true){const m=new T.InstancedMesh(q.g,M(q.m),n);m.castShadow=shadow;m.receiveShadow=true;m.count=0;m.frustumCulled=false;scene.add(m);return m}
-for(const k of Object.keys(K)){if(!MODELS[k]||k==='fundament'||k==='gleis')continue;const n=k==='mast'||k==='verteiler'||k==='kreuzung'?CAP:k==='zentrale'?1:KCAP[k]||600;KM[k]=MODELS[k].map(q=>({m:inst(q,n),q}))}
+// Kleinteile (shadow=false) erscheinen nicht in der Wasserspiegelung; leere Netze werden vor jedem Bild ausgeblendet
+const INST=[],instMerk=(m,klein)=>{m.userData.klein=klein;INST.push(m);return m};function inst(q,n,shadow=true){const m=new T.InstancedMesh(q.g,M(q.m),n);m.castShadow=shadow;m.userData.klein=!shadow;INST.push(m);m.receiveShadow=true;m.count=0;m.frustumCulled=false;scene.add(m);return m}
+// Schatten werfen nur Gebäude: Bei zehntausenden Bändern und Masten kostet jeder Schattenwurf einen zweiten Durchgang
+for(const k of Object.keys(K)){if(!MODELS[k]||k==='fundament'||k==='gleis')continue;const n=k==='mast'||k==='verteiler'||k==='kreuzung'?CAP:k==='zentrale'?1:KCAP[k]||600;KM[k]=MODELS[k].map(q=>({m:inst(q,n,K[k].s>1&&k!=='solar'),q}))}
 function pmat(e,q,spin){const s=K[e.k].s,a=-e.r*Math.PI/2;dm.position.set(e.x+s/2,YL(e.z),e.y+s/2);dm.rotation.set(0,a,0);dm.scale.set(1,e.bau?Math.max(.05,1-e.bau/e.bau0):1,1);dm.updateMatrix();mtx.copy(dm.matrix);if(q.piv){dm.position.set(q.piv[0],q.piv[1],q.piv[2]);dm.rotation.set(0,spin||0,0);dm.updateMatrix();mtx.multiply(dm.matrix)}return mtx}
 function rebuildK(){for(const k in KM){const l=byKind[k]||[];KM[k].forEach(({m,q})=>{const platz=m.instanceMatrix.count;m.count=Math.min(l.length,platz);l.forEach((e,i)=>{if(i>=platz)return;m.setMatrixAt(i,pmat(e,q));if(q.m==='Rahmen')m.setColorAt(i,C1)});m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true})}
  const l=machines;lamps.count=l.length;l.forEach((e,i)=>{const s=K[e.k].s,h=LAMP[e.k]||[0,2,0],a=-e.r*Math.PI/2,c=Math.cos(a),n=Math.sin(a);dm.position.set(e.x+s/2+h[0]*c+h[2]*n,h[1]+YL(e.z),e.y+s/2-h[0]*n+h[2]*c);dm.rotation.set(0,0,0);dm.scale.setScalar(.075);dm.updateMatrix();lamps.setMatrixAt(i,dm.matrix)});lamps.instanceMatrix.needsUpdate=true;let tn=0;l.forEach(e=>{if(!e.tier)return;const s=K[e.k].s,h=LAMP[e.k]||[0,2,0],a=-e.r*Math.PI/2,c=Math.cos(a),n=Math.sin(a);dm.position.set(e.x+s/2+h[0]*c+h[2]*n,h[1]+YL(e.z)-.08,e.y+s/2-h[0]*n+h[2]*c);dm.rotation.set(0,0,0);dm.scale.set(1,1,1);dm.updateMatrix();tierM.setMatrixAt(tn,dm.matrix);tierM.setColorAt(tn,TC[e.tier]);tn++});tierM.count=tn;tierM.instanceMatrix.needsUpdate=true;if(tierM.instanceColor)tierM.instanceColor.needsUpdate=true;dirtyK=false}
@@ -10,7 +12,7 @@ const lamps=new T.InstancedMesh(new T.SphereGeometry(1,10,8),new T.MeshBasicMate
 const lc={ok:new T.Color(0x53e07a),wait:new T.Color(0xffc21f),blocked:new T.Color(0xff4a3c),noPower:new T.Color(0xff4a3c),defekt:new T.Color(0xff1e1e),off:new T.Color(0x6a7478)};
 const tierM=new T.InstancedMesh(new T.BoxGeometry(.5,.07,.5),new T.MeshStandardMaterial({metalness:.6,roughness:.3}),2000);tierM.count=0;tierM.frustumCulled=false;tierM.setColorAt(0,new T.Color(1,1,1));scene.add(tierM);const TC=[null,new T.Color(0xc9d2d8),new T.Color(0xf0c24a)];
 // Bänder
-const BNAME={0:'band_s',1:'band_l','-1':'band_r',u:'band_u',d:'band_d'};const BM={};for(const s in BNAME)BM[s]=MODELS[BNAME[s]].map(q=>inst(q,s==='0'?BC:s==='u'||s==='d'?4000:16000));
+const BNAME={0:'band_s',1:'band_l','-1':'band_r',u:'band_u',d:'band_d'};const BM={};for(const s in BNAME)BM[s]=MODELS[BNAME[s]].map(q=>inst(q,s==='0'?BC:s==='u'||s==='d'?4000:16000,false));
 const C1=new T.Color(0x2f5e94),C2=new T.Color(0xe0a81f),C3=new T.Color(0xc23a2a);
 function rebuildB(){shapes();const c={0:0,1:0,'-1':0,u:0,d:0};for(const b of belts){if(b.k==='leitung')continue;const s=b.sl>0?'u':b.sl<0?'d':b.cv;const j=c[s]++;dm.position.set(b.x+.5,YL(b.z),b.y+.5);dm.rotation.set(0,-b.r*Math.PI/2,0);dm.scale.set(1,1,1);dm.updateMatrix();const q=MODELS[BNAME[s]];BM[s].forEach((m,i)=>{m.setMatrixAt(j,dm.matrix);if(q[i].m==='Rahmen')m.setColorAt(j,b.k==='schnellband'?C2:b.k==='expressband'?C3:C1)})}
  for(const s in BM)BM[s].forEach(m=>{m.count=c[s];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true});dirtyB=false}
@@ -19,15 +21,22 @@ const FM=MODELS.fundament.map(q=>inst(q,16000));let dirtyF=true;
 function rebuildF(){let n=0;dm.rotation.set(0,0,0);dm.scale.set(1,1,1);for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=y*N+x;if(F[i]>TER[i])for(let l=F[i];l>TER[i]&&n<16000;l--){dm.position.set(x+.5,YL(l),y+.5);dm.updateMatrix();for(const m of FM)m.setMatrixAt(n,dm.matrix);n++}}for(const m of FM){m.count=n;m.instanceMatrix.needsUpdate=true}drawGrid(true);dirtyF=false}
 // Material auf Bändern
 const IG={lump:new T.DodecahedronGeometry(.12),plate:new T.BoxGeometry(.3,.06,.3),part:new T.CylinderGeometry(.13,.13,.11,8)};const IM={};const IC=60000;
-for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=true;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
+for(const t in IG){const m=new T.InstancedMesh(IG[t],new T.MeshStandardMaterial({roughness:.5,metalness:t==='lump'?0:.45,flatShading:t==='lump'}),IC);m.count=0;m.frustumCulled=false;m.castShadow=false;m.setColorAt(0,new T.Color(1,1,1));scene.add(m);IM[t]=m}
 const icol={};for(const k in ITEMS)icol[k]=new T.Color(ITEMS[k][1]);
 const IY=.345+.06;
-const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);
+const IP={};for(const t in IM)IP[t]=new SW.InstanzPuffer(IM[t],IC);const IP_NETZE=Object.values(IM);
 let itemBild=0;
-function drawItems(){// Weit herausgezoomt: Teile größer zeichnen, damit die Bänder nicht leer wirken, dafür nur jedes zweite Bild neu setzen
- const weit=C.dist>200,gr=weit?Math.min(2.8,C.dist/200):1;if(weit&&++itemBild%2)return;for(const t in IP)IP[t].beginne();dm.rotation.set(0,0,0);dm.scale.set(gr,gr,gr);const put=(k,x,y,z)=>{dm.position.set(x,y,z);dm.updateMatrix();IP[ITEMS[k][2]].setze(dm.matrix,icol[k])};
- const sicht=C.dist*1.25+30;for(const b of belts){if(b.k==='leitung'||b.hh||Math.abs(b.x-C.x)>sicht||Math.abs(b.y-C.z)>sicht)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2,zz=0;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;if(weit&&zz++&1)continue;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
- for(const e of splits){const cx=e.x+.5,cz=e.y+.5;if(e.k==='kreuzung'){for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}}
+// Sichtbarer Bodenausschnitt: die vier Bildecken auf die Bodenebene projiziert, mit Rand
+const SICHT=[0,0,N,N];
+function sichtFeld(){const r=new T.Raycaster(),v=new T.Vector2(),pl=new T.Plane(new T.Vector3(0,1,0),0),p=new T.Vector3();let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9,weit=false;
+ for(const[a,b]of[[-1,-1],[1,-1],[-1,1],[1,1]]){v.set(a,b);r.setFromCamera(v,cam);if(r.ray.intersectPlane(pl,p)&&r.ray.direction.y<-.02){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);z0=Math.min(z0,p.z);z1=Math.max(z1,p.z)}else weit=true}
+ if(weit){const d=C.dist*3+200;x0=Math.min(x0,C.x-d);x1=Math.max(x1,C.x+d);z0=Math.min(z0,C.z-d);z1=Math.max(z1,C.z+d)}
+ SICHT[0]=x0-6;SICHT[1]=z0-6;SICHT[2]=x1+6;SICHT[3]=z1+6}
+// Teile auf Bändern: Matrizen und Farben direkt in die Puffer schreiben (keine Object3D-Rechnung je Teil)
+function drawItems(){const weit=C.dist>200,gr=weit?Math.min(2.8,C.dist/200):1;if(weit&&++itemBild%2)return;sichtFeld();const[sx0,sz0,sx1,sz1]=SICHT;
+ for(const t in IP)IP[t].beginne();const put=(k,x,y,z)=>IP[ITEMS[k][2]].setzeDirekt(x,y,z,gr,icol[k]);
+ for(const b of belts){if(b.k==='leitung'||b.hh||!b.it.length||b.x<sx0||b.x>sx1||b.y<sz0||b.y>sz1)continue;const d=b.r,cx=b.x+.5,cz=b.y+.5,dx=DX[d],dy=DY[d],y0=YL(b.z),ex=paused?0:SIM.rest*K[b.k].v;let pv=2,zz=0;for(const q of b.it){const qt=Math.max(q.t,Math.min(q.t+ex,pv-GAP,1));pv=qt;if(weit&&zz++&1)continue;let lx,lz,yy=0;if(b.cv===0){lx=-.5+qt;lz=0;if(b.sl){const u=qt*qt*(3-2*qt);yy=b.sl>0?u*H:(1-u)*H}}else{const f=qt*Math.PI/2;lx=.5-.5*Math.cos(f);lz=b.cv*(.5-.5*Math.sin(f))}put(q.k,cx+lx*dx-lz*dy,IY+y0+yy,cz+lx*dy+lz*dx)}}
+ for(const e of splits){if(e.k!=='kreuzung'||e.x<sx0||e.x>sx1||e.y<sz0||e.y>sz1)continue;const cx=e.x+.5,cz=e.y+.5;for(const l of e.sl)for(const q of l){const up=q.d%2===e.r%2,lx=-.5+q.t;put(q.k,cx+lx*DX[q.d],IY+YL(e.z)+(up?.44*Math.sin(Math.PI*q.t):0),cz+lx*DY[q.d])}}
  for(const t in IP)IP[t].abschliessen()}
 // Leitungen
 const wires=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0x1a1f22}));scene.add(wires);

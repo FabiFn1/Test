@@ -28,7 +28,7 @@ const MX=(x,y,z,rx,ry,rz,sx,sy,sz)=>MXt(x,y,z,rx,ry,rz,sx,sy,sz).clone();
 function MXt(x,y,z,rx,ry,rz,sx,sy,sz){const o=GB.ob;o.position.set(x,y,z);o.rotation.set(rx||0,ry||0,rz||0);o.scale.set(sx||1,sy||1,sz||1);o.updateMatrix();return o.matrix}
 const BOX=(w,h,d)=>new T.BoxGeometry(w,h,d),CYL=(a,b,h,s)=>new T.CylinderGeometry(a,b,h,s||12);
 // Teil anlegen: kinds = Bauwerke, n = Stück je Maschine
-function teil(id,kinds,geo,mat,n,shadow=true){const m=new T.InstancedMesh(geo,mat,Math.min(4000,600*n));m.count=0;m.frustumCulled=false;m.castShadow=shadow;m.receiveShadow=true;scene.add(m);GB.teile[id]={m,kinds,n,mat};return m}
+function teil(id,kinds,geo,mat,n,shadow=true){const m=instMerk(new T.InstancedMesh(geo,mat,Math.min(4000,600*n)),false);m.count=0;m.frustumCulled=false;m.castShadow=shadow;m.receiveShadow=true;scene.add(m);GB.teile[id]={m,kinds,n,mat};return m}
 // Maschinenmatrix (wie das Modell selbst)
 function mMat(e,out){const s=K[e.k].s;GB.ob.position.set(e.x+s/2,YL(e.z),e.y+s/2);GB.ob.rotation.set(0,-e.r*Math.PI/2,0);GB.ob.scale.set(1,1,1);GB.ob.updateMatrix();return out.copy(GB.ob.matrix)}
 function lokal(e,x,y,z){const s=K[e.k].s,a=-e.r*Math.PI/2,c=Math.cos(a),n=Math.sin(a);return[e.x+s/2+x*c+z*n,YL(e.z)+y,e.y+s/2-x*n+z*c]}

@@ -74,7 +74,9 @@ function wasserSpiegel(t){const u=REAL.wM.uniforms;u.uT.value=t;u.sunD.value.cop
  mc.projectionMatrix.copy(cam.projectionMatrix);mc.projectionMatrixInverse.copy(cam.projectionMatrixInverse);mc.updateMatrixWorld();
  REAL.tm.set(.5,0,0,.5, 0,.5,0,.5, 0,0,.5,.5, 0,0,0,1).multiply(mc.projectionMatrix).multiply(mc.matrixWorldInverse);u.tm.value.copy(REAL.tm);
  const gv=REAL.gras.visible,au=ren.shadowMap.autoUpdate;REAL.wMesh.visible=false;REAL.gras.visible=false;ren.shadowMap.autoUpdate=false;ren.clippingPlanes=REAL.clip;
- ren.setRenderTarget(REAL.rRT);ren.render(scene,mc);
+ // Kleinteile (Bänder, Masten, Solar, Material) spiegeln sich nicht: das spart bei großen Werken die Hälfte der Zeichenaufrufe der Spiegelung
+ const aus=[];for(const m of INST)if(m.visible&&m.userData.klein){m.visible=false;aus.push(m)}for(const m of IP_NETZE)if(m.visible){m.visible=false;aus.push(m)}
+ ren.setRenderTarget(REAL.rRT);ren.render(scene,mc);for(const m of aus)m.visible=true;
  ren.clippingPlanes=[];ren.shadowMap.autoUpdate=au;REAL.wMesh.visible=true;REAL.gras.visible=gv;u.tR.value=REAL.rRT.texture}
 /* --- Bäume: unregelmäßige Kronen, jeder Baum etwas anders gefärbt --- */
 {const P=TREEPARTS();P.forEach(([ge],q)=>{if(q===2)return;const p=ge.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),h=Math.sin(x*12.9+y*78.2+z*37.7)*43758.5,r=h-Math.floor(h);const s=y>1.5?1:.82+r*.36;p.setXYZ(i,x*s+(r-.5)*.18,y+(r-.5)*.25,z*s+(Math.cos(h)*.5)*.18)}p.needsUpdate=true;ge.computeVertexNormals()})}
@@ -125,7 +127,7 @@ function realRT(){const v=ren.getDrawingBufferSize(new T.Vector2()),ms=SET.qual=
  if(REAL.rt){REAL.rt.depthTexture.dispose();REAL.rt.dispose();REAL.aoRT.dispose()}const dt=new T.DepthTexture(v.x,v.y);dt.type=T.UnsignedIntType;
  REAL.rt=new T.WebGLRenderTarget(v.x,v.y,{type:T.HalfFloatType,depthTexture:dt,samples:ms});const ax=Math.ceil(v.x/2),ay=Math.ceil(v.y/2);REAL.aoRT=new T.WebGLRenderTarget(ax,ay,{type:T.UnsignedByteType});
  REAL.aoM.uniforms.res.value.set(ax,ay);REAL.coM.uniforms.ares.value.set(ax,ay)}
-function renderBild(){const t=(performance.now()-REAL.t0)/1000;gebaeudeUpdate();
+function renderBild(){const t=(performance.now()-REAL.t0)/1000;gebaeudeUpdate();for(const m of INST)m.visible=m.count>0;
  const grasAn=SET.gras&&SET.qual!=='niedrig'&&C.dist<105;REAL.gras.visible=grasAn;if(grasAn){if(REAL.grasU)REAL.grasU.value=t;const a=REAL.grasAt;if(!a||Math.abs(a[0]-C.tx)>5||Math.abs(a[1]-C.tz)>5)grasBauen()}
  wasserSpiegel(t);
  if(SET.qual==='niedrig'){ren.setRenderTarget(null);ren.render(scene,cam);return}

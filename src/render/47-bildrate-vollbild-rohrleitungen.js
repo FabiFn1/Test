@@ -16,7 +16,7 @@ function decoKachel(k){const ch=new Set();for(const i of k.tiles){const l=KA.dec
 // Gras seltener neu aufbauen
 {const _g=grasBauen;let gt=0;grasBauen=function(){const n=performance.now();if(REAL.grasAt&&n-gt<350)return;gt=n;_g()}}
 /* --- Rohrleitungen: Flüssigkeiten laufen nur durch Rohre --- */
-const ROHR=(function(){const mat=M('Stahl_Verzinkt'),halb=new T.CylinderGeometry(.13,.13,.5,12,1,true);halb.rotateZ(Math.PI/2);halb.translate(.25,0,0);const mk=(g,m,n)=>{const q=new T.InstancedMesh(g,m,n);q.count=0;q.frustumCulled=false;q.castShadow=true;q.receiveShadow=true;scene.add(q);return q};
+const ROHR=(function(){const mat=M('Stahl_Verzinkt'),halb=new T.CylinderGeometry(.13,.13,.5,12,1,true);halb.rotateZ(Math.PI/2);halb.translate(.25,0,0);const mk=(g,m,n)=>{const q=instMerk(new T.InstancedMesh(g,m,n),true);q.count=0;q.frustumCulled=false;q.castShadow=true;q.receiveShadow=true;scene.add(q);return q};
  const fl=new T.CylinderGeometry(.17,.17,.05,12);fl.rotateZ(Math.PI/2);fl.translate(.47,0,0);
  return{halb:mk(halb,mat,16000),knoten:mk(new T.SphereGeometry(.14,12,8),mat,8000),flansch:mk(fl,M('Lack_Dunkel'),16000),stuetze:mk(new T.BoxGeometry(.07,.2,.07),M('Lack_Dunkel'),8000)}})();
 function rohreBauen(){const o=GB.ob;let nh=0,nk=0,ns=0;for(const b of belts){if(b.k!=='leitung')continue;const y=YL(b.z)+.3,cx=b.x+.5,cz=b.y+.5,arm=d=>{if(nh>=16000)return;o.position.set(cx,y,cz);o.rotation.set(0,-d*Math.PI/2,0);o.scale.set(1,1,1);o.updateMatrix();ROHR.halb.setMatrixAt(nh,o.matrix);ROHR.flansch.setMatrixAt(nh,o.matrix);nh++};

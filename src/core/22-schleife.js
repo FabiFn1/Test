@@ -3,7 +3,8 @@ let miniT=0,last=performance.now(),hudT=0,saveT=0,pwT=0,beltOff=0,trick=0;
 /* Leistungsmessung: gleitender Mittelwert je Bereich in ms pro Bild */
 const LZ={w:{},add(k,ms){this.w[k]=(this.w[k]??ms)*.92+ms*.08}};
 /* Simulation in festen 30 Schritten je Sekunde, unabhängig von der Bildrate */
-const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:8,schritt:h=>{step(h);EV.melde('schritt',h)}});
+// Höchstens 3 Schritte je Bild: Ist die Simulation zu langsam, läuft das Spiel etwas langsamer statt die Bildrate in den Keller zu ziehen
+const SIM=new SW.Simulationsschleife({hz:30,maxSchritte:3,schritt:h=>{step(h);EV.melde('schritt',h)}});
 function frame(now){if(window.__noloop&&!window.__once)return;window.__once=false;const dt=Math.min((now-last)/1000,.1);last=now;panKeys(dt);camUp(dt);
  const chg=dirtyF||dirtyP||dirtyB||dirtyK;if(dirtyF)rebuildF();if(dirtyP)relist();if(dirtyB)rebuildB();if(dirtyK)rebuildK();if(chg)updateDeco();
  if(!paused){const t0=performance.now();SIM.vor(dt*G.speed);LZ.add('sim',performance.now()-t0);
