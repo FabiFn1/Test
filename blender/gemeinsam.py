@@ -66,10 +66,86 @@ def _kante(nt):
     """Hellere, abgenutzte Kanten (Kantenverschleiß) über die Krümmung."""
     g = nt.nodes.new("ShaderNodeNewGeometry")
     r = nt.nodes.new("ShaderNodeValToRGB")
-    r.color_ramp.elements[0].position = 0.56
-    r.color_ramp.elements[1].position = 0.7
+    r.color_ramp.elements[0].position = 0.53
+    r.color_ramp.elements[1].position = 0.6
     nt.links.new(g.outputs["Pointiness"], r.inputs["Fac"])
     return r.outputs["Color"]
+
+
+def _socket_vor(nt, b, eingang):
+    l = next((l for l in nt.links if l.to_socket == b.inputs[eingang]), None)
+    return l.from_socket if l else None
+
+
+def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.0, russ=False):
+    """Realistischere Oberfläche: Bodenschmutz, Schmutz- oder Rostläufer nach unten, Flecken, Ruß oben,
+    dazu ein Relief (Bump) aus der Höhe des Musters plus feinem Rauschen. Wird mitgebacken (Farbe, Normalen)."""
+    nt = m.node_tree
+    b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    c = _socket_vor(nt, b, "Base Color")
+    if c is None:
+        rgb = nt.nodes.new("ShaderNodeRGB")
+        rgb.outputs[0].default_value = b.inputs["Base Color"].default_value
+        c = rgb.outputs[0]
+    tk = nt.nodes.new("ShaderNodeTexCoord")
+    sx = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tk.outputs["Object"], sx.inputs["Vector"])
+
+    def mix(fac, a, farbe, art="MIX"):
+        mx = nt.nodes.new("ShaderNodeMix")
+        mx.data_type = "RGBA"
+        mx.blend_type = art
+        nt.links.new(fac, mx.inputs["Factor"])
+        nt.links.new(a, mx.inputs[6])
+        mx.inputs[7].default_value = (*farbe, 1)
+        return mx.outputs[2]
+
+    def bereich(wert, a, b2, c2, d):
+        r = nt.nodes.new("ShaderNodeMapRange")
+        r.inputs["From Min"].default_value, r.inputs["From Max"].default_value = a, b2
+        r.inputs["To Min"].default_value, r.inputs["To Max"].default_value = c2, d
+        r.clamp = True
+        nt.links.new(wert, r.inputs["Value"])
+        return r.outputs["Result"]
+
+    # Bodenschmutz: die unteren 40 cm dunkler und bräunlich
+    c = mix(bereich(sx.outputs["Z"], 0.0, 0.6, 0.6 * schmutz, 0.0), c, (0.11, 0.09, 0.07))
+    # Läufer: in der Höhe gestrecktes Rauschen
+    st = nt.nodes.new("ShaderNodeVectorMath")
+    st.operation = "MULTIPLY"
+    st.inputs[1].default_value = (4.0, 4.0, 0.22)
+    nt.links.new(tk.outputs["Object"], st.inputs[0])
+    nl = nt.nodes.new("ShaderNodeTexNoise")
+    nl.inputs["Scale"].default_value = 3.0
+    nl.inputs["Detail"].default_value = 6.0
+    nt.links.new(st.outputs["Vector"], nl.inputs["Vector"])
+    c = mix(bereich(nl.outputs["Fac"], 0.5, 0.72, 0.0, 0.6 * schmutz + 0.15), c, laeufer)
+    # Flecken
+    nf = _rauschen(nt, 2.5, 5, 0.6)
+    c = mix(bereich(nf.outputs["Fac"], 0.42, 0.72, 0.0, 0.5 * schmutz), c, (0.45, 0.42, 0.38), "MULTIPLY")
+    # Ruß oben (Schornsteine, Hauben)
+    if russ:
+        c = mix(bereich(sx.outputs["Z"], 2.2, 3.4, 0.0, 0.75), c, (0.04, 0.035, 0.03))
+    nt.links.new(c, b.inputs["Base Color"])
+    # Relief: Musterhöhe plus feines Rauschen
+    fein = _rauschen(nt, 60, 8, 0.7)
+    h = fein.outputs["Fac"]
+    if hoehe is not None:
+        add = nt.nodes.new("ShaderNodeMath")
+        add.operation = "MULTIPLY_ADD"
+        nt.links.new(hoehe, add.inputs[0])
+        add.inputs[1].default_value = 4.0
+        nt.links.new(fein.outputs["Fac"], add.inputs[2])
+        h = add.outputs[0]
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = relief
+    bump.inputs["Distance"].default_value = 0.01
+    nt.links.new(h, bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    # Rauheit leicht streuen
+    rr = b.inputs["Roughness"].default_value
+    nt.links.new(bereich(nf.outputs["Fac"], 0.3, 0.7, max(0, rr - 0.12), min(1, rr + 0.12)), b.inputs["Roughness"])
+    return m
 
 
 def lack(name, farbe, rauh=0.45, metall=0.3, verschleiss=True):
@@ -86,7 +162,7 @@ def lack(name, farbe, rauh=0.45, metall=0.3, verschleiss=True):
     nt.links.new(c, b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = rauh
     b.inputs["Metallic"].default_value = metall
-    return m
+    return _veredeln(m, relief=0.2, laeufer=(0.3, 0.12, 0.04) if verschleiss else (0.2, 0.18, 0.16))
 
 
 def stahl(name, farbe=(0.30, 0.31, 0.32), rauh=0.38):
@@ -95,7 +171,7 @@ def stahl(name, farbe=(0.30, 0.31, 0.32), rauh=0.38):
     nt.links.new(_mische(nt, n.outputs["Fac"], tuple(v * 0.7 for v in farbe), farbe), b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = rauh
     b.inputs["Metallic"].default_value = 0.85
-    return m
+    return _veredeln(m, relief=0.25, laeufer=(0.28, 0.11, 0.04), russ=True)
 
 
 def rost(name):
@@ -110,7 +186,7 @@ def rost(name):
     nt.links.new(r.outputs["Color"], b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = 0.8
     b.inputs["Metallic"].default_value = 0.45
-    return m
+    return _veredeln(m, hoehe=n.outputs["Fac"], relief=0.6, laeufer=(0.15, 0.05, 0.02), russ=True)
 
 
 def beton(name, hell=0.55):
@@ -120,7 +196,7 @@ def beton(name, hell=0.55):
     nt.links.new(c, b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = 0.88
     b.inputs["Metallic"].default_value = 0.0
-    return m
+    return _veredeln(m, hoehe=n.outputs["Fac"], relief=0.45, schmutz=0.7)
 
 
 def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, radius=0.56):
@@ -151,7 +227,8 @@ def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, 
     br.inputs["Scale"].default_value = skala
     br.inputs["Mortar Size"].default_value = 0.018
     br.inputs["Color1"].default_value = (*farbe, 1)
-    br.inputs["Color2"].default_value = tuple(v * 0.72 for v in farbe) + (1,)
+    br.inputs["Color2"].default_value = tuple(v * 0.55 for v in farbe) + (1,)
+    br.inputs["Bias"].default_value = -0.2
     br.inputs["Mortar"].default_value = (*fuge, 1)
     br.offset = 0.5
     nt.links.new(vec.outputs["Vector"], br.inputs["Vector"])
@@ -159,12 +236,17 @@ def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, 
     mx = nt.nodes.new("ShaderNodeMix")
     mx.data_type = "RGBA"
     mx.blend_type = "MULTIPLY"
-    mx.inputs["Factor"].default_value = 0.35
+    mx.inputs["Factor"].default_value = 0.6
     nt.links.new(br.outputs["Color"], mx.inputs[6])
     nt.links.new(n.outputs["Color"], mx.inputs[7])
     nt.links.new(mx.outputs[2], b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = 0.9
-    return m
+    # Fugen liegen tiefer als die Steine
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(br.outputs["Fac"], inv.inputs[1])
+    return _veredeln(m, hoehe=inv.outputs[0], relief=0.9, schmutz=0.6, russ=True)
 
 
 def wellblech(name, farbe=(0.55, 0.57, 0.58), rauh=0.42, metall=0.6, skala=9.0, senkrecht=True):
@@ -188,7 +270,7 @@ def wellblech(name, farbe=(0.55, 0.57, 0.58), rauh=0.42, metall=0.6, skala=9.0, 
     nt.links.new(mx.outputs[2], b.inputs["Base Color"])
     b.inputs["Roughness"].default_value = rauh
     b.inputs["Metallic"].default_value = metall
-    return m
+    return _veredeln(m, hoehe=w.outputs["Fac"], relief=0.8, laeufer=(0.26, 0.12, 0.05))
 
 
 def leuchten(name, farbe=(1.0, 0.42, 0.08), staerke=6.0):
@@ -424,7 +506,11 @@ def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
     farbe = _backe(koerper, "DIFFUSE", groesse, {"COLOR"}, "farbe")
     ao = _backe(koerper, "AO", groesse, None, "ao")
     rauh = _backe(koerper, "ROUGHNESS", groesse // 2, None, "rauh")
-    farbe[..., :3] *= (0.35 + 0.65 * ao[..., :3])
+    bpy.context.scene.render.bake.normal_space = "TANGENT"
+    normal = _backe(koerper, "NORMAL", groesse // 2, None, "normal")
+    from PIL import Image
+    Image.fromarray((np.clip(normal[::-1, :, :3], 0, 1) * 255).astype(np.uint8)).save(os.path.join(AUS, f"{name}_normal.jpg"), quality=92)
+    farbe[..., :3] *= (0.12 + 0.88 * ao[..., :3] ** 1.3)
     _jpeg(farbe, os.path.join(AUS, f"{name}_farbe.jpg"))
     _metall_als_emission(koerper)
     metall = _backe(koerper, "EMIT", groesse // 2, None, "metall")
@@ -454,6 +540,12 @@ def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
     print(name, sum(t["n_dreiecke"] for t in teile_json), "Dreiecke")
     # Für die Vorschau: gebackene Texturen statt der prozeduralen Materialien, so wie im Spiel
     m, nt, b = _knoten("Atlas")
+    nm = nt.nodes.new("ShaderNodeNormalMap")
+    tn = nt.nodes.new("ShaderNodeTexImage")
+    tn.image = bpy.data.images.load(os.path.join(AUS, f"{name}_normal.jpg"))
+    tn.image.colorspace_settings.name = "Non-Color"
+    nt.links.new(tn.outputs["Color"], nm.inputs["Color"])
+    nt.links.new(nm.outputs["Normal"], b.inputs["Normal"])
     for datei, eingang, farbig in ((f"{name}_farbe.jpg", "Base Color", True), (f"{name}_orm.jpg", None, False)):
         t = nt.nodes.new("ShaderNodeTexImage")
         t.image = bpy.data.images.load(os.path.join(AUS, datei))
