@@ -423,6 +423,111 @@ def rohr(name, mat, punkte, r):
     return _fertig(ob, mat, 0)
 
 
+def _richtung(a, b):
+    from mathutils import Vector
+    v = Vector(b) - Vector(a)
+    return v.length, v.to_track_quat("Z", "Y").to_euler()
+
+
+def zwischen(name, mat, a, b, r, ecken=16, fase=0.0):
+    """Zylinder von Punkt a nach Punkt b (Stäbe, Streben, kurze Rohrstücke)."""
+    l, rot = _richtung(a, b)
+    m = tuple((p + q) / 2 for p, q in zip(a, b))
+    return zylinder(name, mat, r, l, m, ecken=ecken, fase=fase, drehung=rot)
+
+
+def rohr_rund(name, mat, punkte, r, bogen=None, flansche=True):
+    """Rohr mit runden Bögen an den Knickpunkten und Flanschen an den Enden (und an jedem geraden Stück)."""
+    from mathutils import Vector
+    bogen = bogen if bogen is not None else max(r * 2.5, 0.06)
+    P = [Vector(p) for p in punkte]
+    pfad = [P[0]]
+    for i in range(1, len(P) - 1):
+        a, m, b = P[i - 1], P[i], P[i + 1]
+        da, db = (a - m), (b - m)
+        ra = min(bogen, da.length / 2)
+        rb = min(bogen, db.length / 2)
+        s0, s1 = m + da.normalized() * ra, m + db.normalized() * rb
+        for k in range(9):  # quadratischer Bézier als Bogen
+            t = k / 8
+            pfad.append((1 - t) ** 2 * s0 + 2 * (1 - t) * t * m + t ** 2 * s1)
+    pfad.append(P[-1])
+    teile = [rohr(name, mat, [tuple(p) for p in pfad], r)]
+    if flansche:
+        for i, (a, b) in enumerate(((P[0], P[1]), (P[-1], P[-2]))):
+            d = (b - a).normalized()
+            teile.append(zwischen(name + "_flansch", mat, tuple(a + d * 0.005), tuple(a + d * 0.035), r * 1.55, ecken=20, fase=0.004))
+    return teile
+
+
+def ventil(name, mat, ort, r=0.06, hoch=0.08):
+    """Handrad mit Speichen auf einer Spindel."""
+    x, y, z = ort
+    t = [zylinder(name + "_spindel", mat, 0.012, hoch, (x, y, z + hoch / 2), ecken=8, fase=0),
+         ring(name + "_rad", mat, r, 0.009, (x, y, z + hoch), ecken=24)]
+    for i in range(4):
+        a = i / 4 * math.tau
+        t.append(zwischen(name + "_speiche", mat, (x, y, z + hoch), (x + r * math.cos(a), y + r * math.sin(a), z + hoch), 0.006, ecken=6))
+    return t
+
+
+def gitterrost(name):
+    """Gitterrost: dunkle Stäbe mit Zwischenräumen (als Farbe und Relief gebacken)."""
+    m, nt, b = _knoten(name)
+    tk = nt.nodes.new("ShaderNodeTexCoord")
+    br = nt.nodes.new("ShaderNodeTexBrick")
+    br.inputs["Scale"].default_value = 40
+    br.inputs["Mortar Size"].default_value = 0.09
+    br.inputs["Brick Width"].default_value = 0.25
+    br.inputs["Row Height"].default_value = 0.25
+    br.offset = 0.0
+    br.inputs["Color1"].default_value = (0.03, 0.03, 0.03, 1)
+    br.inputs["Color2"].default_value = (0.04, 0.035, 0.03, 1)
+    br.inputs["Mortar"].default_value = (0.32, 0.32, 0.31, 1)
+    nt.links.new(tk.outputs["Object"], br.inputs["Vector"])
+    nt.links.new(br.outputs["Color"], b.inputs["Base Color"])
+    b.inputs["Roughness"].default_value = 0.55
+    b.inputs["Metallic"].default_value = 0.7
+    return _veredeln(m, hoehe=br.outputs["Fac"], relief=0.8, schmutz=0.7)
+
+
+def buehne(name, rost_mat, rahmen_mat, x0, y0, x1, y1, z, gelaender_mat=None, offen=()):
+    """Bühne: Gitterrost mit Randträgern und Fußleisten, optional Geländer an den Seiten (ohne die in offen: 'x0','x1','y0','y1')."""
+    t = [quader(name, rost_mat, (x1 - x0, y1 - y0, 0.03), ((x0 + x1) / 2, (y0 + y1) / 2, z - 0.015), 0.004)]
+    seiten = {"y0": [(x0, y0, z), (x1, y0, z)], "y1": [(x0, y1, z), (x1, y1, z)], "x0": [(x0, y0, z), (x0, y1, z)], "x1": [(x1, y0, z), (x1, y1, z)]}
+    for k, (a, b) in seiten.items():
+        t.append(zwischen(name + "_traeger", rahmen_mat, (a[0], a[1], z - 0.06), (b[0], b[1], z - 0.06), 0.02, ecken=8))
+        if k not in offen:
+            t.append(zwischen(name + "_fussleiste", rahmen_mat, (a[0], a[1], z + 0.04), (b[0], b[1], z + 0.04), 0.012, ecken=6))
+            if gelaender_mat:
+                t += gelaender(name + "_gel_" + k, gelaender_mat, [a, b], hoehe=0.4)
+    return t
+
+
+def treppe(name, mat, a, b, breite=0.3, stufe=0.11, gelaender_mat=None):
+    """Gerade Treppe von a (unten) nach b (oben): Wangen, Stufen, Handlauf."""
+    from mathutils import Vector
+    A, B = Vector(a), Vector(b)
+    d = B - A
+    hor = Vector((d.x, d.y, 0)).normalized()
+    quer = Vector((-hor.y, hor.x, 0)) * (breite / 2)
+    t = []
+    for s in (-1, 1):
+        t.append(zwischen(name + "_wange", mat, tuple(A + quer * s), tuple(B + quer * s), 0.018, ecken=6))
+    n = max(2, int(d.z / stufe))
+    for i in range(1, n):
+        p = A + d * (i / n)
+        t.append(quader(name + "_stufe", mat, (breite, 0.09, 0.012), tuple(p), 0.003, drehung=(0, 0, math.atan2(hor.y, hor.x) + math.pi / 2)))
+    if gelaender_mat:
+        for s in (-1, 1):
+            o = Vector((0, 0, 0.42))
+            t.append(zwischen(name + "_hand", gelaender_mat, tuple(A + quer * s + o), tuple(B + quer * s + o), 0.012, ecken=8))
+            for i in range(0, 4):
+                p = A + d * (i / 3) + quer * s
+                t.append(zwischen(name + "_pfosten", gelaender_mat, tuple(p), tuple(p + o), 0.01, ecken=6))
+    return t
+
+
 def gelaender(name, mat, punkte, hoehe=0.42, r=0.016, pfosten=0.35):
     """Geländer: Handlauf, Knieleiste und Pfosten entlang eines Polygonzugs (z = Laufhöhe)."""
     teile = [rohr(name + "_hand", mat, [(x, y, z + hoehe) for x, y, z in punkte], r),
@@ -635,6 +740,13 @@ def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
 def vorschau(ziel, pfad, abstand=5.5, hoehe=3.2, winkel=0.75, z_mitte=1.2, aufloesung=(900, 700)):
     """Vorschaubild mit den gebackenen Texturen: Sonne, Himmel, Boden."""
     s = bpy.context.scene
+    if "Ziel" in bpy.data.objects:  # zweite Ansicht: Licht und Boden stehen schon, nur die Kamera versetzen
+        cam = s.camera
+        cam.location = (abstand * math.cos(winkel), -abstand * math.sin(winkel), hoehe)
+        bpy.data.objects["Ziel"].location = (0, 0, z_mitte)
+        s.render.filepath = pfad
+        bpy.ops.render.render(write_still=True)
+        return
     w = bpy.data.worlds.new("Himmel")
     s.world = w
     w.use_nodes = True
