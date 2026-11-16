@@ -167,6 +167,30 @@ def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, 
     return m
 
 
+def wellblech(name, farbe=(0.55, 0.57, 0.58), rauh=0.42, metall=0.6, skala=9.0, senkrecht=True):
+    """Trapez- bzw. Wellblech: Rippen als helle und dunkle Streifen, dazu Schmutzschlieren."""
+    m, nt, b = _knoten(name)
+    tk = nt.nodes.new("ShaderNodeTexCoord")
+    w = nt.nodes.new("ShaderNodeTexWave")
+    w.wave_type = "BANDS"
+    w.bands_direction = "X" if senkrecht else "Z"
+    w.inputs["Scale"].default_value = skala
+    w.inputs["Distortion"].default_value = 0.0
+    nt.links.new(tk.outputs["Object"], w.inputs["Vector"])
+    c = _mische(nt, w.outputs["Fac"], tuple(v * 0.72 for v in farbe), farbe)
+    n = _rauschen(nt, 6, 4, 0.5)
+    mx = nt.nodes.new("ShaderNodeMix")
+    mx.data_type = "RGBA"
+    mx.blend_type = "MULTIPLY"
+    mx.inputs["Factor"].default_value = 0.3
+    nt.links.new(c, mx.inputs[6])
+    nt.links.new(n.outputs["Color"], mx.inputs[7])
+    nt.links.new(mx.outputs[2], b.inputs["Base Color"])
+    b.inputs["Roughness"].default_value = rauh
+    b.inputs["Metallic"].default_value = metall
+    return m
+
+
 def leuchten(name, farbe=(1.0, 0.42, 0.08), staerke=6.0):
     m, nt, b = _knoten(name)
     b.inputs["Base Color"].default_value = (*farbe, 1)
@@ -200,6 +224,18 @@ def quader(name, mat, groesse, ort, fase=0.02, drehung=(0, 0, 0)):
     ob.scale = groesse
     bpy.ops.object.transform_apply(scale=True)
     return _fertig(ob, mat, fase)
+
+
+def flaeche(name, mat, punkte, dicke=0.03):
+    """Ebene Fläche aus Eckpunkten (z. B. Giebel), mit Dicke."""
+    me = bpy.data.meshes.new(name)
+    me.from_pydata([tuple(p) for p in punkte], [], [list(range(len(punkte)))])
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    mod = ob.modifiers.new("Dicke", "SOLIDIFY")
+    mod.thickness = dicke
+    mod.offset = 0
+    return _fertig(ob, mat, 0)
 
 
 def zylinder(name, mat, r, h, ort, ecken=24, r_oben=None, fase=0.015, drehung=(0, 0, 0), kappe=True):
@@ -343,10 +379,12 @@ def _jpeg(px, pfad, qualitaet=88):
     Image.fromarray((a * 255).astype(np.uint8)).save(pfad, quality=qualitaet)
 
 
-def _netz(ob):
+def _netz(ob, relativ=False):
     """Dreiecke mit getrennten Ecken je UV-Naht; Spiel-Koordinaten (Y oben)."""
     dg = bpy.context.evaluated_depsgraph_get()
     me = ob.evaluated_get(dg).to_mesh()
+    if not relativ:
+        me.transform(ob.matrix_world)
     me.calc_loop_triangles()
     uv = me.uv_layers.active.data if me.uv_layers else None
     pos, nor, uvs, idx, schluessel = [], [], [], [], {}
@@ -374,6 +412,8 @@ def _netz(ob):
 
 
 def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
+    """bewegt: [(objekte, drehpunkt, spielmaterial)] – drehen sich im Spiel um die senkrechte Achse durch den Drehpunkt.
+    Sie werden nicht gebacken, sondern nutzen ein Material des Spiels (z. B. 'Lack_Dunkel')."""
     """teile: Objekte, die in den Atlas gebacken werden. leuchtend: Objekte mit Leuchtmaterial (bleiben einzeln, Spielmaterial 'Glut').
     bewegt: [(objekte, drehpunkt)] drehende Teile (bleiben einzeln, ebenfalls gebacken)."""
     os.makedirs(AUS, exist_ok=True)
@@ -398,6 +438,15 @@ def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
         glut = _verbinden(list(leuchtend), name + "_glut")
         leuchtend = [glut]
         teile_json.append({**_netz(glut), "m": "Glut"})
+    for obs, dp, spielmat in bewegt:
+        o = _verbinden(list(obs), name + "_dreh")
+        bpy.ops.object.select_all(action="DESELECT")
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        bpy.context.scene.cursor.location = dp
+        bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
+        teil = _netz(o, relativ=True)
+        teile_json.append({**teil, "m": spielmat, "spin": 1, "piv": [round(dp[0], 3), round(dp[2], 3), round(-dp[1], 3)]})
     # Befestigungspunkte (Rauch, Lampe, Glut …) in Spiel-Koordinaten
     sp = {k: [round(x, 3), round(z, 3), round(-y, 3)] for k, (x, y, z) in (punkte or {}).items()}
     with open(os.path.join(AUS, f"{name}.json"), "w") as f:
