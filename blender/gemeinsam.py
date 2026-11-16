@@ -18,6 +18,8 @@ import bpy
 import numpy as np
 
 AUS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ausgabe")
+# Foto-Texturen (CC0, Poly Haven, siehe texturen/quellen.json): je Satz farbe, rauh, hoehe als JPEG
+TEX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "texturen")
 
 
 def leeren():
@@ -77,7 +79,60 @@ def _socket_vor(nt, b, eingang):
     return l.from_socket if l else None
 
 
-def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.0, russ=False):
+def _bild(nt, satz, art, skala, farbig):
+    pfad = os.path.join(TEX, f"{satz}_{art}.jpg")
+    t = nt.nodes.new("ShaderNodeTexImage")
+    t.image = bpy.data.images.load(pfad, check_existing=True)
+    t.image.colorspace_settings.name = "sRGB" if farbig else "Non-Color"
+    t.projection = "BOX"
+    t.projection_blend = 0.3
+    tk = nt.nodes.new("ShaderNodeTexCoord")
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (1 / skala,) * 3
+    nt.links.new(tk.outputs["Object"], mp.inputs["Vector"])
+    nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+    return t
+
+
+def foto(name, satz, skala=1.5, tint=None, metall=0.0, relief=0.6, schmutz=0.6, russ=False):
+    """Material aus einer Foto-Textur (Würfelprojektion, Kantenlänge einer Kachel = skala Meter).
+    tint: Farbe, in die das Foto umgefärbt wird (Helligkeit und Flecken bleiben, z. B. Lack in Gelb)."""
+    m, nt, b = _knoten(name)
+    f = _bild(nt, satz, "farbe", skala, True)
+    c = f.outputs["Color"]
+    if tint:
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(c, bw.inputs["Color"])
+        hell = nt.nodes.new("ShaderNodeMath")
+        hell.operation = "MULTIPLY"
+        hell.inputs[1].default_value = 3.4
+        nt.links.new(bw.outputs["Val"], hell.inputs[0])
+        um = nt.nodes.new("ShaderNodeMix")
+        um.data_type = "RGBA"
+        um.blend_type = "MULTIPLY"
+        um.inputs["Factor"].default_value = 1.0
+        nt.links.new(hell.outputs[0], um.inputs[6])
+        um.inputs[7].default_value = (*tint, 1)
+        # Rostige Stellen (dunkel, rötlich) im Foto bleiben teilweise erhalten
+        mx = nt.nodes.new("ShaderNodeMix")
+        mx.data_type = "RGBA"
+        mx.inputs["Factor"].default_value = 0.82
+        nt.links.new(c, mx.inputs[6])
+        nt.links.new(um.outputs[2], mx.inputs[7])
+        c = mx.outputs[2]
+    nt.links.new(c, b.inputs["Base Color"])
+    r = _bild(nt, satz, "rauh", skala, False)
+    nt.links.new(r.outputs["Color"], b.inputs["Roughness"])
+    b.inputs["Metallic"].default_value = metall
+    h = _bild(nt, satz, "hoehe", skala, False)
+    return _veredeln(m, hoehe=h.outputs["Color"], relief=relief, schmutz=schmutz, russ=russ, rauh_lassen=True)
+
+
+def _fotos(satz):
+    return os.path.exists(os.path.join(TEX, f"{satz}_farbe.jpg"))
+
+
+def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.0, russ=False, rauh_lassen=False):
     """Realistischere Oberfläche: Bodenschmutz, Schmutz- oder Rostläufer nach unten, Flecken, Ruß oben,
     dazu ein Relief (Bump) aus der Höhe des Musters plus feinem Rauschen. Wird mitgebacken (Farbe, Normalen)."""
     nt = m.node_tree
@@ -142,13 +197,17 @@ def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.
     bump.inputs["Distance"].default_value = 0.01
     nt.links.new(h, bump.inputs["Height"])
     nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
-    # Rauheit leicht streuen
+    # Rauheit leicht streuen (nicht bei Foto-Texturen, die bringen ihre eigene mit)
+    if rauh_lassen:
+        return m
     rr = b.inputs["Roughness"].default_value
     nt.links.new(bereich(nf.outputs["Fac"], 0.3, 0.7, max(0, rr - 0.12), min(1, rr + 0.12)), b.inputs["Roughness"])
     return m
 
 
 def lack(name, farbe, rauh=0.45, metall=0.3, verschleiss=True):
+    if verschleiss and _fotos("lack"):
+        return foto(name, "lack", 1.1, tint=farbe, metall=metall, relief=0.5, schmutz=0.5)
     m, nt, b = _knoten(name)
     n = _rauschen(nt, 18)
     c = _mische(nt, n.outputs["Fac"], tuple(v * 0.82 for v in farbe), farbe)
@@ -175,6 +234,8 @@ def stahl(name, farbe=(0.30, 0.31, 0.32), rauh=0.38):
 
 
 def rost(name):
+    if _fotos("lack"):
+        return foto(name, "lack", 1.0, metall=0.45, relief=0.6, schmutz=0.5, russ=True)
     m, nt, b = _knoten(name)
     n = _rauschen(nt, 9, 10, 0.75)
     r = nt.nodes.new("ShaderNodeValToRGB")
@@ -190,6 +251,8 @@ def rost(name):
 
 
 def beton(name, hell=0.55):
+    if _fotos("beton"):
+        return foto(name, "beton", 2.2, tint=(hell * 1.05, hell * 1.03, hell) if hell < 0.5 else None, relief=0.5, schmutz=0.8)
     m, nt, b = _knoten(name)
     n = _rauschen(nt, 14, 9, 0.65)
     c = _mische(nt, n.outputs["Fac"], (hell * 0.78, hell * 0.77, hell * 0.74), (hell, hell * 0.99, hell * 0.95))
@@ -201,6 +264,8 @@ def beton(name, hell=0.55):
 
 def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, radius=0.56):
     """Mauerwerk. radius > 0: zylindrisch um die Z-Achse des Teils (für runde Schächte), sonst eben (Wände entlang X/Y)."""
+    if _fotos("ziegel"):
+        return foto(name, "ziegel", 1.4, relief=0.9, schmutz=0.6, russ=True)
     m, nt, b = _knoten(name)
     tk = nt.nodes.new("ShaderNodeTexCoord")
     sx = nt.nodes.new("ShaderNodeSeparateXYZ")
@@ -251,6 +316,9 @@ def ziegel(name, farbe=(0.42, 0.14, 0.08), fuge=(0.48, 0.46, 0.43), skala=11.0, 
 
 def wellblech(name, farbe=(0.55, 0.57, 0.58), rauh=0.42, metall=0.6, skala=9.0, senkrecht=True):
     """Trapez- bzw. Wellblech: Rippen als helle und dunkle Streifen, dazu Schmutzschlieren."""
+    if _fotos("wellblech"):
+        satz = "wellblech_rost" if not senkrecht else "wellblech"
+        return foto(name, satz, 1.3, tint=None if satz == "wellblech_rost" else farbe, metall=metall, relief=0.9, schmutz=0.6)
     m, nt, b = _knoten(name)
     tk = nt.nodes.new("ShaderNodeTexCoord")
     w = nt.nodes.new("ShaderNodeTexWave")
