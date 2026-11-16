@@ -164,7 +164,7 @@ def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.
         return r.outputs["Result"]
 
     # Bodenschmutz: die unteren 40 cm dunkler und bräunlich
-    c = mix(bereich(sx.outputs["Z"], 0.0, 0.6, 0.6 * schmutz, 0.0), c, (0.11, 0.09, 0.07))
+    c = mix(bereich(sx.outputs["Z"], 0.0, 0.45, 0.4 * schmutz, 0.0), c, (0.16, 0.13, 0.1))
     # Läufer: in der Höhe gestrecktes Rauschen
     st = nt.nodes.new("ShaderNodeVectorMath")
     st.operation = "MULTIPLY"
@@ -174,10 +174,10 @@ def _veredeln(m, hoehe=None, relief=0.35, laeufer=(0.16, 0.12, 0.09), schmutz=1.
     nl.inputs["Scale"].default_value = 3.0
     nl.inputs["Detail"].default_value = 6.0
     nt.links.new(st.outputs["Vector"], nl.inputs["Vector"])
-    c = mix(bereich(nl.outputs["Fac"], 0.5, 0.72, 0.0, 0.6 * schmutz + 0.15), c, laeufer)
+    c = mix(bereich(nl.outputs["Fac"], 0.55, 0.75, 0.0, 0.4 * schmutz + 0.1), c, laeufer)
     # Flecken
     nf = _rauschen(nt, 2.5, 5, 0.6)
-    c = mix(bereich(nf.outputs["Fac"], 0.42, 0.72, 0.0, 0.5 * schmutz), c, (0.45, 0.42, 0.38), "MULTIPLY")
+    c = mix(bereich(nf.outputs["Fac"], 0.45, 0.75, 0.0, 0.3 * schmutz), c, (0.55, 0.52, 0.48), "MULTIPLY")
     # Ruß oben (Schornsteine, Hauben)
     if russ:
         c = mix(bereich(sx.outputs["Z"], 2.2, 3.4, 0.0, 0.75), c, (0.04, 0.035, 0.03))
@@ -711,7 +711,8 @@ def ausgeben(name, teile, leuchtend=(), bewegt=(), groesse=1024, punkte=None):
     normal = _backe(koerper, "NORMAL", groesse // 2, None, "normal")
     from PIL import Image
     Image.fromarray((np.clip(normal[::-1, :, :3], 0, 1) * 255).astype(np.uint8)).save(os.path.join(AUS, f"{name}_normal.jpg"), quality=92)
-    farbe[..., :3] *= (0.12 + 0.88 * ao[..., :3] ** 1.3)
+    # Verdeckung nur in echten Ecken deutlich, Grundhelligkeit leicht angehoben
+    farbe[..., :3] *= (0.38 + 0.62 * ao[..., :3] ** 1.1) * 1.12
     _jpeg(farbe, os.path.join(AUS, f"{name}_farbe.jpg"))
     _metall_als_emission(koerper)
     metall = _backe(koerper, "EMIT", groesse // 2, None, "metall")
