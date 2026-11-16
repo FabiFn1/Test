@@ -373,7 +373,8 @@ def quader(name, mat, groesse, ort, fase=0.02, drehung=(0, 0, 0)):
     ob.name = name
     ob.scale = groesse
     bpy.ops.object.transform_apply(scale=True)
-    return _fertig(ob, mat, fase)
+    # Rundungen an sehr dünnen Teilen (Sprossen, Rahmen) sieht man nicht, sie kosten nur Dreiecke
+    return _fertig(ob, mat, fase if min(groesse) >= 0.06 else 0)
 
 
 def flaeche(name, mat, punkte, dicke=0.03):
@@ -525,6 +526,33 @@ def treppe(name, mat, a, b, breite=0.3, stufe=0.11, gelaender_mat=None):
             for i in range(0, 4):
                 p = A + d * (i / 3) + quer * s
                 t.append(zwischen(name + "_pfosten", gelaender_mat, tuple(p), tuple(p + o), 0.01, ecken=6))
+    return t
+
+
+def fenster(name, glas, rahmen, mitte, breite, hoehe, achse="y", seite=1, sprossen=(3, 2), bank=None):
+    """Industriefenster in einer Wand: Glas, Rahmen, Sprossen, Fensterbank.
+    achse: Normalenrichtung der Wand ('x' oder 'y'), seite: +1/-1 (nach außen), mitte: Mittelpunkt auf der Wandfläche."""
+    x, y, z = mitte
+    t = []
+    d = 0.02 * seite
+
+    def q(nm, mat, bx, bz, dicke, dx=0.0, dz=0.0, aus=0.0):
+        if achse == "y":
+            return quader(nm, mat, (bx, dicke, bz), (x + dx, y + d + aus * seite, z + dz), 0.004)
+        return quader(nm, mat, (dicke, bx, bz), (x + d + aus * seite, y + dx, z + dz), 0.004)
+    t.append(q(name + "_glas", glas, breite, hoehe, 0.01, aus=-0.01))
+    rb = 0.035
+    for dz in (-hoehe / 2, hoehe / 2):
+        t.append(q(name + "_rahmen", rahmen, breite + rb, rb, 0.03, dz=dz))
+    for dx in (-breite / 2, breite / 2):
+        t.append(q(name + "_rahmen", rahmen, rb, hoehe + rb, 0.03, dx=dx))
+    nx, nz = sprossen
+    for i in range(1, nx):
+        t.append(q(name + "_sprosse", rahmen, 0.014, hoehe, 0.02, dx=-breite / 2 + breite * i / nx))
+    for i in range(1, nz):
+        t.append(q(name + "_sprosse", rahmen, breite, 0.014, 0.02, dz=-hoehe / 2 + hoehe * i / nz))
+    if bank:
+        t.append(q(name + "_bank", bank, breite + 0.08, 0.035, 0.07, dz=-hoehe / 2 - 0.04, aus=0.02))
     return t
 
 
