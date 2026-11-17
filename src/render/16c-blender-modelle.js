@@ -2,7 +2,7 @@
    Jedes Modell hat einen Atlas (Farbe mit Umgebungsverdeckung, Rauheit und Metall, Oberflächenstruktur als Normal-Map) und damit nur ein Material:
    ein Zeichenaufruf statt eines je Teil. Leuchtende Teile behalten das Spielmaterial 'Glut'. */
 {const lade=new T.TextureLoader();
- for(const k in BLENDER){const d=BLENDER[k],farbe=lade.load(d.farbe),orm=lade.load(d.orm),normal=d.normal?lade.load(d.normal):null;farbe.colorSpace=T.SRGBColorSpace;farbe.anisotropy=8;
+ for(const k in BLENDER){if(k==='fels')continue;const d=BLENDER[k],farbe=lade.load(d.farbe),orm=lade.load(d.orm),normal=d.normal?lade.load(d.normal):null;farbe.colorSpace=T.SRGBColorSpace;farbe.anisotropy=8;
   const mat='Atlas_'+k;// Etwas heller und weniger metallisch als gebacken: Im Spiel fehlt die helle Umgebung der Blender-Vorschau, Metall wirkt sonst fast schwarz
   mats[mat]=new T.MeshStandardMaterial({map:farbe,roughnessMap:orm,metalnessMap:orm,normalMap:normal,color:new T.Color(1.7,1.66,1.6),roughness:1,metalness:.45,envMapIntensity:1.4});
   // Drehende Teile (spin) liegen relativ zu ihrem Drehpunkt (piv) vor, wie bei den bisherigen Modellen

@@ -10,6 +10,13 @@ for (const f of fs.readdirSync(ein).filter((f) => f.endsWith('.json')).sort()) {
   const bild = (n) => 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ein, `${m.name}_${n}.jpg`)).toString('base64');
   daten[m.name] = { teile: m.teile.map(({ p, n, u, i, m: mat, spin, piv }) => ({ p, n, u, i, m: mat, ...(spin ? { spin, piv } : {}) })), punkte: m.punkte || {}, farbe: bild('farbe'), orm: bild('orm'), normal: bild('normal') };
 }
-const js = '/* ====== In Blender gebaute Modelle (erzeugt von scripts/modelle-einbetten.js, nicht von Hand ändern) ====== */\nconst BLENDER=' + JSON.stringify(daten) + ';\n';
+// Foto-Texturen für Boden und Gestein (CC0, Poly Haven; Quellen in blender/texturen/quellen.json)
+const tex = path.join(root, 'blender', 'texturen');
+const foto = {};
+for (const [name, arten] of Object.entries({ fels: ['farbe', 'normal'], waldboden: ['farbe'], geroell: ['farbe'] })) {
+  foto[name] = {};
+  for (const a of arten) foto[name][a] = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(tex, `${name}_${a}.jpg`)).toString('base64');
+}
+const js = '/* ====== In Blender gebaute Modelle (erzeugt von scripts/modelle-einbetten.js, nicht von Hand ändern) ====== */\nconst BLENDER=' + JSON.stringify(daten) + ';\nconst FOTO=' + JSON.stringify(foto) + ';\n';
 fs.writeFileSync(path.join(root, 'src', 'assets', '16-blender-modelle.js'), js);
 console.log(`${Object.keys(daten).length} Modelle eingebettet (${(js.length / 1e6).toFixed(2)} MB): ${Object.keys(daten).join(', ')}`);

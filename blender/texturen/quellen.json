@@ -6,5 +6,8 @@
  "lack": "rusty_painted_metal",
  "stahl": "metal_plate",
  "rost": "rusty_metal_02",
- "blech_blau": "blue_metal_plate"
+ "blech_blau": "blue_metal_plate",
+ "fels": "rock_face_03",
+ "waldboden": "forrest_ground_01",
+ "geroell": "rocky_terrain_02"
 }

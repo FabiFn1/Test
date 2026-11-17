@@ -800,3 +800,165 @@ def vorschau(ziel, pfad, abstand=5.5, hoehe=3.2, winkel=0.75, z_mitte=1.2, auflo
     s.cycles.samples = 64
     s.render.filepath = pfad
     bpy.ops.render.render(write_still=True)
+
+
+# ---------- Größere Bausteine für ganze Gebäude ----------
+
+class Satz:
+    """Gemeinsame Materialien, einmal je Gebäude angelegt."""
+    def __init__(self):
+        self.beton = beton("Beton", 0.58)
+        self.beton_h = beton("Beton_Hell", 0.68)
+        self.ziegel = ziegel("Ziegel", (0.42, 0.15, 0.09))
+        self.ziegel_d = ziegel("Ziegel_Dunkel", (0.28, 0.1, 0.07))
+        self.wand = wellblech("Wandblech", (0.56, 0.59, 0.58), skala=22)
+        self.wand_blau = wellblech("Wandblech_Blau", (0.18, 0.3, 0.45), skala=22)
+        self.wand_rot = wellblech("Wandblech_Rot", (0.45, 0.13, 0.08), skala=22)
+        self.dach = wellblech("Dachblech", (0.3, 0.33, 0.36), skala=26, senkrecht=False)
+        self.stahl = stahl("Stahl")
+        self.stahl_d = stahl("Stahl_Dunkel", (0.15, 0.15, 0.16), 0.5)
+        self.rost = rost("Rost")
+        self.gelb = lack("Lack_Gelb", (0.78, 0.55, 0.06))
+        self.blau = lack("Lack_Blau", (0.08, 0.2, 0.42))
+        self.rot = lack("Lack_Rot", (0.5, 0.08, 0.05))
+        self.gruen = lack("Lack_Gruen", (0.12, 0.3, 0.18))
+        self.grau = lack("Lack_Grau", (0.4, 0.42, 0.43))
+        self.weiss = lack("Lack_Weiss", (0.75, 0.76, 0.74))
+        self.glas = lack("Glas", (0.14, 0.2, 0.24), 0.08, 0.3, False)
+        self.rahmen = lack("Rahmen", (0.12, 0.13, 0.13), 0.5, 0.4, False)
+        self.tor = wellblech("Torblech", (0.5, 0.36, 0.12), skala=30, senkrecht=False)
+        self.rost_g = gitterrost("Gitterrost")
+        self.glut = leuchten("Glut")
+        self.licht = leuchten("Licht", (0.55, 0.85, 1.0), 4.0)
+
+
+def halle(S, x0, x1, y0, y1, traufe, dach="sattel", wand=None, sockel=None, sockel_h=0.5, first=None,
+          fenster_seiten=("y0", "y1"), stuetzen=None, z0=0.12):
+    """Werkhalle: Sockel, Wand, Stützen, Fensterbänder, Dach ('sattel' First entlang X, 'pult', 'flach', 'shed'), Rinnen, Fallrohre."""
+    wand = wand or S.wand
+    sockel = sockel or S.ziegel
+    W, D = x1 - x0, y1 - y0
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    t = [quader("Sockel", sockel, (W, D, sockel_h), (cx, cy, z0 + sockel_h / 2), 0.015),
+         quader("Sockelgesims", S.beton_h, (W + 0.05, D + 0.05, 0.05), (cx, cy, z0 + sockel_h + 0.025), 0.008),
+         quader("Wand", wand, (W - 0.04, D - 0.04, traufe - sockel_h - z0), (cx, cy, z0 + sockel_h + (traufe - sockel_h - z0) / 2), 0.01)]
+    n = max(2, round(W / 0.7))
+    if stuetzen:
+        for i in range(n + 1):
+            x = x0 + W * i / n
+            for y in (y0 - 0.025, y1 + 0.025):
+                t.append(quader("Stuetze", stuetzen, (0.06, 0.05, traufe - z0), (x, y, z0 + (traufe - z0) / 2), 0.006))
+    for seite in fenster_seiten:
+        y, s = (y0, -1) if seite == "y0" else (y1, 1)
+        for i in range(n):
+            x = x0 + W * (i + 0.5) / n
+            t += fenster("Band", S.glas, S.rahmen, (x, y, (z0 + sockel_h + traufe) / 2 + 0.05), min(0.5, W / n * 0.7), 0.36, "y", s, (3, 1))
+    if dach == "sattel":
+        hf = first or traufe + D * 0.18
+        neig = math.atan2(hf - traufe, D / 2)
+        for s in (-1, 1):
+            t.append(quader("Dach", S.dach, (W + 0.16, D / 2 / math.cos(neig) + 0.1, 0.04), (cx, cy + s * D / 4, (traufe + hf) / 2 + 0.03), 0.006, drehung=(-s * neig, 0, 0)))
+            t.append(zwischen("Rinne", S.stahl, (x0 - 0.06, cy + s * (D / 2 + 0.07), traufe - 0.01), (x1 + 0.06, cy + s * (D / 2 + 0.07), traufe - 0.01), 0.032, ecken=10))
+        for x in (x0 + 0.01, x1 - 0.01):
+            t.append(flaeche("Giebel", wand, [(x, y0, traufe), (x, y1, traufe), (x, cy, hf)], 0.03))
+    elif dach == "pult":
+        hf = first or traufe + D * 0.15
+        neig = math.atan2(hf - traufe, D)
+        t.append(quader("Dach", S.dach, (W + 0.16, D / math.cos(neig) + 0.12, 0.04), (cx, cy, (traufe + hf) / 2 + 0.03), 0.006, drehung=(-neig, 0, 0)))
+        for x in (x0 + 0.01, x1 - 0.01):
+            t.append(flaeche("Giebel", wand, [(x, y0, traufe), (x, y1, traufe), (x, y1, hf)], 0.03))
+        t.append(quader("Wandaufsatz", wand, (W - 0.04, 0.04, hf - traufe), (cx, y1 - 0.02, traufe + (hf - traufe) / 2), 0.004))
+    elif dach == "flach":
+        t.append(quader("Attika", S.beton_h, (W + 0.04, D + 0.04, 0.12), (cx, cy, traufe + 0.06), 0.012))
+        t.append(quader("Flachdach", S.beton, (W - 0.1, D - 0.1, 0.04), (cx, cy, traufe + 0.04), 0.004))
+    elif dach == "shed":
+        z = 3
+        tiefe = D / z
+        for k in range(z):
+            ya = y0 + k * tiefe
+            h = 0.45
+            neig = math.atan2(h, tiefe * 0.8)
+            t.append(quader("Shed", S.dach, (W + 0.08, math.hypot(h, tiefe * 0.8), 0.04), (cx, ya + tiefe * 0.4, traufe + h / 2 + 0.02), 0.006, drehung=(neig, 0, 0)))
+            t.append(quader("Shedglas", S.glas, (W - 0.08, 0.03, h * 0.9), (cx, ya + tiefe * 0.8 + 0.02, traufe + h / 2), 0.004, drehung=(math.radians(-12), 0, 0)))
+            for x in (x0 + 0.03, x1 - 0.03):
+                t.append(flaeche("Shedgiebel", wand, [(x, ya, traufe), (x, ya + tiefe * 0.8, traufe), (x, ya + tiefe * 0.8, traufe + h)], 0.04))
+    for x in (x0 + 0.05, x1 - 0.05):
+        for y in (y0 - 0.07, y1 + 0.07):
+            t.append(zylinder("Fallrohr", S.stahl, 0.026, traufe - z0, (x, y, z0 + (traufe - z0) / 2), ecken=10))
+    return t
+
+
+def tor(S, x, y, breite=1.0, hoehe=1.15, achse="x", seite=1, z0=0.12):
+    """Rolltor in der Wand mit Rahmen, Wickelwelle, Rammschutz und Leuchte. achse: Wandnormale."""
+    def q(nm, mat, b, d, h, dx=0.0, dz=0.0, aus=0.0):
+        if achse == "x":
+            return quader(nm, mat, (d, b, h), (x + aus * seite, y + dx, z0 + dz), 0.008)
+        return quader(nm, mat, (b, d, h), (x + dx, y + aus * seite, z0 + dz), 0.008)
+    t = [q("Torrahmen", S.gelb, breite + 0.15, 0.07, hoehe + 0.12, dz=(hoehe + 0.12) / 2, aus=0.02),
+         q("Tor", S.tor, breite, 0.04, hoehe, dz=hoehe / 2, aus=0.045),
+         q("Leuchte", S.stahl_d, 0.26, 0.14, 0.06, dz=hoehe + 0.3, aus=0.09)]
+    rot = (math.radians(90), 0, 0) if achse == "x" else (0, math.radians(90), 0)
+    wx, wy = (x + 0.08 * seite, y) if achse == "x" else (x, y + 0.08 * seite)
+    t.append(zylinder("Torwelle", S.stahl_d, 0.065, breite + 0.15, (wx, wy, z0 + hoehe + 0.12), ecken=16, drehung=rot))
+    for d in (-1, 1):
+        px, py = (x + 0.18 * seite, y + d * (breite / 2 + 0.12)) if achse == "x" else (x + d * (breite / 2 + 0.12), y + 0.18 * seite)
+        t.append(zylinder("Rammschutz", S.gelb, 0.038, 0.45, (px, py, z0 + 0.22), ecken=14, fase=0.006))
+    return t
+
+
+def tank(S, x, y, r, h, z0=0.12, mat=None, dach="kuppel", beine=True, leiter=True):
+    """Stehender Tank auf Füßen mit Bändern, Kuppel oder Kegeldach, Leiter und Geländer oben."""
+    mat = mat or S.weiss
+    zb = z0 + (0.25 if beine else 0)
+    t = [zylinder("Tank", mat, r, h, (x, y, zb + h / 2), ecken=32)]
+    for i in range(1, int(h / 0.35) + 1):
+        t.append(zylinder("Tankband", S.stahl_d, r + 0.008, 0.025, (x, y, zb + i * h / (int(h / 0.35) + 1)), ecken=32, fase=0))
+    if dach == "kuppel":
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=12, radius=r, location=(x, y, zb + h))
+        k = bpy.context.object
+        k.scale = (1, 1, 0.35)
+        bpy.ops.object.transform_apply(scale=True)
+        t.append(_fertig(k, mat, 0))
+    else:
+        t.append(zylinder("Tankdach", S.stahl_d, r + 0.02, r * 0.4, (x, y, zb + h + r * 0.2), ecken=32, r_oben=0.04))
+    if beine:
+        for i in range(4):
+            a = i / 4 * math.tau + math.pi / 4
+            t.append(zylinder("Tankfuss", S.stahl_d, 0.035, 0.3, (x + r * 0.75 * math.cos(a), y + r * 0.75 * math.sin(a), z0 + 0.15), ecken=8))
+    if leiter:
+        t += leiter_rohr(S, x + r + 0.05, y, zb, zb + h)
+    return t
+
+
+def leiter_rohr(S, x, y, z0, z1):
+    return leiter("Leiter", S.gelb, x, y, z0, z1, richtung=0, breite=0.22)
+
+
+def kamin(S, x, y, r, h, z0=0.12, mat=None, baender=3):
+    """Schornstein: verjüngt, mit Stahlbändern und Kopf."""
+    mat = mat or S.ziegel
+    t = [zylinder("Kamin", mat, r, h, (x, y, z0 + h / 2), ecken=24, r_oben=r * 0.78)]
+    for i in range(1, baender + 1):
+        z = z0 + h * i / (baender + 1)
+        t.append(zylinder("Kaminband", S.stahl_d, r - (r * 0.22) * (z - z0) / h + 0.01, 0.035, (x, y, z), ecken=24, fase=0.004))
+    t.append(zylinder("Kaminkopf", S.stahl_d, r * 0.88, 0.07, (x, y, z0 + h + 0.03), ecken=24, r_oben=r * 0.8, fase=0.005))
+    return t
+
+
+def luefter(S, x, y, z, r=0.18):
+    """Dachlüfter: Gehäuse (fest) und Haube mit Schaufeln (dreht). Rückgabe: (feste Teile, drehende Teile, Drehpunkt)."""
+    fest = [zylinder("Luefterhaus", S.stahl, r + 0.02, 0.2, (x, y, z + 0.1), ecken=24)]
+    dreh = [zylinder("Luefterkappe", S.stahl_d, r, 0.07, (x, y, z + 0.25), ecken=24, r_oben=0.05)]
+    for i in range(8):
+        a = i / 8 * math.tau
+        dreh.append(quader("Schaufel", S.stahl_d, (r * 0.7, 0.015, 0.08), (x + r * 0.62 * math.cos(a), y + r * 0.62 * math.sin(a), z + 0.17), 0.0, drehung=(0, 0, a + 0.6)))
+    return fest, dreh, (x, y, z + 0.25)
+
+
+def fundament(S, groesse, h=0.12):
+    return [quader("Fundament", S.beton, (groesse - 0.06, groesse - 0.06, h), (0, 0, h / 2), 0.03)]
+
+
+def g2b(p):
+    """Spiel-Koordinaten (x, y, z) in Blender-Koordinaten."""
+    return (p[0], -p[2], p[1])

@@ -31,6 +31,7 @@
  "save/32-karten-spielstaende-schwierigkeit-freies-bauen.js",
  "sim/33-zuege.js",
  "render/34-natur.js",
+ "render/34b-umwelt-fotos.js",
  "render/35-leben-im-werk.js",
  "ui/36-bedienung.js",
  "ui/37-maschinenfenster.js",
